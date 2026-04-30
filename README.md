@@ -1,5 +1,8 @@
 # ClickHouse Product Analytics
 
+> [!NOTE]
+> This is a personal side project. I'll work on it when I have spare time, so progress will be slow.
+
 ClickHouse Product Analytics is a first-party product analytics ingress layer for ClickHouse. It helps teams send browser, clickstream, and product events directly into ClickHouse through a lightweight browser SDK and HTTP ingest service.
 
 The repo scope is intentionally limited to the first mile of product analytics: event capture in the browser and reliable ingestion into ClickHouse. It is not intended to define a full analytics suite in v1; dashboards, feature flags, experiments, session replay, surveys, heatmaps, and other heavyweight product analytics features are out of scope.
