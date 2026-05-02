@@ -1,2 +1,2 @@
 :HL["/clickhouse-product-analytics/pr-preview/pr-1/_next/static/chunks/0h24pu2y_an8m.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"slug","param":{"type":"oc","key":"reference/sdk","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"qpXG8FCBFzwJZ2CFc-W8h"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"slug","param":{"type":"oc","key":"reference/sdk","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"IcJODDuDIBcTTwkm_B2-Y"}
