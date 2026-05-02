@@ -23,7 +23,9 @@ async function normalizeDirectory(directory) {
     }
 
     const content = await readFile(path, 'utf8')
-    const normalizedContent = normalizeMdxLinks(content, path)
+    const linkedContent = normalizeMdxLinks(content, path)
+    const title = inferTitle(linkedContent, path)
+    const normalizedContent = removeMarkdownH1(linkedContent)
 
     if (normalizedContent.startsWith('---\n')) {
       if (normalizedContent !== content) {
@@ -32,7 +34,6 @@ async function normalizeDirectory(directory) {
       continue
     }
 
-    const title = inferTitle(normalizedContent, path)
     await writeFile(path, `---\ntitle: ${JSON.stringify(title)}\ndescription: Generated TypeDoc reference.\n---\n\n${normalizedContent}`)
   }
 }
@@ -99,6 +100,10 @@ function stripMarkdown(value) {
     .replaceAll('`', '')
     .replace(/\[(.+?)\]\(.+?\)/g, '$1')
     .trim()
+}
+
+function removeMarkdownH1(content) {
+  return content.replace(/^#\s+.+\n(?:\n)?/m, '')
 }
 
 function normalizeMdxLinks(content, sourceFile) {

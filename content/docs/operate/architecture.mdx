@@ -3,8 +3,6 @@ title: Architecture
 description: System boundaries, event flow, and identity flow.
 ---
 
-# Architecture
-
 ClickHouse Product Analytics is deliberately small. The browser SDK and direct API collect events, the ingest service validates and normalizes them, and ClickHouse stores the resulting analytics tables. Everything else, including visualization and analysis, happens outside this repository.
 
 ## System Boundary

@@ -3,8 +3,6 @@ title: ClickHouse Schema
 description: Tables, views, and query patterns for humans and agents.
 ---
 
-# ClickHouse Schema
-
 The ClickHouse database is the analytics source of truth. The default database name is `product_analytics`, but deployments can set `CLICKHOUSE_DATABASE`.
 
 There is no project ID and no tenant column. `api_key` is stored on events when supplied as an ingest credential, but it is not a tenant or identity boundary. Do not write queries that assume `project_id`, `team_id`, or multi-tenancy.

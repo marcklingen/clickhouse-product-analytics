@@ -3,8 +3,6 @@ title: ClickHouse Product Analytics
 description: First-party product analytics ingress for ClickHouse.
 ---
 
-# ClickHouse Product Analytics
-
 ClickHouse Product Analytics is a first-party product analytics ingress layer for ClickHouse. It captures browser and backend product events, validates and normalizes them through one HTTP service, and writes query-ready events, people, identity links, and sessions into ClickHouse.
 
 The project intentionally owns only the first mile of product analytics: event capture, identity stitching, and warehouse-native storage. It does not include dashboards, funnels, feature flags, session replay, surveys, or a settings UI. Use ClickHouse, SQL, notebooks, BI tools, or agentic analytics on top of the tables.
