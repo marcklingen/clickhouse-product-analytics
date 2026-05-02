@@ -9,6 +9,34 @@ ClickHouse Product Analytics is a first-party product analytics ingress layer fo
 
 The project intentionally owns only the first mile of product analytics: event capture, identity stitching, and warehouse-native storage. It does not include dashboards, funnels, feature flags, session replay, surveys, or a settings UI. Use ClickHouse, SQL, notebooks, BI tools, or agentic analytics on top of the tables.
 
+## Why Build This
+
+If your analytics events already need to end up in ClickHouse, a traditional product analytics pipeline can become a detour: send events to a vendor, let the vendor store them in its managed backend, then export them back through S3 into your own ClickHouse warehouse.
+
+This project removes that loop. It gives you the first-party capture layer and ingest service needed to send product events directly into ClickHouse, while leaving analysis and visualization to the SQL, BI, notebook, and agentic tools you already use on top of the warehouse.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph repo["This repo"]
+        sdk["Browser SDK<br/>pageviews, events, identify, sessions, batching"]
+        react["React bindings<br/>provider, hook, viewport tracking"]
+        ingest["HTTP ingest service<br/>validate, normalize, write"]
+        migrations["ClickHouse migrations<br/>events, persons, identity links, sessions"]
+        docs["Static docs<br/>OpenAPI and generated references"]
+    end
+
+    app["Web app"] --> react
+    app --> sdk
+    react --> sdk
+    backend["Backend services"] --> ingest
+    sdk --> ingest
+    ingest --> ch["ClickHouse"]
+    migrations --> ch
+    ch --> tools["SQL, BI, notebooks, agents"]
+```
+
 ## Start
 
 - [Sending events](/start/sending-events): browser SDK, backend/direct API, batch API, gzip, and event naming examples.
