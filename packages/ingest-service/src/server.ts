@@ -3,7 +3,7 @@ import cors from '@fastify/cors'
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify'
 import { ZodError } from 'zod'
 import type { ServiceConfig } from './config.js'
-import { applyIdentitySideEffects, normalizeEvents, parsePayload } from './payload.js'
+import { PayloadDecodeError, applyIdentitySideEffects, normalizeEvents, parsePayload } from './payload.js'
 import type { AnalyticsWriter } from './types.js'
 
 export type CreateServerOptions = {
@@ -108,6 +108,12 @@ export async function createServer({ config, writer }: CreateServerOptions): Pro
       return reply.code(400).send({
         status: 'error',
         error: message
+      })
+    }
+    if (error instanceof PayloadDecodeError || statusCode === 400) {
+      return reply.code(400).send({
+        status: 'error',
+        error: error instanceof PayloadDecodeError ? error.message : message
       })
     }
     if (message.includes('Origin is not allowed')) {

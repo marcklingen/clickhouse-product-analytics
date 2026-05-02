@@ -33,6 +33,15 @@ export type NormalizedEventsResult = {
   dropped: number
 }
 
+export class PayloadDecodeError extends Error {
+  readonly statusCode = 400
+
+  constructor(message = 'Malformed request payload') {
+    super(message)
+    this.name = 'PayloadDecodeError'
+  }
+}
+
 export function parsePayload(body: unknown): ParsedPayload {
   const decodedBody = decodeBody(body)
 
@@ -202,10 +211,33 @@ function decodeBody(body: unknown): unknown {
   const params = new URLSearchParams(trimmed)
   const encoded = params.get('data')
   if (encoded) {
-    return JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))
+    return parseJson(decodeBase64(encoded))
   }
 
-  return JSON.parse(trimmed)
+  return parseJson(trimmed)
+}
+
+function decodeBase64(value: string): string {
+  const trimmed = value.trim()
+  if (!isBase64(trimmed)) {
+    throw new PayloadDecodeError('Invalid base64 payload')
+  }
+  return Buffer.from(trimmed, 'base64').toString('utf8')
+}
+
+function isBase64(value: string): boolean {
+  return value.length > 0
+    && value.length % 4 !== 1
+    && /^[A-Za-z0-9+/]*={0,2}$/.test(value)
+    && !value.slice(0, -2).includes('=')
+}
+
+function parseJson(value: string): unknown {
+  try {
+    return JSON.parse(value)
+  } catch {
+    throw new PayloadDecodeError()
+  }
 }
 
 function resolvePersonForEvent(

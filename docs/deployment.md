@@ -108,7 +108,7 @@ The browser SDK and React package do not connect to ClickHouse Cloud directly. T
 | `PORT` | no | `8080` | HTTP listen port. |
 | `PUBLIC_API_KEYS` | yes | none | Comma-separated publishable API keys accepted by the service. These are dataset credentials, not tenant IDs. |
 | `ALLOWED_ORIGINS` | recommended | empty | Comma-separated browser origins accepted by CORS and source validation. |
-| `ALLOWED_HOSTS` | no | derived from origins | Optional host allowlist. Useful when multiple origins share the same host logic. |
+| `ALLOWED_HOSTS` | no | empty | Optional explicit host allowlist. Use only when host-level matching across schemes is intentional. |
 | `ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN` | no | `true` | Allows backend requests without an `Origin` header. |
 | `MAX_BATCH_BYTES` | no | `20971520` | Maximum request body size after decompression. |
 | `MAX_EVENTS_PER_BATCH` | no | `10000` | Maximum number of events in a batch request. |

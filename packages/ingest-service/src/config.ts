@@ -23,16 +23,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServiceConfig 
   }
 
   const allowedOrigins = csv(env.ALLOWED_ORIGINS)
-  const allowedHosts = [
-    ...csv(env.ALLOWED_HOSTS),
-    ...allowedOrigins.map((origin) => {
-      try {
-        return new URL(origin).host
-      } catch {
-        return origin
-      }
-    })
-  ].filter(Boolean)
+  const allowedHosts = csv(env.ALLOWED_HOSTS)
 
   return {
     host: env.HOST ?? '0.0.0.0',

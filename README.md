@@ -174,7 +174,7 @@ Environment variables:
 - `LOG_LEVEL`: service log level, default `warn`.
 - `PUBLIC_API_KEYS`: comma-separated publishable keys accepted by the service. These are credentials for one analytics dataset, not tenant or project boundaries.
 - `ALLOWED_ORIGINS`: comma-separated browser origins allowed by CORS and source validation.
-- `ALLOWED_HOSTS`: optional host allowlist derived from origins if omitted.
+- `ALLOWED_HOSTS`: optional explicit host allowlist for accepting requests across schemes on those hosts.
 - `ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN`: allow backend events without an `Origin` header, default `true`.
 - `MAX_BATCH_BYTES`: request body limit, default 20 MB.
 - `MAX_EVENTS_PER_BATCH`: event count limit, default 10,000.

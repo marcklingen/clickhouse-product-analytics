@@ -239,6 +239,81 @@ describe('ingest service', () => {
     expect(badOrigin.statusCode).toBe(403)
   })
 
+  it('enforces exact origins from ALLOWED_ORIGINS', async () => {
+    const wrongScheme = await app.inject({
+      method: 'POST',
+      url: '/capture/',
+      headers: {
+        origin: 'https://localhost:3000'
+      },
+      payload: {
+        api_key: 'test_key',
+        event: 'wrong_scheme',
+        distinct_id: 'user_123'
+      }
+    })
+    const wrongPort = await app.inject({
+      method: 'POST',
+      url: '/capture/',
+      headers: {
+        origin: 'http://localhost:3001'
+      },
+      payload: {
+        api_key: 'test_key',
+        event: 'wrong_port',
+        distinct_id: 'user_123'
+      }
+    })
+
+    expect(wrongScheme.statusCode).toBe(403)
+    expect(wrongPort.statusCode).toBe(403)
+  })
+
+  it('returns 400 for malformed JSON and form payloads', async () => {
+    const invalidJson = await app.inject({
+      method: 'POST',
+      url: '/capture/',
+      headers: {
+        origin: 'http://localhost:3000',
+        'content-type': 'application/json'
+      },
+      payload: '{"api_key":'
+    })
+    const invalidText = await app.inject({
+      method: 'POST',
+      url: '/capture/',
+      headers: {
+        origin: 'http://localhost:3000',
+        'content-type': 'text/plain'
+      },
+      payload: '{"api_key":'
+    })
+    const invalidBase64 = await app.inject({
+      method: 'POST',
+      url: '/capture/',
+      headers: {
+        origin: 'http://localhost:3000',
+        'content-type': 'application/x-www-form-urlencoded'
+      },
+      payload: new URLSearchParams({ data: 'not-base64!!!' }).toString()
+    })
+    const invalidBase64Json = await app.inject({
+      method: 'POST',
+      url: '/capture/',
+      headers: {
+        origin: 'http://localhost:3000',
+        'content-type': 'application/x-www-form-urlencoded'
+      },
+      payload: new URLSearchParams({ data: Buffer.from('{"api_key":').toString('base64') }).toString()
+    })
+
+    expect(invalidJson.statusCode).toBe(400)
+    expect(invalidText.statusCode).toBe(400)
+    expect(invalidBase64.statusCode).toBe(400)
+    expect(invalidBase64Json.statusCode).toBe(400)
+    expect(writer.events).toHaveLength(0)
+  })
+
   it('accepts gzip-compressed JSON payloads', async () => {
     const payload = JSON.stringify({
       api_key: 'test_key',
