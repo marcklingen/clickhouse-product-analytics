@@ -38,7 +38,7 @@ For exact method and option signatures, see the [generated SDK reference](./refe
 ```ts
 import analytics from '@clickhouse-product-analytics/sdk'
 
-analytics.init('local_dev_key', {
+analytics.init({
   api_host: 'http://127.0.0.1:8080',
   capture_pageview: 'history_change',
   autocapture: {
@@ -77,7 +77,7 @@ Important options:
 For single-page applications, use `capture_pageview: "history_change"` so route changes emit `$pageview`:
 
 ```ts
-analytics.init('local_dev_key', {
+analytics.init({
   api_host: 'https://analytics.example.com',
   capture_pageview: 'history_change'
 })
@@ -95,7 +95,7 @@ The SDK promotes URL fields into ClickHouse columns:
 Autocapture is opt-in. Keep it narrow and explicit:
 
 ```ts
-analytics.init('local_dev_key', {
+analytics.init({
   api_host: 'https://analytics.example.com',
   autocapture: {
     captureText: true,
@@ -112,7 +112,7 @@ The SDK avoids hidden/password inputs, common payment and secret field names, cr
 Use `before_send` to enforce a local event contract:
 
 ```ts
-analytics.init('local_dev_key', {
+analytics.init({
   api_host: 'https://analytics.example.com',
   before_send: (event) => {
     if (event.event === 'debug_event') {
@@ -148,7 +148,6 @@ import { AnalyticsProvider } from '@clickhouse-product-analytics/react'
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AnalyticsProvider
-      apiKey="local_dev_key"
       options={{
         api_host: 'http://127.0.0.1:8080',
         capture_pageview: 'history_change',
@@ -265,7 +264,7 @@ curl -X POST http://127.0.0.1:8080/batch/ \
   }'
 ```
 
-The service also accepts an array of event objects as the request body. At least one event must carry `api_key` or `token`; events without a key inherit that value, and any provided keys in the same array must match.
+The service also accepts an array of event objects as the request body. Browser-origin arrays can omit keys. No-origin backend arrays need a valid `api_key` on at least one event, and any provided keys in the same request must match.
 
 ## Compressed Requests
 
@@ -297,7 +296,7 @@ await fetch('http://127.0.0.1:8080/capture/', {
 
 ## Invalid Events
 
-The service rejects malformed requests such as missing API keys, invalid timestamps, mixed API keys in one batch, disallowed origins, invalid keys, oversized bodies, and oversized batches.
+The service rejects malformed requests such as invalid timestamps, mixed API keys in one request, disallowed origins, invalid keys, missing keys on no-origin backend requests, oversized bodies, and oversized batches.
 
 Inside an otherwise valid batch, events missing an event name or distinct ID are dropped and counted in the response:
 

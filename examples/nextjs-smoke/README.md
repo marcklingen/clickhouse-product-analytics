@@ -25,4 +25,4 @@ docker compose up -d --build
 npm run verify:e2e
 ```
 
-For non-default stacks, set `CPA_SERVICE_URL`, `CPA_API_KEY`, `CLICKHOUSE_URL`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, and `CLICKHOUSE_DATABASE` before running the verifier.
+For non-default stacks, set `CPA_SERVICE_URL`, `CLICKHOUSE_URL`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, and `CLICKHOUSE_DATABASE` before running the verifier. Set `CPA_API_KEY` when exercising no-origin direct API requests or intentionally testing provided-key validation.

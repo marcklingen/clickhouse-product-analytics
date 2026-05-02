@@ -13,7 +13,6 @@ const totalEvents = requestCount * batchSize
 
 const config = loadConfig({
   PUBLIC_API_KEYS: 'bench_key',
-  ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN: 'true',
   MAX_EVENTS_PER_BATCH: String(Math.max(10_000, batchSize)),
   MAX_BATCH_BYTES: String(20 * 1024 * 1024)
 })

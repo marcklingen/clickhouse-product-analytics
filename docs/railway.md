@@ -35,9 +35,8 @@ Set these variables in Railway:
 | --- | --- |
 | `PORT` | `8080` or Railway's provided port if your deployment injects one. |
 | `LOG_LEVEL` | `warn` for production. Use `info` or `debug` only while diagnosing. |
-| `PUBLIC_API_KEYS` | Comma-separated publishable keys accepted by the service. |
+| `PUBLIC_API_KEYS` | Optional comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest. |
 | `ALLOWED_ORIGINS` | Comma-separated browser origins, for example `https://app.example.com`. |
-| `ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN` | `true` if backend services send events without an `Origin` header. |
 | `CLICKHOUSE_URL` | ClickHouse HTTP or HTTPS URL. |
 | `CLICKHOUSE_USER` | ClickHouse user. |
 | `CLICKHOUSE_PASSWORD` | ClickHouse password. |

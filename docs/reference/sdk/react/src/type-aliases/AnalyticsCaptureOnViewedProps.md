@@ -8,7 +8,7 @@
 
 > **AnalyticsCaptureOnViewedProps** = `HTMLAttributes`\<`HTMLDivElement`\> & `object`
 
-Defined in: [react/src/index.tsx:123](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/react/src/index.tsx#L123)
+Defined in: [react/src/index.tsx:127](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/react/src/index.tsx#L127)
 
 Props for `AnalyticsCaptureOnViewed`, a viewport-impression helper.
 

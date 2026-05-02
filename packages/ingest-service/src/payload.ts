@@ -7,7 +7,6 @@ const jsonObjectSchema = z.record(z.unknown())
 
 const eventSchema = z.object({
   api_key: z.string().optional(),
-  token: z.string().optional(),
   event: z.string().optional(),
   distinct_id: z.string().optional(),
   properties: jsonObjectSchema.optional().default({}),
@@ -18,13 +17,12 @@ const singlePayloadSchema = eventSchema
 
 const batchPayloadSchema = z.object({
   api_key: z.string().optional(),
-  token: z.string().optional(),
   batch: z.array(eventSchema).min(1),
   historical_migration: z.boolean().optional()
 }).passthrough()
 
 export type ParsedPayload = {
-  apiKey: string
+  apiKey?: string
   events: IncomingEvent[]
 }
 
@@ -47,35 +45,35 @@ export function parsePayload(body: unknown): ParsedPayload {
 
   if (Array.isArray(decodedBody)) {
     const events = z.array(eventSchema).parse(decodedBody)
-    const apiKey = events.find((event) => event.api_key ?? event.token)?.api_key ?? events.find((event) => event.api_key ?? event.token)?.token
     return {
-      apiKey: requireApiKey(apiKey),
+      apiKey: requestApiKey(events.map((event) => event.api_key)),
       events
     }
   }
 
   if (isRecord(decodedBody) && Array.isArray(decodedBody.batch)) {
     const parsed = batchPayloadSchema.parse(decodedBody)
-    const apiKey = parsed.api_key ?? parsed.token
     return {
-      apiKey: requireApiKey(apiKey),
+      apiKey: requestApiKey([
+        parsed.api_key,
+        ...parsed.batch.map((event) => event.api_key)
+      ]),
       events: parsed.batch.map((event) => ({
-        ...event,
-        api_key: event.api_key ?? event.token ?? apiKey
+        ...event
       }))
     }
   }
 
   const parsed = singlePayloadSchema.parse(decodedBody)
   return {
-    apiKey: requireApiKey(parsed.api_key ?? parsed.token),
+    apiKey: requestApiKey([parsed.api_key]),
     events: [parsed]
   }
 }
 
 export async function normalizeEvents(
   writer: AnalyticsWriter,
-  apiKey: string,
+  apiKey: string | undefined,
   events: IncomingEvent[],
   request: FastifyRequest
 ): Promise<NormalizedEventsResult> {
@@ -91,11 +89,6 @@ export async function normalizeEvents(
   let dropped = 0
 
   for (const incoming of events) {
-    const eventApiKey = incoming.api_key ?? incoming.token ?? apiKey
-    if (eventApiKey !== apiKey) {
-      throw new Error('Mixed api_key values in one batch are not supported')
-    }
-
     const properties = incoming.properties ?? {}
     if (!incoming.event || !incoming.event.trim()) {
       dropped += 1
@@ -134,7 +127,7 @@ export async function normalizeEvents(
 
     normalized.push({
       eventId: randomUUID(),
-      apiKey,
+      apiKey: apiKey ?? '',
       event: eventName,
       distinctId,
       personId,
@@ -159,7 +152,6 @@ export async function normalizeEvents(
 
 export async function applyIdentitySideEffects(writer: AnalyticsWriter, event: NormalizedEvent): Promise<void> {
   await writer.upsertAlias({
-    apiKey: event.apiKey,
     distinctId: event.distinctId,
     personId: event.personId
   })
@@ -170,7 +162,6 @@ export async function applyIdentitySideEffects(writer: AnalyticsWriter, event: N
     const anonymousId = firstString(event.properties.$anon_distinct_id, event.properties.anon_distinct_id)
 
     await writer.upsertPerson({
-      apiKey: event.apiKey,
       distinctId: event.distinctId,
       personId: event.personId,
       properties: setProperties ?? {},
@@ -179,7 +170,6 @@ export async function applyIdentitySideEffects(writer: AnalyticsWriter, event: N
     })
     if (event.event === '$identify' && anonymousId) {
       await writer.upsertAlias({
-        apiKey: event.apiKey,
         distinctId: anonymousId,
         personId: event.personId
       })
@@ -190,7 +180,6 @@ export async function applyIdentitySideEffects(writer: AnalyticsWriter, event: N
     const alias = firstString(event.properties.alias)
     if (alias) {
       await writer.upsertAlias({
-        apiKey: event.apiKey,
         distinctId: alias,
         personId: event.personId
       })
@@ -333,11 +322,12 @@ function parseTimestamp(value: string | undefined): Date | undefined {
   return date
 }
 
-function requireApiKey(value: string | undefined): string {
-  if (!value || !value.trim()) {
-    throw new Error('api_key is required')
+function requestApiKey(values: Array<string | undefined>): string | undefined {
+  const keys = [...new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value)))]
+  if (keys.length > 1) {
+    throw new Error('Mixed api_key values in one request are not supported')
   }
-  return value
+  return keys[0]
 }
 
 function firstString(...values: unknown[]): string | undefined {

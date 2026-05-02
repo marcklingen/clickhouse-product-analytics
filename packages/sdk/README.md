@@ -13,7 +13,7 @@ npm install @clickhouse-product-analytics/sdk
 ```ts
 import analytics from '@clickhouse-product-analytics/sdk'
 
-analytics.init('local_dev_key', {
+analytics.init({
   api_host: 'https://analytics.example.com',
   capture_pageview: 'history_change'
 })

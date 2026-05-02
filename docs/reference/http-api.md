@@ -5,7 +5,7 @@ description: Public ingest endpoints, payloads, responses, and error semantics.
 
 # HTTP API Reference
 
-The ingest service exposes a small public event API. It accepts browser SDK batches, backend service events, and compatibility-style capture calls. There is no project or tenant ID in this service; each deployment writes to one ClickHouse database and validates requests with `PUBLIC_API_KEYS`.
+The ingest service exposes a small public event API. It accepts browser SDK batches, backend service events, and compatibility-style capture calls. There is no project or tenant ID in this service; each deployment writes to one ClickHouse database. Browser requests are validated by `Origin`, while backend or no-origin requests use `api_key` credentials from `PUBLIC_API_KEYS`.
 
 ## Endpoints
 
@@ -21,7 +21,9 @@ All event ingestion endpoints accept `POST` with JSON bodies:
 
 ## Authentication
 
-Send `api_key` or `token` in the request body. The value must be listed in the service's `PUBLIC_API_KEYS` environment variable.
+Browser requests from an allowed `Origin` can omit `api_key`. If a browser request includes `api_key`, the value must be listed in `PUBLIC_API_KEYS`; unknown provided keys return `401`.
+
+Backend requests commonly omit `Origin`. Those requests require a valid `api_key`. `PUBLIC_API_KEYS` accepts a comma-separated list so operators can keep old and new backend keys active during rotation. To disable no-origin backend ingest, leave `PUBLIC_API_KEYS` empty.
 
 ```json
 {
@@ -31,7 +33,7 @@ Send `api_key` or `token` in the request body. The value must be listed in the s
 }
 ```
 
-Requests with unknown keys return `401`.
+Requests from disallowed origins return `403`. No-origin requests with missing or unknown keys return `401`.
 
 ## Single Event Payload
 
@@ -52,7 +54,7 @@ Fields:
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `api_key` or `token` | Yes | Publishable key accepted by the service. |
+| `api_key` | Browser: no. No-origin backend: yes. | Ingest credential accepted by the service. It does not scope identity or create tenants. |
 | `event` | Yes | Stable event name. Empty names are dropped. |
 | `distinct_id` | Yes | User, anonymous, device, or backend actor ID. |
 | `timestamp` | No | ISO timestamp. Defaults to ingest time. |
@@ -76,9 +78,9 @@ Fields:
 }
 ```
 
-All events in a batch must resolve to the same API key. Mixed keys return `400`. Batches larger than `MAX_EVENTS_PER_BATCH` return `413`.
+If a batch includes keys in more than one place, all provided keys must match. Mixed keys return `400`. Batches larger than `MAX_EVENTS_PER_BATCH` return `413`.
 
-The service also accepts an array of event objects as the request body when each event carries `api_key` or `token`.
+The service also accepts an array of event objects as the request body. Browser-origin arrays can omit keys. No-origin backend arrays need a valid key on at least one event, and all provided keys must match.
 
 ## Form-Encoded Payloads
 
@@ -124,7 +126,7 @@ Compressed payloads are still limited by `MAX_BATCH_BYTES` after inflation. Over
 
 ## CORS and Origins
 
-Browser requests must use an `Origin` listed in `ALLOWED_ORIGINS`. Backend requests usually omit `Origin`; they are accepted when `ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN=true`.
+Browser requests must use an `Origin` listed in `ALLOWED_ORIGINS`. Backend requests usually omit `Origin`; they are accepted when the payload includes one of the configured API keys.
 
 ## Responses
 
@@ -144,8 +146,8 @@ Common errors:
 
 | Status | Meaning |
 | --- | --- |
-| `400` | Invalid payload, invalid timestamp, missing API key, or mixed batch keys. |
-| `401` | Unknown API key. |
+| `400` | Invalid payload, invalid timestamp, or mixed batch keys. |
+| `401` | Missing key on no-origin backend requests, unknown provided key, or invalid provided browser key. |
 | `403` | Origin is not allowed. |
 | `413` | Request body or event count exceeds configured limits. |
 | `500` | Unexpected server or ClickHouse write error. |

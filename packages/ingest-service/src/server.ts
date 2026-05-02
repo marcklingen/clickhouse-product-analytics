@@ -21,7 +21,7 @@ export async function createServer({ config, writer }: CreateServerOptions): Pro
   await app.register(cors, {
     origin(origin, callback) {
       if (!origin) {
-        callback(null, config.allowServerEventsWithoutOrigin)
+        callback(null, true)
         return
       }
       callback(null, isAllowedOrigin(config, origin))
@@ -56,12 +56,12 @@ export async function createServer({ config, writer }: CreateServerOptions): Pro
   }))
 
   const ingest = async (request: FastifyRequest, reply: FastifyReply) => {
-    assertAllowedSource(config, request.headers.origin)
     const parsed = parsePayload(request.body)
-    if (!config.publicApiKeys.has(parsed.apiKey)) {
-      return reply.code(401).send({
+    const authorization = authorizeRequest(config, request.headers.origin, parsed.apiKey)
+    if (!authorization.ok) {
+      return reply.code(authorization.statusCode).send({
         status: 'error',
-        error: 'Invalid api_key'
+        error: authorization.error
       })
     }
     if (parsed.events.length > config.maxEventsPerBatch) {
@@ -142,16 +142,33 @@ export async function createServer({ config, writer }: CreateServerOptions): Pro
   return app
 }
 
-function assertAllowedSource(config: ServiceConfig, origin: string | undefined): void {
-  if (!origin) {
-    if (config.allowServerEventsWithoutOrigin) {
-      return
+function authorizeRequest(config: ServiceConfig, origin: string | undefined, apiKey: string | undefined): { ok: true } | { ok: false; statusCode: 401 | 403; error: string } {
+  if (origin) {
+    if (!isAllowedOrigin(config, origin)) {
+      return {
+        ok: false,
+        statusCode: 403,
+        error: 'Origin is not allowed'
+      }
     }
-    throw new Error('Origin is not allowed')
+    if (apiKey && !config.publicApiKeys.has(apiKey)) {
+      return {
+        ok: false,
+        statusCode: 401,
+        error: 'Invalid api_key'
+      }
+    }
+    return { ok: true }
   }
-  if (!isAllowedOrigin(config, origin)) {
-    throw new Error('Origin is not allowed')
+
+  if (!apiKey || !config.publicApiKeys.has(apiKey)) {
+    return {
+      ok: false,
+      statusCode: 401,
+      error: 'Invalid api_key'
+    }
   }
+  return { ok: true }
 }
 
 function isAllowedOrigin(config: ServiceConfig, origin: string): boolean {

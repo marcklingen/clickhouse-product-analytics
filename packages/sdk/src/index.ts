@@ -39,7 +39,7 @@ type StoredState = {
 
 type NormalizedOptions = {
   apiHost: string
-  apiKey: string
+  apiKey?: string
   batchEndpoint: string
   capturePageview: boolean | 'history_change'
   capturePageleave: boolean | 'if_capture_pageview'
@@ -75,14 +75,14 @@ export class ClickHouseProductAnalytics {
   private listeners: Array<() => void> = []
   private pageleaveCaptured = false
 
-  /** Initialize the client with a publishable API key and browser SDK options. */
-  init(token: string, config?: Omit<InitOptions, 'apiKey' | 'token'>): this
-  /** Initialize the client with a complete options object. */
+  /** Initialize the client with an ingest API key and browser SDK options. */
+  init(apiKey: string, config?: Omit<InitOptions, 'apiKey'>): this
+  /** Initialize the client with a complete options object. Allowed-origin browser requests can omit the API key. */
   init(config: InitOptions): this
-  init(tokenOrConfig: string | InitOptions, maybeConfig: Omit<InitOptions, 'apiKey' | 'token'> = {}): this {
-    const input = typeof tokenOrConfig === 'string'
-      ? { ...maybeConfig, apiKey: tokenOrConfig, token: tokenOrConfig }
-      : tokenOrConfig
+  init(apiKeyOrConfig: string | InitOptions, maybeConfig: Omit<InitOptions, 'apiKey'> = {}): this {
+    const input = typeof apiKeyOrConfig === 'string'
+      ? { ...maybeConfig, apiKey: apiKeyOrConfig }
+      : apiKeyOrConfig
 
     this.options = normalizeOptions(input)
     this.storage = createStorage(this.options.persistence, this.options.disablePersistence)
@@ -416,14 +416,21 @@ export class ClickHouseProductAnalytics {
     const visibility = (): void => {
       if (document.visibilityState === 'hidden') {
         unload()
+      } else if (document.visibilityState === 'visible') {
+        this.pageleaveCaptured = false
       }
+    }
+    const restore = (): void => {
+      this.pageleaveCaptured = false
     }
 
     window.addEventListener('pagehide', unload)
     window.addEventListener('beforeunload', unload)
+    window.addEventListener('pageshow', restore)
     document.addEventListener('visibilitychange', visibility)
     this.listeners.push(() => window.removeEventListener('pagehide', unload))
     this.listeners.push(() => window.removeEventListener('beforeunload', unload))
+    this.listeners.push(() => window.removeEventListener('pageshow', restore))
     this.listeners.push(() => document.removeEventListener('visibilitychange', visibility))
   }
 
@@ -501,11 +508,8 @@ const defaultClient = createClient()
 export default defaultClient
 
 function normalizeOptions(input: InitOptions): NormalizedOptions {
-  const apiKey = input.apiKey ?? input.token
+  const apiKey = input.apiKey
   const apiHost = input.apiHost ?? input.api_host
-  if (!apiKey) {
-    throw new Error('apiKey/token is required')
-  }
   if (!apiHost) {
     throw new Error('apiHost/api_host is required')
   }

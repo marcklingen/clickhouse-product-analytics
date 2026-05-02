@@ -25,7 +25,7 @@ helm upgrade --install cpa ./deploy/helm/clickhouse-product-analytics \
   --create-namespace \
   --set image.repository=ghcr.io/<owner>/<repo>/ingest-service \
   --set image.tag=sha-<commit> \
-  --set ingest.publicApiKeys="<publishable-key>" \
+  --set ingest.publicApiKeys="<backend-key-old>,<backend-key-new>" \
   --set ingest.allowedOrigins="https://app.example.com" \
   --set clickhouse.url="https://<clickhouse-cloud-host>:8443" \
   --set clickhouse.database="product_analytics" \
@@ -37,7 +37,7 @@ Use an existing Kubernetes secret for ClickHouse credentials when possible:
 
 ```bash
 helm upgrade --install cpa ./deploy/helm/clickhouse-product-analytics \
-  --set ingest.publicApiKeys="<publishable-key>" \
+  --set ingest.publicApiKeys="<backend-key-old>,<backend-key-new>" \
   --set clickhouse.url="https://<clickhouse-cloud-host>:8443" \
   --set clickhouse.existingSecret=clickhouse-credentials
 ```
@@ -50,12 +50,12 @@ Use `image.tag=latest` only for quick trials. Production rollouts should use the
 helm upgrade --install cpa ./deploy/helm/clickhouse-product-analytics \
   --set image.repository=ghcr.io/<owner>/<repo>/ingest-service \
   --set image.digest=sha256:<digest> \
-  --set ingest.publicApiKeys="<publishable-key>" \
+  --set ingest.publicApiKeys="<backend-key-old>,<backend-key-new>" \
   --set clickhouse.url="https://<clickhouse-cloud-host>:8443" \
   --set clickhouse.existingSecret=clickhouse-credentials
 ```
 
-`clickhouse.url` is required. Rendering fails early when it is missing so an invalid deployment is not applied.
+`clickhouse.url` is required. Rendering fails early when it is missing so an invalid deployment is not applied. Set `ingest.publicApiKeys` to a comma-separated list when backend or no-origin ingest is enabled; browser-only deployments that rely on `ingest.allowedOrigins` can omit API keys.
 
 ## Autoscaling Defaults
 

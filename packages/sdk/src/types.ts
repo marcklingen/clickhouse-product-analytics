@@ -27,7 +27,8 @@ export type QueuedEvent = {
 
 /** Batch payload sent to the public ingest API. */
 export type TransportPayload = {
-  api_key: string
+  /** Optional ingest API key. Allowed-origin browser payloads can omit it. */
+  api_key?: string
   batch: QueuedEvent[]
 }
 
@@ -72,8 +73,6 @@ export type RequestQueueConfig = {
 export type AnalyticsClientConfig = {
   /** Ingest service base URL, for example `https://analytics.example.com`. */
   api_host?: string
-  /** Publishable API key. Alias of `apiKey`. */
-  token?: string
   /** Enable or configure privacy-aware autocapture. */
   autocapture?: boolean | AutocaptureConfig
   /** Capture an initial pageview, no pageviews, or pageviews on history changes. */
@@ -106,7 +105,7 @@ export type AnalyticsClientConfig = {
 export type InitOptions = AnalyticsClientConfig & {
   /** CamelCase alias of `api_host`. */
   apiHost?: string
-  /** CamelCase alias of `token`. */
+  /** Optional client-supplied API key. Required for no-origin backend calls; optional for allowed-origin browser calls. */
   apiKey?: string
   /** Path appended to `apiHost` for batch ingestion. Defaults to `/batch/`. */
   batchEndpoint?: string

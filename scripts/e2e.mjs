@@ -44,7 +44,7 @@ async function runBrowserSdkFlow() {
   const userId = `user_${runId}`
 
   try {
-    client.init(apiKey, {
+    client.init({
       api_host: serviceUrl,
       capture_pageview: 'history_change',
       autocapture: {
@@ -120,7 +120,7 @@ async function withBrowserClient(url, options, callback) {
   const dom = installDom(url)
   const client = createClient()
   try {
-    client.init(apiKey, {
+    client.init({
       api_host: serviceUrl,
       persistence: 'memory',
       request_queue_config: {
@@ -240,7 +240,6 @@ async function runReactFlow() {
       React.createElement(
         AnalyticsProvider,
         {
-          apiKey,
           options: {
             api_host: serviceUrl,
             capture_pageview: false,
@@ -296,7 +295,6 @@ async function runDirectApiFlow() {
   })
 
   await postJson(`${serviceUrl}/i/v0/e/`, {
-    api_key: apiKey,
     event: 'allowed_origin_event',
     distinct_id: directDistinctId,
     properties: {
@@ -402,6 +400,14 @@ async function assertRejectedRequests() {
     api_key: 'invalid_key',
     event: 'invalid_key_event',
     distinct_id: `invalid_${runId}`,
+    properties: {
+      run_id: runId
+    }
+  }, 401)
+
+  await expectStatus(`${serviceUrl}/capture/`, {
+    event: 'missing_key_no_origin_event',
+    distinct_id: `missing_key_${runId}`,
     properties: {
       run_id: runId
     }
@@ -867,6 +873,20 @@ function installDom(url) {
     pretendToBeVisual: true
   })
   const previous = new Map()
+  const nativeFetch = globalThis.fetch.bind(globalThis)
+  const browserFetch = (resource, init = {}) => {
+    const requestUrl = typeof resource === 'string' || resource instanceof URL
+      ? String(resource)
+      : resource.url
+    const headers = new Headers(init.headers ?? (typeof resource === 'object' && 'headers' in resource ? resource.headers : undefined))
+    if (requestUrl.startsWith(serviceUrl) && !headers.has('origin')) {
+      headers.set('origin', dom.window.location.origin)
+    }
+    return nativeFetch(resource, {
+      ...init,
+      headers
+    })
+  }
   const assignments = {
     window: dom.window,
     document: dom.window.document,
@@ -879,6 +899,7 @@ function installDom(url) {
     Event: dom.window.Event,
     MouseEvent: dom.window.MouseEvent,
     Blob: dom.window.Blob,
+    fetch: browserFetch,
     IntersectionObserver: undefined
   }
 

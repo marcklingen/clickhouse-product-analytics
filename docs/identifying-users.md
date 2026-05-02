@@ -13,7 +13,7 @@ For exact SDK signatures, see the [generated SDK reference](./reference/sdk/sdk/
 
 Every event has a `distinct_id`. In the browser, the SDK creates one automatically and stores it using the configured persistence layer. Backend events must provide a `distinct_id` directly.
 
-The ingest service resolves each `distinct_id` to a `person_id`:
+The ingest service resolves each `distinct_id` to a `person_id` globally within the deployment:
 
 - If the distinct ID already exists in `person_distinct_ids`, the existing `person_id` is used.
 - If it does not exist, a deterministic `person_id` is derived from the distinct ID.

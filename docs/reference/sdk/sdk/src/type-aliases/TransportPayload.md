@@ -14,11 +14,13 @@ Batch payload sent to the public ingest API.
 
 ## Properties
 
-### api\_key
+### api\_key?
 
-> **api\_key**: `string`
+> `optional` **api\_key?**: `string`
 
-Defined in: [sdk/src/types.ts:30](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L30)
+Defined in: [sdk/src/types.ts:31](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L31)
+
+Optional ingest API key. Allowed-origin browser payloads can omit it.
 
 ***
 
@@ -26,4 +28,4 @@ Defined in: [sdk/src/types.ts:30](https://github.com/marcklingen/clickhouse-prod
 
 > **batch**: [`QueuedEvent`](QueuedEvent.md)[]
 
-Defined in: [sdk/src/types.ts:31](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L31)
+Defined in: [sdk/src/types.ts:32](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L32)

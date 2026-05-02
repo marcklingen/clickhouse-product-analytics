@@ -28,7 +28,6 @@ ingest:
   publicApiKeys: ""
   allowedOrigins: ""
   allowedHosts: ""
-  allowServerEventsWithoutOrigin: "true"
   maxBatchBytes: "20971520"
   maxEventsPerBatch: "10000"
   migrateOnStart: "false"

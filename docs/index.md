@@ -44,14 +44,14 @@ Local endpoints:
 
 - Ingest service: `http://127.0.0.1:8080`
 - ClickHouse HTTP API: `http://127.0.0.1:8123`
-- Development API key: `local_dev_key`
+- Development backend API key: `local_dev_key`
 
 ## Minimal Browser Example
 
 ```ts
 import analytics from '@clickhouse-product-analytics/sdk'
 
-analytics.init('local_dev_key', {
+analytics.init({
   api_host: 'http://127.0.0.1:8080',
   capture_pageview: 'history_change',
   autocapture: {
@@ -88,7 +88,7 @@ This repository contains:
 
 - `packages/sdk`: browser event capture, sessions, batching, pageview/pageleave, autocapture, persistence, opt-in/out, and identity helpers.
 - `packages/react`: provider, hook, and viewport tracking component for React and Next.js applications.
-- `packages/ingest-service`: Fastify ingest API, CORS/origin checks, API-key validation, decompression, normalization, identity side effects, and ClickHouse writes.
+- `packages/ingest-service`: Fastify ingest API, origin and API-key validation, decompression, normalization, identity side effects, and ClickHouse writes.
 - `packages/ingest-service/migrations`: ClickHouse schema for `events`, `persons`, `person_distinct_ids`, and `sessions`.
 - `examples`: a Next.js browser smoke app and a direct backend capture script.
 - `docs`: this GitHub Pages documentation site, maintained as Markdown.

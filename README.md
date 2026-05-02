@@ -11,7 +11,7 @@ The repo scope is intentionally narrow: own the first mile of product analytics 
 
 - **Browser SDK** (`packages/sdk`): client-side initialization, pageviews, custom events, identify/reset, sessions, batching, retry, unload flushing, privacy-aware optional autocapture, and opt-in/out helpers.
 - **React bindings** (`packages/react`): provider, hook, and viewport tracking component for React and Next.js apps.
-- **HTTP ingest service** (`packages/ingest-service`): public API-key validation, CORS/origin allowlisting, compressed request handling, event normalization, person linking, and ClickHouse writes.
+- **HTTP ingest service** (`packages/ingest-service`): origin and API-key validation, CORS/origin allowlisting, compressed request handling, event normalization, person linking, and ClickHouse writes.
 - **ClickHouse migrations** (`packages/ingest-service/migrations`): `events`, `persons`, and `person_distinct_ids` tables plus the `sessions` view.
 - **Local stack** (`docker-compose.yml`): ClickHouse plus ingest service with migration-on-start for development.
 - **Examples** (`examples`): a Next.js browser smoke app and direct backend API capture script.
@@ -32,7 +32,7 @@ The local stack exposes:
 
 - Ingest service: `http://127.0.0.1:8080`
 - ClickHouse HTTP API: `http://127.0.0.1:8123`
-- Development API key: `local_dev_key`
+- Development backend API key: `local_dev_key`
 
 The Compose stack pins `clickhouse/clickhouse-server:26.3.9.8-alpine` so local development and E2E verification use the current 26.3 stable ClickHouse release without depending on a floating image tag. If you need registry-level reproducibility, pin the same image by digest in your own deployment.
 
@@ -63,7 +63,7 @@ Key pages:
 ```ts
 import analytics from '@clickhouse-product-analytics/sdk'
 
-analytics.init('local_dev_key', {
+analytics.init({
   api_host: 'http://127.0.0.1:8080',
   capture_pageview: 'history_change',
   autocapture: {
@@ -101,7 +101,6 @@ import { AnalyticsProvider, useAnalytics } from '@clickhouse-product-analytics/r
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AnalyticsProvider
-      apiKey="local_dev_key"
       options={{
         api_host: 'http://127.0.0.1:8080',
         capture_pageview: 'history_change',
@@ -172,10 +171,9 @@ Environment variables:
 
 - `PORT`: HTTP port, default `8080`.
 - `LOG_LEVEL`: service log level, default `warn`.
-- `PUBLIC_API_KEYS`: comma-separated publishable keys accepted by the service. These are credentials for one analytics dataset, not tenant or project boundaries.
+- `PUBLIC_API_KEYS`: optional comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest. Browser requests from `ALLOWED_ORIGINS` can omit `api_key`; if they provide one, it must match this list. Keep old and new keys in the list during rotation.
 - `ALLOWED_ORIGINS`: comma-separated browser origins allowed by CORS and source validation.
 - `ALLOWED_HOSTS`: optional explicit host allowlist for accepting requests across schemes on those hosts.
-- `ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN`: allow backend events without an `Origin` header, default `true`.
 - `MAX_BATCH_BYTES`: request body limit, default 20 MB.
 - `MAX_EVENTS_PER_BATCH`: event count limit, default 10,000.
 - `CLICKHOUSE_URL`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`: ClickHouse connection.

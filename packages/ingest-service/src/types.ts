@@ -2,7 +2,6 @@ export type JsonObject = Record<string, unknown>
 
 export type IncomingEvent = {
   api_key?: string
-  token?: string
   event?: string
   distinct_id?: string
   properties?: JsonObject
@@ -28,7 +27,6 @@ export type NormalizedEvent = {
 }
 
 export type PersonUpdate = {
-  apiKey: string
   distinctId: string
   personId: string
   properties: JsonObject
@@ -37,7 +35,6 @@ export type PersonUpdate = {
 }
 
 export type AliasUpdate = {
-  apiKey: string
   distinctId: string
   personId: string
 }

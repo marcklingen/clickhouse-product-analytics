@@ -28,7 +28,7 @@ type WithChildren<T> = T & {
   children?: ReactNode
 }
 
-/** Props for `AnalyticsProvider`. Pass either a managed `apiKey`/`options` pair or an explicit client. */
+/** Props for `AnalyticsProvider`. Pass either managed options with an optional API key or an explicit client. */
 export type AnalyticsProviderProps = WithChildren<
   | {
       client: AnalyticsClient
@@ -36,14 +36,14 @@ export type AnalyticsProviderProps = WithChildren<
       options?: never
     }
   | {
-      apiKey: string
-      options: Omit<InitOptions, 'apiKey' | 'token'>
+      apiKey?: string
+      options: Omit<InitOptions, 'apiKey'>
       client?: never
     }
 >
 
 type PreviousInitialization = {
-  apiKey: string
+  apiKey?: string
   optionsKey: string
 }
 
@@ -92,7 +92,11 @@ export function AnalyticsProvider({ children, client, apiKey, options }: Analyti
     }
 
     const ownedClient = createClient()
-    ownedClient.init(apiKey, options)
+    if (apiKey) {
+      ownedClient.init(apiKey, options)
+    } else {
+      ownedClient.init(options)
+    }
     ownedClientRef.current = ownedClient
     previousInitializationRef.current = { apiKey, optionsKey }
     setActiveClient(ownedClient)

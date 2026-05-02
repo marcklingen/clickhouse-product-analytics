@@ -9,7 +9,6 @@ data:
   LOG_LEVEL: {{ .Values.ingest.logLevel | quote }}
   ALLOWED_ORIGINS: {{ .Values.ingest.allowedOrigins | quote }}
   ALLOWED_HOSTS: {{ .Values.ingest.allowedHosts | quote }}
-  ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN: {{ .Values.ingest.allowServerEventsWithoutOrigin | quote }}
   MAX_BATCH_BYTES: {{ .Values.ingest.maxBatchBytes | quote }}
   MAX_EVENTS_PER_BATCH: {{ .Values.ingest.maxEventsPerBatch | quote }}
   CLICKHOUSE_URL: {{ required "clickhouse.url is required" .Values.clickhouse.url | quote }}

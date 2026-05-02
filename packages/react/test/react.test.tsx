@@ -28,7 +28,7 @@ describe('React bindings', () => {
     }
 
     const html = renderToString(
-      <AnalyticsProvider apiKey="local_dev_key" options={{ api_host: 'http://127.0.0.1:8080' }}>
+      <AnalyticsProvider options={{ api_host: 'http://127.0.0.1:8080' }}>
         <Probe />
       </AnalyticsProvider>
     )
@@ -61,7 +61,6 @@ describe('React bindings', () => {
     const view = renderClient(
       <StrictMode>
         <AnalyticsProvider
-          apiKey="local_dev_key"
           options={{
             api_host: 'http://127.0.0.1:8080',
             capture_pageview: false,

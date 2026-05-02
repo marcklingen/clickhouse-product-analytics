@@ -1,6 +1,6 @@
 import { gunzipSync } from 'node:zlib'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ClickHouseProductAnalytics, type TransportPayload } from '../src/index.js'
+import { ClickHouseProductAnalytics, type Transport, type TransportPayload } from '../src/index.js'
 
 describe('ClickHouseProductAnalytics', () => {
   afterEach(() => {
@@ -42,6 +42,28 @@ describe('ClickHouseProductAnalytics', () => {
         '$lib_version': '0.1.0'
       }
     })
+  })
+
+  it('can send browser events without an api key', async () => {
+    const calls: TransportPayload[] = []
+    const client = new ClickHouseProductAnalytics()
+
+    client.init({
+      apiHost: 'http://localhost:8080',
+      capturePageview: false,
+      flushAt: 10,
+      flushIntervalMs: 0,
+      persistence: 'memory',
+      transport: async (_url, payload) => {
+        calls.push(payload)
+      }
+    })
+
+    client.capture('anonymous_browser_event')
+    await client.flush()
+
+    expect(calls[0].api_key).toBeUndefined()
+    expect(calls[0].batch[0].event).toBe('anonymous_browser_event')
   })
 
   it('connects anonymous and known users with identify', async () => {
@@ -139,6 +161,48 @@ describe('ClickHouseProductAnalytics', () => {
     await vi.waitFor(() => {
       expect(delivered).toEqual(['retry_three', 'retry_four'])
     })
+    client.shutdown()
+  })
+
+  it('includes in-flight batches in unload delivery', async () => {
+    const lifecycle = stubBrowserLifecycle()
+    const calls: Array<{ payload: TransportPayload; options: Parameters<Transport>[2] }> = []
+    let releaseFirstTransport: (() => void) | undefined
+    const client = new ClickHouseProductAnalytics()
+
+    client.init({
+      apiHost: 'http://localhost:8080',
+      apiKey: 'test_key',
+      capturePageview: false,
+      flushAt: 10,
+      flushIntervalMs: 0,
+      persistence: 'memory',
+      transport: async (_url, payload, options) => {
+        calls.push({ payload, options })
+        if (calls.length === 1) {
+          await new Promise<void>((resolve) => {
+            releaseFirstTransport = resolve
+          })
+        }
+      }
+    })
+
+    client.capture('pending_event')
+    const flushPromise = client.flush()
+
+    await vi.waitFor(() => {
+      expect(calls).toHaveLength(1)
+    })
+    lifecycle.pagehide()
+
+    await vi.waitFor(() => {
+      expect(calls).toHaveLength(2)
+    })
+    expect(calls[1].options.transport).toBe('sendBeacon')
+    expect(calls[1].payload.batch.map((event) => event.event)).toEqual(['pending_event'])
+
+    releaseFirstTransport?.()
+    await flushPromise
     client.shutdown()
   })
 
@@ -366,6 +430,36 @@ describe('ClickHouseProductAnalytics', () => {
     client.shutdown()
   })
 
+  it('captures pageleave again after visibility is restored', async () => {
+    const calls: TransportPayload[] = []
+    const lifecycle = stubBrowserLifecycle()
+    const client = new ClickHouseProductAnalytics()
+
+    client.init({
+      apiHost: 'http://localhost:8080',
+      apiKey: 'test_key',
+      capturePageview: false,
+      capturePageleave: true,
+      persistence: 'memory',
+      transport: async (_url, payload) => {
+        calls.push(payload)
+      }
+    })
+
+    lifecycle.visibilitychange('hidden')
+    await vi.waitFor(() => {
+      expect(calls).toHaveLength(1)
+    })
+    lifecycle.visibilitychange('visible')
+    lifecycle.visibilitychange('hidden')
+
+    await vi.waitFor(() => {
+      expect(calls).toHaveLength(2)
+    })
+    expect(calls.map((call) => call.batch[0].event)).toEqual(['$pageleave', '$pageleave'])
+    client.shutdown()
+  })
+
   it('falls back to fetch when sendBeacon rejects an unload payload', async () => {
     const lifecycle = stubBrowserLifecycle()
     const sendBeacon = vi.fn(() => false)
@@ -475,13 +569,25 @@ describe('ClickHouseProductAnalytics', () => {
   })
 })
 
-function stubBrowserLifecycle(): { pagehide: () => void; beforeunload: () => void } {
+function stubBrowserLifecycle(): {
+  pagehide: () => void
+  beforeunload: () => void
+  pageshow: () => void
+  visibilitychange: (visibilityState: 'hidden' | 'visible') => void
+} {
   const listeners = new Map<string, Array<() => void>>()
   const addEventListener = (event: string, listener: () => void): void => {
     listeners.set(event, [...(listeners.get(event) ?? []), listener])
   }
   const removeEventListener = (event: string, listener: () => void): void => {
     listeners.set(event, (listeners.get(event) ?? []).filter((item) => item !== listener))
+  }
+  const documentStub = {
+    addEventListener,
+    removeEventListener,
+    referrer: '',
+    title: 'Test page',
+    visibilityState: 'visible'
   }
 
   vi.stubGlobal('window', {
@@ -496,13 +602,7 @@ function stubBrowserLifecycle(): { pagehide: () => void; beforeunload: () => voi
       pathname: '/test'
     }
   })
-  vi.stubGlobal('document', {
-    addEventListener,
-    removeEventListener,
-    referrer: '',
-    title: 'Test page',
-    visibilityState: 'visible'
-  })
+  vi.stubGlobal('document', documentStub)
 
   return {
     pagehide: () => {
@@ -512,6 +612,17 @@ function stubBrowserLifecycle(): { pagehide: () => void; beforeunload: () => voi
     },
     beforeunload: () => {
       for (const listener of listeners.get('beforeunload') ?? []) {
+        listener()
+      }
+    },
+    pageshow: () => {
+      for (const listener of listeners.get('pageshow') ?? []) {
+        listener()
+      }
+    },
+    visibilitychange: (visibilityState: 'hidden' | 'visible') => {
+      documentStub.visibilityState = visibilityState
+      for (const listener of listeners.get('visibilitychange') ?? []) {
         listener()
       }
     }

@@ -45,7 +45,7 @@ Recommended production model:
 
 - one or more ingest service containers,
 - shared ClickHouse database on a supported stable or LTS ClickHouse release,
-- stable `PUBLIC_API_KEYS`,
+- stable `PUBLIC_API_KEYS` when backend or no-origin requests are used,
 - explicit `ALLOWED_ORIGINS`,
 - `LOG_LEVEL=warn` or stricter for high-volume traffic,
 - migrations run manually before deploy,
@@ -82,9 +82,8 @@ CLICKHOUSE_DATABASE=product_analytics
 Then configure the ingest service the same way you would for a self-hosted production deployment:
 
 ```bash
-PUBLIC_API_KEYS=<publishable-ingest-key>
+PUBLIC_API_KEYS=<backend-ingest-key-old>,<backend-ingest-key-new>
 ALLOWED_ORIGINS=https://app.example.com
-ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN=true
 MIGRATE_ON_START=false
 ```
 
@@ -106,10 +105,9 @@ The browser SDK and React package do not connect to ClickHouse Cloud directly. T
 | Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
 | `PORT` | no | `8080` | HTTP listen port. |
-| `PUBLIC_API_KEYS` | yes | none | Comma-separated publishable API keys accepted by the service. These are dataset credentials, not tenant IDs. |
+| `PUBLIC_API_KEYS` | for no-origin backend ingest | empty | Comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest. Browser requests from allowed origins can omit `api_key`; provided keys are still validated. Include old and new keys during rotation. |
 | `ALLOWED_ORIGINS` | recommended | empty | Comma-separated browser origins accepted by CORS and source validation. |
 | `ALLOWED_HOSTS` | no | empty | Optional explicit host allowlist. Use only when host-level matching across schemes is intentional. |
-| `ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN` | no | `true` | Allows backend requests without an `Origin` header. |
 | `MAX_BATCH_BYTES` | no | `20971520` | Maximum request body size after decompression. |
 | `MAX_EVENTS_PER_BATCH` | no | `10000` | Maximum number of events in a batch request. |
 | `CLICKHOUSE_URL` | no | `http://localhost:8123` | ClickHouse HTTP endpoint. Use `https://<service-host>:8443` for ClickHouse Cloud. |
@@ -157,14 +155,14 @@ Browser traffic must come from an allowed origin. Configure `ALLOWED_ORIGINS` wi
 ALLOWED_ORIGINS=https://app.example.com,https://www.example.com
 ```
 
-Backend requests often omit `Origin`. Keep `ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN=true` when server-side services need to send events directly.
+Backend requests often omit `Origin`. They are accepted when they send one of the configured `PUBLIC_API_KEYS`. To disable no-origin backend ingest, leave `PUBLIC_API_KEYS` empty.
 
 ## Scaling
 
 The ingest service has no local runtime state and can be scaled horizontally for event capture. All instances must share:
 
 - the same ClickHouse database,
-- the same accepted API keys,
+- the same accepted API keys when backend ingest uses them,
 - the same origin policy,
 - the same request limits.
 

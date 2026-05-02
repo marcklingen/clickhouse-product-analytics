@@ -13,9 +13,8 @@ describe('ingest service', () => {
     writer = new MemoryAnalyticsWriter()
     app = await createServer({
       config: loadConfig({
-        PUBLIC_API_KEYS: 'test_key',
-        ALLOWED_ORIGINS: 'http://localhost:3000',
-        ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN: 'false'
+        PUBLIC_API_KEYS: 'test_key,other_key',
+        ALLOWED_ORIGINS: 'http://localhost:3000'
       }),
       writer
     })
@@ -33,7 +32,6 @@ describe('ingest service', () => {
         origin: 'http://localhost:3000'
       },
       payload: {
-        api_key: 'test_key',
         batch: [
           {
             event: '$pageview',
@@ -54,7 +52,7 @@ describe('ingest service', () => {
       dropped: 0
     })
     expect(writer.events[0]).toMatchObject({
-      apiKey: 'test_key',
+      apiKey: '',
       event: '$pageview',
       distinctId: 'anon_1',
       personId: expect.any(String),
@@ -205,6 +203,133 @@ describe('ingest service', () => {
       first_seen_source: 'landing',
       plan: 'pro'
     })
+  })
+
+  it('keeps person identity global across api keys', async () => {
+    const firstKey = await app.inject({
+      method: 'POST',
+      url: '/i/v0/e/',
+      headers: {
+        origin: 'http://localhost:3000'
+      },
+      payload: {
+        api_key: 'test_key',
+        event: '$identify',
+        distinct_id: 'shared_user',
+        properties: {
+          '$set': {
+            project: 'first'
+          }
+        }
+      }
+    })
+    const secondKey = await app.inject({
+      method: 'POST',
+      url: '/i/v0/e/',
+      headers: {
+        origin: 'http://localhost:3000'
+      },
+      payload: {
+        api_key: 'other_key',
+        event: '$identify',
+        distinct_id: 'shared_user',
+        properties: {
+          '$set': {
+            project: 'second'
+          }
+        }
+      }
+    })
+
+    expect(firstKey.statusCode).toBe(200)
+    expect(secondKey.statusCode).toBe(200)
+    expect(writer.events).toHaveLength(2)
+    expect(writer.events[0].personId).toBe(writer.events[1].personId)
+    await expect(writer.resolvePersonId('shared_user')).resolves.toBe(writer.events[0].personId)
+    expect(writer.persons.get('shared_user')?.properties).toEqual({ project: 'second' })
+  })
+
+  it('uses api keys to authenticate no-origin backend requests', async () => {
+    const backendWriter = new MemoryAnalyticsWriter()
+    const backendApp = await createServer({
+      config: loadConfig({
+        PUBLIC_API_KEYS: 'primary_key,secondary_key'
+      }),
+      writer: backendWriter
+    })
+
+    const primary = await backendApp.inject({
+      method: 'POST',
+      url: '/capture/',
+      payload: {
+        api_key: 'primary_key',
+        event: 'backend_primary',
+        distinct_id: 'backend_1'
+      }
+    })
+    const secondary = await backendApp.inject({
+      method: 'POST',
+      url: '/capture/',
+      payload: {
+        api_key: 'secondary_key',
+        event: 'backend_secondary',
+        distinct_id: 'backend_2'
+      }
+    })
+    const missingKey = await backendApp.inject({
+      method: 'POST',
+      url: '/capture/',
+      payload: {
+        event: 'backend_missing_key',
+        distinct_id: 'backend_3'
+      }
+    })
+    const invalidKey = await backendApp.inject({
+      method: 'POST',
+      url: '/capture/',
+      payload: {
+        api_key: 'invalid_key',
+        event: 'backend_invalid_key',
+        distinct_id: 'backend_4'
+      }
+    })
+    const tokenOnly = await backendApp.inject({
+      method: 'POST',
+      url: '/capture/',
+      payload: {
+        token: 'primary_key',
+        event: 'backend_token_only',
+        distinct_id: 'backend_5'
+      }
+    })
+
+    expect(primary.statusCode).toBe(200)
+    expect(secondary.statusCode).toBe(200)
+    expect(missingKey.statusCode).toBe(401)
+    expect(invalidKey.statusCode).toBe(401)
+    expect(tokenOnly.statusCode).toBe(401)
+    expect(backendWriter.events.map((event) => event.event)).toEqual(['backend_primary', 'backend_secondary'])
+    await backendApp.close()
+  })
+
+  it('disables no-origin backend ingest when no api keys are configured', async () => {
+    const backendApp = await createServer({
+      config: loadConfig({}),
+      writer: new MemoryAnalyticsWriter()
+    })
+
+    const response = await backendApp.inject({
+      method: 'POST',
+      url: '/capture/',
+      payload: {
+        api_key: 'unconfigured_key',
+        event: 'backend_disabled',
+        distinct_id: 'backend_1'
+      }
+    })
+
+    expect(response.statusCode).toBe(401)
+    await backendApp.close()
   })
 
   it('rejects unknown api keys and disallowed origins', async () => {
@@ -461,7 +586,6 @@ describe('ingest service', () => {
       config: loadConfig({
         PUBLIC_API_KEYS: 'test_key',
         ALLOWED_ORIGINS: 'http://localhost:3000',
-        ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN: 'false',
         MAX_BATCH_BYTES: '80'
       }),
       writer: new MemoryAnalyticsWriter()

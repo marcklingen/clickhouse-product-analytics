@@ -22,7 +22,6 @@ import {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AnalyticsProvider
-      apiKey="local_dev_key"
       options={{
         api_host: 'https://analytics.example.com',
         capture_pageview: 'history_change'

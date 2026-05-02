@@ -14,7 +14,7 @@ Web app / React app  ->  Browser SDK  ->  HTTP ingest service  ->  ClickHouse
 Backend services     ->  Direct API   ->  HTTP ingest service  ->  ClickHouse
 ```
 
-The ingest service has no settings UI and no runtime project model. Configuration comes from environment variables. API keys are publishable credentials for one analytics dataset, not tenant or project boundaries.
+The ingest service has no settings UI and no runtime project model. Configuration comes from environment variables. Browser traffic is gated by allowed origins. `PUBLIC_API_KEYS` is optional to configure; when configured, keys are required for backend or no-origin requests and optional for allowed-origin browser requests. API keys are not tenant or identity boundaries.
 
 ## Components
 
@@ -61,8 +61,8 @@ ClickHouse is the only required database. The service writes append-only events 
 
 ## Event Flow
 
-1. A browser or backend sends an event with an API key, event name, distinct ID, optional timestamp, and properties.
-2. The service validates the API key and request source.
+1. A browser or backend sends an event with an event name, distinct ID, optional timestamp, optional API key, and properties.
+2. The service validates the request source: browser requests must match the origin allowlist, while no-origin backend requests need a configured API key.
 3. The payload is decoded. Plain JSON, form-encoded `data`, gzip, deflate, and Brotli request bodies are supported.
 4. Invalid events inside a batch are dropped when the event name or distinct ID is missing. The response remains successful and includes a `dropped` count.
 5. Each accepted event is normalized with promoted fields such as `event`, `distinct_id`, `person_id`, `session_id`, `window_id`, `current_url`, `host`, timestamp, IP, and user agent.

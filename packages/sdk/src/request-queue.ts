@@ -7,7 +7,7 @@ const MAX_RETRIES = 10
 const MAX_RETRY_DELAY_MS = 30 * 60 * 1000
 
 export type RequestQueueOptions = {
-  apiKey: string
+  apiKey?: string
   endpointUrl: string
   flushAt: number
   flushIntervalMs?: number
@@ -27,6 +27,8 @@ type RetryItem = {
 export class RequestQueue {
   private queue: QueuedEvent[] = []
   private retries: RetryItem[] = []
+  private inFlight: QueuedEvent[][] = []
+  private unloadSentInFlight = new WeakSet<QueuedEvent[]>()
   private flushTimer?: ReturnType<typeof setTimeout>
   private retryTimer?: ReturnType<typeof setTimeout>
   private flushPromise?: Promise<void>
@@ -72,7 +74,13 @@ export class RequestQueue {
       return
     }
     const batch = this.queue.splice(0, this.options.requestBatching ? this.queue.length : 1)
-    await this.sendBatch(batch, transport)
+    this.inFlight.push(batch)
+    try {
+      await this.sendBatch(batch, transport)
+    } finally {
+      this.inFlight = this.inFlight.filter((item) => item !== batch)
+      this.unloadSentInFlight.delete(batch)
+    }
   }
 
   unload(): void {
@@ -83,10 +91,14 @@ export class RequestQueue {
     }
     const batches = [
       this.queue.splice(0, this.queue.length),
-      ...this.retries.splice(0, this.retries.length).map((item) => item.batch)
+      ...this.retries.splice(0, this.retries.length).map((item) => item.batch),
+      ...this.inFlight.filter((batch) => !this.unloadSentInFlight.has(batch))
     ].filter((batch) => batch.length > 0)
 
     for (const batch of batches) {
+      if (this.inFlight.includes(batch)) {
+        this.unloadSentInFlight.add(batch)
+      }
       void this.options.transport(this.options.endpointUrl, this.payload(batch), {
         timeoutMs: this.options.requestTimeoutMs,
         transport: 'sendBeacon',
@@ -202,10 +214,7 @@ export class RequestQueue {
   }
 
   private payload(batch: QueuedEvent[]): TransportPayload {
-    return {
-      api_key: this.options.apiKey,
-      batch
-    }
+    return this.options.apiKey ? { api_key: this.options.apiKey, batch } : { batch }
   }
 
   private handleOnline = (): void => {

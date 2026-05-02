@@ -30,7 +30,6 @@ import { AnalyticsProvider, useAnalytics } from '@clickhouse-product-analytics/r
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AnalyticsProvider
-      apiKey={process.env.NEXT_PUBLIC_CPA_API_KEY!}
       options={{
         api_host: process.env.NEXT_PUBLIC_CPA_HOST!,
         capture_pageview: 'history_change',
@@ -58,7 +57,7 @@ export function SignupButton() {
 ```ts
 import analytics from '@clickhouse-product-analytics/sdk'
 
-analytics.init('public_key', {
+analytics.init({
   api_host: 'https://analytics.example.com',
   capture_pageview: 'history_change',
   property_denylist: ['token', 'secret', 'password']
@@ -68,6 +67,8 @@ analytics.capture('invite_sent', { role: 'admin' })
 analytics.identify('user_123', { plan: 'pro' }, { first_seen_source: 'signup' })
 ```
 
+Allowed browser origins can omit the API key. Use `apiKey` or `analytics.init('configured_key', options)` only when intentionally sending a configured key for extra browser validation.
+
 ## Backend Event Pattern
 
 ```ts
@@ -75,7 +76,7 @@ await fetch('https://analytics.example.com/i/v0/e/', {
   method: 'POST',
   headers: { 'content-type': 'application/json' },
   body: JSON.stringify({
-    api_key: process.env.ANALYTICS_PUBLIC_KEY,
+    api_key: process.env.ANALYTICS_API_KEY,
     event: 'backend_job_completed',
     distinct_id: userId,
     properties: {
@@ -87,7 +88,7 @@ await fetch('https://analytics.example.com/i/v0/e/', {
 })
 ```
 
-Backend requests without an `Origin` header require `ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN=true` on the ingest service. If that is disabled, send backend events through an allowed origin or a trusted internal route that adds one.
+Backend requests without an `Origin` header require a valid configured `api_key`. `PUBLIC_API_KEYS` accepts a comma-separated list for rotation. Leave `PUBLIC_API_KEYS` empty to disable no-origin backend ingest. Browser requests from `ALLOWED_ORIGINS` may omit keys, but any provided `api_key` must match `PUBLIC_API_KEYS`. API keys are ingest credentials only; they are not tenant, project, or identity boundaries.
 
 ## Review Checklist
 
