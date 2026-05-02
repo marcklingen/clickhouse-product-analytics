@@ -717,7 +717,7 @@ async function assertDocsDeploymentWiring() {
     readFile('content/docs/start/react.mdx', 'utf8'),
     readFile('content/docs/operate/clickhouse-schema.mdx', 'utf8'),
     readFile('content/docs/project/sdk-stability.mdx', 'utf8'),
-    readFile('content/docs/operate/verification.mdx', 'utf8'),
+    readFile('content/docs/project/verification.mdx', 'utf8'),
     readFile('content/docs/reference/api.mdx', 'utf8'),
     readFile('content/docs/reference/openapi.mdx', 'utf8'),
     readFile('content/docs/reference/sdk.mdx', 'utf8'),
@@ -761,7 +761,7 @@ async function assertDocsDeploymentWiring() {
     '/operate/deployment',
     '/operate/railway',
     '/operate/helm',
-    '/operate/verification',
+    '/project/verification',
     '/reference/api',
     '/reference/openapi',
     '/reference/sdk',
@@ -818,8 +818,8 @@ async function assertDocsDeploymentWiring() {
   assert(pagesWorkflow.includes('NEXT_PUBLIC_DOCS_BASE_PATH: ${{ env.REPO_BASE_PATH }}') && pagesWorkflow.includes('NEXT_PUBLIC_DOCS_BASE_PATH: ${{ env.REPO_BASE_PATH }}/${{ env.PREVIEW_PATH }}'), 'Expected production and preview builds to use distinct base paths')
   assert(pagesWorkflow.includes('actions/deploy-pages@v4'), 'Expected Pages workflow to deploy to GitHub Pages')
   assert(pagesWorkflow.includes('compareCommitsWithBasehead') && pagesWorkflow.includes('pr-preview/pr-${{ github.event.pull_request.number }}') && pagesWorkflow.includes('clickhouse-product-analytics-docs-preview'), 'Expected Pages workflow to deploy and comment on PR docs previews')
-  assert(ciWorkflow.includes('npm run verify:e2e') && ciWorkflow.includes('helm lint') && ciWorkflow.includes('helm template') && ciWorkflow.includes('git diff --exit-code content/docs/reference/sdk-generated'), 'Expected CI workflow to run E2E, Helm, and generated docs checks')
-  assert(ciWorkflow.includes('npm run docs:typecheck') && ciWorkflow.includes('npm run docs:build') && ciWorkflow.includes('npm run docs:validate'), 'Expected CI workflow to run docs checks')
+  assert(ciWorkflow.includes('npm run verify:e2e') && ciWorkflow.includes('helm lint') && ciWorkflow.includes('helm template'), 'Expected CI workflow to run E2E and Helm checks')
+  assert(!ciWorkflow.includes('npm run docs:reference') && !ciWorkflow.includes('git diff --exit-code content/docs/reference/sdk-generated') && !ciWorkflow.includes('npm run docs:typecheck') && !ciWorkflow.includes('npm run docs:build') && !ciWorkflow.includes('npm run docs:validate'), 'Expected CI workflow to leave docs checks to E2E and Pages workflows')
   assert(agents.includes('openapi/clickhouse-product-analytics.openapi.yaml') && agents.includes('content/docs/reference/sdk-generated'), 'Expected AGENTS.md to point at migrated API and SDK docs artifacts')
   assert(containerWorkflow.includes('workflow_run') && containerWorkflow.includes('CI') && containerWorkflow.includes("workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'") && containerWorkflow.includes('Verify current main commit') && !containerWorkflow.includes('workflow_dispatch'), 'Expected container workflow to publish only after CI succeeds on the current main push')
   assert(containerWorkflow.includes('ghcr.io/${{ github.repository }}/ingest-service') && containerWorkflow.includes('docker/build-push-action@v6'), 'Expected container workflow to publish the ingest image to GHCR')

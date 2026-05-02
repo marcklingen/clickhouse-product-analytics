@@ -40,21 +40,6 @@ jobs:
       - name: Verify packages
         run: npm run verify
 
-      - name: Regenerate reference docs
-        run: npm run docs:reference
-
-      - name: Check generated reference docs
-        run: git diff --exit-code content/docs/reference/sdk-generated
-
-      - name: Typecheck docs app
-        run: npm run docs:typecheck
-
-      - name: Build docs app
-        run: npm run docs:build
-
-      - name: Validate docs links
-        run: npm run docs:validate
-
       - name: Setup Helm
         uses: azure/setup-helm@v4
 
