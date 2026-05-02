@@ -1,0 +1,54 @@
+---
+title: "Type Alias: AnalyticsCaptureOnViewedProps"
+description: Generated TypeDoc reference.
+---
+
+[**SDK and React Reference**](/reference/sdk-generated/)
+
+***
+
+[SDK and React Reference](/reference/sdk-generated/) / [react/src](/reference/sdk-generated/react/src/) / AnalyticsCaptureOnViewedProps
+
+> **AnalyticsCaptureOnViewedProps** = `HTMLAttributes`\<`HTMLDivElement`\> & `object`
+
+Defined in: [react/src/index.tsx:127](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/react/src/index.tsx#L127)
+
+Props for `AnalyticsCaptureOnViewed`, a viewport-impression helper.
+
+## Type Declaration
+
+### eventName?
+
+> `optional` **eventName?**: `string`
+
+Event name to capture when viewed. Defaults to `$element_viewed`.
+
+### name?
+
+> `optional` **name?**: `string`
+
+Stable name for the viewed element. Sent as `element_name`.
+
+### observerOptions?
+
+> `optional` **observerOptions?**: `IntersectionObserverInit`
+
+IntersectionObserver options used to decide when the element is viewed.
+
+### properties?
+
+> `optional` **properties?**: `Record`\<`string`, `unknown`\>
+
+Additional event properties attached to each impression event.
+
+### trackAllChildren?
+
+> `optional` **trackAllChildren?**: `boolean`
+
+Track each child separately instead of the wrapper as one impression.
+
+### trackingKey?
+
+> `optional` **trackingKey?**: `string`
+
+Explicit key used to reset one-shot tracking when props change.

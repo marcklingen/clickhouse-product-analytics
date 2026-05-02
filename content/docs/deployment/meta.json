@@ -1,0 +1,9 @@
+{
+  "title": "Deployment",
+  "defaultOpen": true,
+  "pages": [
+    "docker-compose",
+    "helm",
+    "railway"
+  ]
+}

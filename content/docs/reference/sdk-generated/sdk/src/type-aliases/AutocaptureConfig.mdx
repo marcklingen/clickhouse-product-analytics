@@ -1,0 +1,76 @@
+---
+title: "Type Alias: AutocaptureConfig"
+description: Generated TypeDoc reference.
+---
+
+[**SDK and React Reference**](/reference/sdk-generated/)
+
+***
+
+[SDK and React Reference](/reference/sdk-generated/) / [sdk/src](/reference/sdk-generated/sdk/src/) / AutocaptureConfig
+
+> **AutocaptureConfig** = `object`
+
+Defined in: [sdk/src/types.ts:52](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L52)
+
+Privacy-oriented autocapture settings. Autocapture is disabled unless enabled explicitly.
+
+## Properties
+
+### captureText?
+
+> `optional` **captureText?**: `boolean`
+
+Defined in: [sdk/src/types.ts:54](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L54)
+
+Include safe text snippets for allowed elements.
+
+***
+
+### cssSelectorAllowlist?
+
+> `optional` **cssSelectorAllowlist?**: `string`[]
+
+Defined in: [sdk/src/types.ts:58](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L58)
+
+CSS selectors allowed for autocapture.
+
+***
+
+### domEventAllowlist?
+
+> `optional` **domEventAllowlist?**: (`"click"` \| `"change"` \| `"submit"`)[]
+
+Defined in: [sdk/src/types.ts:64](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L64)
+
+DOM event names to listen for. Defaults to click/change/submit.
+
+***
+
+### elementAllowlist?
+
+> `optional` **elementAllowlist?**: `string`[]
+
+Defined in: [sdk/src/types.ts:56](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L56)
+
+Element tag names allowed for autocapture, for example `button` or `a`.
+
+***
+
+### urlAllowlist?
+
+> `optional` **urlAllowlist?**: (`string` \| `RegExp`)[]
+
+Defined in: [sdk/src/types.ts:60](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L60)
+
+URL patterns where autocapture is allowed.
+
+***
+
+### urlIgnorelist?
+
+> `optional` **urlIgnorelist?**: (`string` \| `RegExp`)[]
+
+Defined in: [sdk/src/types.ts:62](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L62)
+
+URL patterns where autocapture is blocked.

@@ -1,0 +1,24 @@
+{
+  "entryPoints": [
+    "packages/sdk/src/index.ts",
+    "packages/react/src/index.tsx"
+  ],
+  "out": "content/docs/reference/sdk-generated",
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ],
+  "name": "SDK and React Reference",
+  "readme": "none",
+  "entryPointStrategy": "resolve",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "hideGenerator": true,
+  "githubPages": false,
+  "fileExtension": ".mdx",
+  "entryFileName": "index",
+  "gitRevision": "main",
+  "navigation": {
+    "includeGroups": true,
+    "includeCategories": true
+  }
+}

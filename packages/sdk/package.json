@@ -1,0 +1,48 @@
+{
+  "name": "@clickhouse-product-analytics/sdk",
+  "version": "0.1.0",
+  "description": "Browser SDK for ClickHouse Product Analytics",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcklingen/clickhouse-product-analytics.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/marcklingen/clickhouse-product-analytics#readme",
+  "bugs": {
+    "url": "https://github.com/marcklingen/clickhouse-product-analytics/issues"
+  },
+  "keywords": [
+    "analytics",
+    "browser",
+    "clickhouse",
+    "events",
+    "product-analytics"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "prepack": "npm run build",
+    "test": "vitest run"
+  },
+  "sideEffects": false
+}

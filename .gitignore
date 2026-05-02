@@ -1,1 +1,17 @@
 private-notes/
+
+node_modules/
+dist/
+.next/
+.source/
+out/
+coverage/
+.jekyll-cache/
+.sass-cache/
+_site/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+.npm-cache/
+*.tsbuildinfo

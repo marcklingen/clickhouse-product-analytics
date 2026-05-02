@@ -1,0 +1,471 @@
+name: Deploy docs to GitHub Pages
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - converted_to_draft
+      - closed
+  push:
+    branches:
+      - main
+    paths:
+      - apps/docs/**
+      - content/docs/**
+      - openapi/**
+      - typedoc.json
+      - package.json
+      - package-lock.json
+      - .github/workflows/pages.yml
+      - README.md
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  PAGES_BRANCH: gh-pages
+  REPO_BASE_PATH: /${{ github.event.repository.name }}
+
+jobs:
+  detect_pr_docs:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      pr_docs: ${{ steps.detect.outputs.pr_docs }}
+      push_docs: ${{ steps.detect.outputs.push_docs }}
+      same_repo: ${{ steps.detect.outputs.same_repo }}
+      should_preview: ${{ steps.detect.outputs.should_preview }}
+      should_cleanup: ${{ steps.detect.outputs.should_cleanup }}
+      cleanup_reason: ${{ steps.detect.outputs.cleanup_reason }}
+    steps:
+      - name: Detect documentation changes
+        id: detect
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request
+            const docsMatchers = [
+              (path) => path.startsWith('apps/docs/'),
+              (path) => path.startsWith('content/docs/'),
+              (path) => path.startsWith('openapi/'),
+              (path) => path === 'typedoc.json',
+              (path) => path === 'package.json',
+              (path) => path === 'package-lock.json',
+              (path) => path === '.github/workflows/pages.yml',
+              (path) => path === 'README.md'
+            ]
+            const matchesDocs = (files) => files.some((path) => docsMatchers.some((matcher) => matcher(path)))
+            const listPrFiles = async () => {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                per_page: 100
+              })
+              return files.map((file) => file.filename)
+            }
+
+            const prFiles = await listPrFiles()
+            const prDocs = matchesDocs(prFiles)
+            const sameRepo = pr.head.repo?.full_name === context.payload.repository.full_name
+
+            let pushFiles = prFiles
+            if (!sameRepo) {
+              pushFiles = []
+            } else if (context.payload.action === 'synchronize' && context.payload.before && context.payload.after) {
+              try {
+                const comparison = await github.rest.repos.compareCommitsWithBasehead({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  basehead: `${context.payload.before}...${context.payload.after}`
+                })
+                pushFiles = (comparison.data.files ?? []).map((file) => file.filename)
+              } catch (error) {
+                core.warning(`Could not compare latest PR push: ${error.message}`)
+                pushFiles = []
+              }
+            }
+
+            const pushDocs = context.payload.action !== 'closed' && matchesDocs(pushFiles)
+            const shouldPreview = sameRepo && !pr.draft && context.payload.action !== 'closed' && prDocs && pushDocs
+            let cleanupReason = ''
+            if (sameRepo && context.payload.action === 'closed') {
+              cleanupReason = pr.merged ? 'merged' : 'closed'
+            } else if (sameRepo && context.payload.action === 'converted_to_draft') {
+              cleanupReason = 'converted_to_draft'
+            } else if (sameRepo && context.payload.action === 'synchronize' && !prDocs) {
+              cleanupReason = 'no_docs_changes'
+            }
+            const shouldCleanup = cleanupReason !== ''
+
+            core.info(`PR docs files changed: ${prDocs}`)
+            core.info(`Latest PR push changed docs files: ${pushDocs}`)
+            core.info(`Same-repository PR: ${sameRepo}`)
+            core.info(`Should deploy preview: ${shouldPreview}`)
+            core.info(`Should clean up preview: ${shouldCleanup}`)
+
+            core.setOutput('pr_docs', String(prDocs))
+            core.setOutput('push_docs', String(pushDocs))
+            core.setOutput('same_repo', String(sameRepo))
+            core.setOutput('should_preview', String(shouldPreview))
+            core.setOutput('should_cleanup', String(shouldCleanup))
+            core.setOutput('cleanup_reason', cleanupReason)
+
+  deploy-production:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate reference docs
+        run: npm run docs:reference
+
+      - name: Build production static docs
+        run: npm run docs:build
+        env:
+          NEXT_PUBLIC_DOCS_BASE_PATH: ${{ env.REPO_BASE_PATH }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Compose Pages tree
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          rm -rf _pages _deploy
+          remote_host="${GITHUB_SERVER_URL#https://}"
+          remote_url="https://x-access-token:${GITHUB_TOKEN}@${remote_host}/${GITHUB_REPOSITORY}.git"
+
+          if git ls-remote --exit-code --heads origin "${PAGES_BRANCH}" > /dev/null 2>&1; then
+            git fetch origin "${PAGES_BRANCH}:${PAGES_BRANCH}" --depth=1
+            git worktree add _pages "${PAGES_BRANCH}"
+          else
+            mkdir _pages
+            git -C _pages init
+            git -C _pages checkout --orphan "${PAGES_BRANCH}"
+            git -C _pages remote add origin "${remote_url}"
+          fi
+
+          git -C _pages remote set-url origin "${remote_url}"
+          mkdir -p _pages/pr-preview
+          find _pages -mindepth 1 -maxdepth 1 ! -name .git ! -name pr-preview -exec rm -rf {} +
+          cp -a apps/docs/out/. _pages/
+          touch _pages/.nojekyll
+
+          git -C _pages config user.name "github-actions[bot]"
+          git -C _pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C _pages add -A
+          if ! git -C _pages diff --cached --quiet; then
+            git -C _pages commit -m "Deploy production docs"
+            git -C _pages push origin "HEAD:${PAGES_BRANCH}"
+          fi
+
+          mkdir _deploy
+          cp -a _pages/. _deploy/
+          rm -rf _deploy/.git
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_deploy
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  deploy-preview:
+    if: needs.detect_pr_docs.outputs.should_preview == 'true'
+    needs:
+      - detect_pr_docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages-preview
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      PREVIEW_PATH: pr-preview/pr-${{ github.event.pull_request.number }}
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate reference docs
+        run: npm run docs:reference
+
+      - name: Build preview static docs
+        run: npm run docs:build
+        env:
+          NEXT_PUBLIC_DOCS_BASE_PATH: ${{ env.REPO_BASE_PATH }}/${{ env.PREVIEW_PATH }}
+
+      - name: Validate preview export
+        run: |
+          set -euo pipefail
+          test -f apps/docs/out/index.html
+          test -f apps/docs/out/openapi.yaml
+          if grep -R "${REPO_BASE_PATH}/_next" apps/docs/out >/dev/null; then
+            echo "Found production asset prefix in preview output" >&2
+            exit 1
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Compose preview Pages tree
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          rm -rf _pages _deploy
+          remote_host="${GITHUB_SERVER_URL#https://}"
+          remote_url="https://x-access-token:${GITHUB_TOKEN}@${remote_host}/${GITHUB_REPOSITORY}.git"
+
+          if git ls-remote --exit-code --heads origin "${PAGES_BRANCH}" > /dev/null 2>&1; then
+            git fetch origin "${PAGES_BRANCH}:${PAGES_BRANCH}" --depth=1
+            git worktree add _pages "${PAGES_BRANCH}"
+          else
+            mkdir _pages
+            git -C _pages init
+            git -C _pages checkout --orphan "${PAGES_BRANCH}"
+            git -C _pages remote add origin "${remote_url}"
+          fi
+
+          git -C _pages remote set-url origin "${remote_url}"
+          rm -rf "_pages/${PREVIEW_PATH}"
+          mkdir -p "_pages/${PREVIEW_PATH}"
+          cp -a apps/docs/out/. "_pages/${PREVIEW_PATH}/"
+          touch _pages/.nojekyll
+
+          git -C _pages config user.name "github-actions[bot]"
+          git -C _pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C _pages add -A
+          if ! git -C _pages diff --cached --quiet; then
+            git -C _pages commit -m "Deploy docs preview for PR #${{ github.event.pull_request.number }}"
+            git -C _pages push origin "HEAD:${PAGES_BRANCH}"
+          fi
+
+          mkdir _deploy
+          cp -a _pages/. _deploy/
+          rm -rf _deploy/.git
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_deploy
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Build preview URL
+        id: preview-url
+        run: |
+          set -euo pipefail
+          page_url="${{ steps.deployment.outputs.page_url }}"
+          page_url="${page_url%/}/"
+          echo "url=${page_url}${PREVIEW_PATH}/" >> "$GITHUB_OUTPUT"
+
+      - name: Upsert PR preview comment
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.preview-url.outputs.url }}
+          PREVIEW_PATH: ${{ env.PREVIEW_PATH }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const marker = `<!-- clickhouse-product-analytics-docs-preview:${context.issue.number} -->`
+            const body = [
+              marker,
+              `Documentation preview: ${process.env.PREVIEW_URL}`,
+              '',
+              `Path: \`${process.env.PREVIEW_PATH}/\``,
+              `Commit: \`${process.env.HEAD_SHA}\``
+            ].join('\n')
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100
+            })
+            const existing = comments.find((comment) => {
+              return comment.user?.type === 'Bot' && comment.body?.includes(marker)
+            })
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              })
+            }
+
+  cleanup-preview:
+    if: needs.detect_pr_docs.outputs.should_cleanup == 'true'
+    needs:
+      - detect_pr_docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages-preview
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      PREVIEW_PATH: pr-preview/pr-${{ github.event.pull_request.number }}
+      CLEANUP_REASON: ${{ needs.detect_pr_docs.outputs.cleanup_reason }}
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Remove preview from Pages tree
+        id: cleanup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          rm -rf _pages _deploy
+          if ! git ls-remote --exit-code --heads origin "${PAGES_BRANCH}" > /dev/null 2>&1; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          remote_host="${GITHUB_SERVER_URL#https://}"
+          remote_url="https://x-access-token:${GITHUB_TOKEN}@${remote_host}/${GITHUB_REPOSITORY}.git"
+
+          git fetch origin "${PAGES_BRANCH}:${PAGES_BRANCH}" --depth=1
+          git worktree add _pages "${PAGES_BRANCH}"
+          git -C _pages remote set-url origin "${remote_url}"
+
+          if [ ! -d "_pages/${PREVIEW_PATH}" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          rm -rf "_pages/${PREVIEW_PATH}"
+
+          git -C _pages config user.name "github-actions[bot]"
+          git -C _pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C _pages add -A
+          if git -C _pages diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git -C _pages commit -m "Remove docs preview for PR #${{ github.event.pull_request.number }}"
+          git -C _pages push origin "HEAD:${PAGES_BRANCH}"
+
+          mkdir _deploy
+          cp -a _pages/. _deploy/
+          rm -rf _deploy/.git
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Pages artifact
+        if: steps.cleanup.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_deploy
+
+      - name: Deploy to GitHub Pages
+        if: steps.cleanup.outputs.changed == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Update existing PR preview comment
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_PATH: ${{ env.PREVIEW_PATH }}
+          CLEANUP_REASON: ${{ env.CLEANUP_REASON }}
+        with:
+          script: |
+            const marker = `<!-- clickhouse-product-analytics-docs-preview:${context.issue.number} -->`
+            const reasons = {
+              merged: 'this PR was merged',
+              closed: 'this PR was closed',
+              converted_to_draft: 'this PR was converted to draft',
+              no_docs_changes: 'this PR no longer changes the documentation'
+            }
+            const reason = reasons[process.env.CLEANUP_REASON] ?? 'this PR no longer has an active documentation preview'
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100
+            })
+            const existing = comments.find((comment) => {
+              return comment.user?.type === 'Bot' && comment.body?.includes(marker)
+            })
+            if (!existing) {
+              core.info('No existing docs preview comment found.')
+              return
+            }
+            const body = [
+              marker,
+              `Documentation preview removed because ${reason}.`,
+              '',
+              `Removed path: \`${process.env.PREVIEW_PATH}/\``
+            ].join('\n')
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body
+            })
