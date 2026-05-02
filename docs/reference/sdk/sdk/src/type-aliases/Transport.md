@@ -8,7 +8,7 @@
 
 > **Transport** = (`url`, `payload`, `options`) => `Promise`\<`void`\>
 
-Defined in: sdk/src/types.ts:35
+Defined in: [sdk/src/types.ts:35](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L35)
 
 Custom transport hook for applications that need to override fetch/beacon delivery.
 

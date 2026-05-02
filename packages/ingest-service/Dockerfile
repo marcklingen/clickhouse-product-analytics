@@ -20,7 +20,7 @@ FROM node:22-alpine@sha256:8ea2348b068a9544dae7317b4f3aafcdc032df1647bb7d768a05a
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/package.json /app/package-lock.json* ./
-COPY LICENSE THIRD_PARTY_NOTICES.md ATTRIBUTION.md CONTAINER_THIRD_PARTY_NOTICES.md ./
+COPY LICENSE THIRD_PARTY_NOTICES.md ATTRIBUTION.md ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/packages/sdk/package.json packages/sdk/package.json
 COPY --from=build /app/packages/sdk/dist packages/sdk/dist

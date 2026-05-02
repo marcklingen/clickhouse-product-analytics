@@ -8,6 +8,6 @@
 
 > **AnalyticsClient** = `ClickHouseProductAnalytics`
 
-Defined in: react/src/index.tsx:18
+Defined in: [react/src/index.tsx:18](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/react/src/index.tsx#L18)
 
 Analytics client returned by the React hook and accepted by the provider.

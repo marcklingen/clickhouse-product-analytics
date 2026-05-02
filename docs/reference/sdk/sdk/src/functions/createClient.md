@@ -8,7 +8,7 @@
 
 > **createClient**(): [`ClickHouseProductAnalytics`](../classes/ClickHouseProductAnalytics.md)
 
-Defined in: sdk/src/index.ts:497
+Defined in: [sdk/src/index.ts:497](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L497)
 
 Create an isolated analytics client instance.
 

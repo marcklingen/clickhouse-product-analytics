@@ -8,7 +8,7 @@
 
 > **InitOptions** = `AnalyticsClientConfig` & `object`
 
-Defined in: sdk/src/types.ts:106
+Defined in: [sdk/src/types.ts:106](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L106)
 
 Complete initialization options, including camelCase aliases and advanced controls.
 

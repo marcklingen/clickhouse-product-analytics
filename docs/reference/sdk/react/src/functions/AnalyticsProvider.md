@@ -8,7 +8,7 @@
 
 > **AnalyticsProvider**(`__namedParameters`): `Element`
 
-Defined in: react/src/index.tsx:51
+Defined in: [react/src/index.tsx:51](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/react/src/index.tsx#L51)
 
 Initialize or provide an analytics client for descendant React components.
 

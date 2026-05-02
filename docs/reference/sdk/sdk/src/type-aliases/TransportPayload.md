@@ -8,7 +8,7 @@
 
 > **TransportPayload** = `object`
 
-Defined in: sdk/src/types.ts:29
+Defined in: [sdk/src/types.ts:29](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L29)
 
 Batch payload sent to the public ingest API.
 
@@ -18,7 +18,7 @@ Batch payload sent to the public ingest API.
 
 > **api\_key**: `string`
 
-Defined in: sdk/src/types.ts:30
+Defined in: [sdk/src/types.ts:30](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L30)
 
 ***
 
@@ -26,4 +26,4 @@ Defined in: sdk/src/types.ts:30
 
 > **batch**: [`QueuedEvent`](QueuedEvent.md)[]
 
-Defined in: sdk/src/types.ts:31
+Defined in: [sdk/src/types.ts:31](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L31)

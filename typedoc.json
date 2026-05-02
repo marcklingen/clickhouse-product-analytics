@@ -14,6 +14,7 @@
   "excludeInternal": true,
   "hideGenerator": true,
   "githubPages": false,
+  "gitRevision": "main",
   "navigation": {
     "includeGroups": true,
     "includeCategories": true

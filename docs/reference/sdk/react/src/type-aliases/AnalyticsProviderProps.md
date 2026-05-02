@@ -8,6 +8,6 @@
 
 > **AnalyticsProviderProps** = `WithChildren`\<\{ `apiKey?`: `never`; `client`: [`AnalyticsClient`](AnalyticsClient.md); `options?`: `never`; \} \| \{ `apiKey`: `string`; `client?`: `never`; `options`: `Omit`\<`InitOptions`, `"apiKey"` \| `"token"`\>; \}\>
 
-Defined in: react/src/index.tsx:32
+Defined in: [react/src/index.tsx:32](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/react/src/index.tsx#L32)
 
 Props for `AnalyticsProvider`. Pass either a managed `apiKey`/`options` pair or an explicit client.

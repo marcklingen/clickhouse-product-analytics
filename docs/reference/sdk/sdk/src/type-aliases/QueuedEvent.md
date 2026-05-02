@@ -8,7 +8,7 @@
 
 > **QueuedEvent** = `object`
 
-Defined in: sdk/src/types.ts:21
+Defined in: [sdk/src/types.ts:21](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L21)
 
 Event envelope stored in the browser queue and sent to the ingest service.
 
@@ -18,7 +18,7 @@ Event envelope stored in the browser queue and sent to the ingest service.
 
 > **event**: `string`
 
-Defined in: sdk/src/types.ts:23
+Defined in: [sdk/src/types.ts:23](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L23)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: sdk/src/types.ts:23
 
 > **properties**: [`CaptureProperties`](CaptureProperties.md)
 
-Defined in: sdk/src/types.ts:24
+Defined in: [sdk/src/types.ts:24](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L24)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: sdk/src/types.ts:24
 
 > **timestamp**: `string`
 
-Defined in: sdk/src/types.ts:25
+Defined in: [sdk/src/types.ts:25](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L25)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: sdk/src/types.ts:25
 
 > **uuid**: `string`
 
-Defined in: sdk/src/types.ts:22
+Defined in: [sdk/src/types.ts:22](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L22)

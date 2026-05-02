@@ -6,7 +6,7 @@
 
 # Class: ClickHouseProductAnalytics
 
-Defined in: sdk/src/index.ts:70
+Defined in: [sdk/src/index.ts:70](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L70)
 
 Browser analytics client for capturing product events into the ingest service.
 
@@ -26,7 +26,7 @@ Browser analytics client for capturing product events into the ingest service.
 
 > **alias**(`alias`, `original?`): [`QueuedEvent`](../type-aliases/QueuedEvent.md) \| `undefined`
 
-Defined in: sdk/src/index.ts:208
+Defined in: [sdk/src/index.ts:208](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L208)
 
 Link another distinct ID to the current or supplied original distinct ID.
 
@@ -50,7 +50,7 @@ Link another distinct ID to the current or supplied original distinct ID.
 
 > **capture**(`eventName`, `properties?`, `options?`): [`QueuedEvent`](../type-aliases/QueuedEvent.md) \| `undefined`
 
-Defined in: sdk/src/index.ts:115
+Defined in: [sdk/src/index.ts:115](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L115)
 
 Capture a named event with optional properties.
 
@@ -78,7 +78,7 @@ Capture a named event with optional properties.
 
 > **flush**(`transport?`): `Promise`\<`void`\>
 
-Defined in: sdk/src/index.ts:305
+Defined in: [sdk/src/index.ts:305](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L305)
 
 Flush queued events using fetch or, when requested, sendBeacon.
 
@@ -98,7 +98,7 @@ Flush queued events using fetch or, when requested, sendBeacon.
 
 > **get\_distinct\_id**(): `string`
 
-Defined in: sdk/src/index.ts:261
+Defined in: [sdk/src/index.ts:261](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L261)
 
 Return the current distinct ID.
 
@@ -112,7 +112,7 @@ Return the current distinct ID.
 
 > **get\_property**(`property`): `unknown`
 
-Defined in: sdk/src/index.ts:274
+Defined in: [sdk/src/index.ts:274](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L274)
 
 Return a registered property value or the current distinct ID.
 
@@ -132,7 +132,7 @@ Return a registered property value or the current distinct ID.
 
 > **get\_session\_id**(): `string`
 
-Defined in: sdk/src/index.ts:267
+Defined in: [sdk/src/index.ts:267](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L267)
 
 Return the current session ID, rotating the session first if it has expired.
 
@@ -146,7 +146,7 @@ Return the current session ID, rotating the session first if it has expired.
 
 > **has\_opted\_out\_capturing**(): `boolean`
 
-Defined in: sdk/src/index.ts:294
+Defined in: [sdk/src/index.ts:294](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L294)
 
 Return whether this client is currently opted out.
 
@@ -160,7 +160,7 @@ Return whether this client is currently opted out.
 
 > **identify**(`newDistinctId?`, `userPropertiesToSet?`, `userPropertiesToSetOnce?`): `void`
 
-Defined in: sdk/src/index.ts:164
+Defined in: [sdk/src/index.ts:164](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L164)
 
 Associate future events with a known user and optionally set person properties.
 
@@ -190,7 +190,7 @@ Associate future events with a known user and optionally set person properties.
 
 > **init**(`token`, `config?`): `this`
 
-Defined in: sdk/src/index.ts:79
+Defined in: [sdk/src/index.ts:79](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L79)
 
 Initialize the client with a publishable API key and browser SDK options.
 
@@ -212,7 +212,7 @@ Initialize the client with a publishable API key and browser SDK options.
 
 > **init**(`config`): `this`
 
-Defined in: sdk/src/index.ts:81
+Defined in: [sdk/src/index.ts:81](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L81)
 
 Initialize the client with a complete options object.
 
@@ -232,7 +232,7 @@ Initialize the client with a complete options object.
 
 > **is\_capturing**(): `boolean`
 
-Defined in: sdk/src/index.ts:300
+Defined in: [sdk/src/index.ts:300](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L300)
 
 Return whether this client will enqueue new events.
 
@@ -246,7 +246,7 @@ Return whether this client will enqueue new events.
 
 > **opt\_in\_capturing**(): `void`
 
-Defined in: sdk/src/index.ts:287
+Defined in: [sdk/src/index.ts:287](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L287)
 
 Resume capturing events after an opt-out.
 
@@ -260,7 +260,7 @@ Resume capturing events after an opt-out.
 
 > **opt\_out\_capturing**(): `void`
 
-Defined in: sdk/src/index.ts:280
+Defined in: [sdk/src/index.ts:280](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L280)
 
 Stop capturing events until `opt_in_capturing` is called.
 
@@ -274,7 +274,7 @@ Stop capturing events until `opt_in_capturing` is called.
 
 > **register**(`properties`): `void`
 
-Defined in: sdk/src/index.ts:233
+Defined in: [sdk/src/index.ts:233](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L233)
 
 Register properties that are attached to all future events.
 
@@ -294,7 +294,7 @@ Register properties that are attached to all future events.
 
 > **register\_once**(`properties`, `defaultValue?`): `void`
 
-Defined in: sdk/src/index.ts:243
+Defined in: [sdk/src/index.ts:243](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L243)
 
 Register properties only when their current value is absent or equal to `defaultValue`.
 
@@ -318,7 +318,7 @@ Register properties only when their current value is absent or equal to `default
 
 > **reset**(`resetDeviceId?`): `void`
 
-Defined in: sdk/src/index.ts:213
+Defined in: [sdk/src/index.ts:213](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L213)
 
 Reset local identity and session state, optionally generating a new device ID.
 
@@ -338,7 +338,7 @@ Reset local identity and session state, optionally generating a new device ID.
 
 > **setPersonProperties**(`userPropertiesToSet?`, `userPropertiesToSetOnce?`): `void`
 
-Defined in: sdk/src/index.ts:197
+Defined in: [sdk/src/index.ts:197](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L197)
 
 Set or set-once person properties for the current distinct ID.
 
@@ -362,7 +362,7 @@ Set or set-once person properties for the current distinct ID.
 
 > **shutdown**(): `void`
 
-Defined in: sdk/src/index.ts:311
+Defined in: [sdk/src/index.ts:311](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L311)
 
 Remove lifecycle listeners and stop queue timers.
 
@@ -376,7 +376,7 @@ Remove lifecycle listeners and stop queue timers.
 
 > **unregister**(`property`): `void`
 
-Defined in: sdk/src/index.ts:254
+Defined in: [sdk/src/index.ts:254](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L254)
 
 Remove a registered super property from future events.
 

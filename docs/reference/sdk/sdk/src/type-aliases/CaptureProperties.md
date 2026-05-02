@@ -8,6 +8,6 @@
 
 > **CaptureProperties** = `Record`\<`string`, `unknown`\>
 
-Defined in: sdk/src/types.ts:2
+Defined in: [sdk/src/types.ts:2](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L2)
 
 JSON-serializable event or person properties.
