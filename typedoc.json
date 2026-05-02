@@ -3,7 +3,7 @@
     "packages/sdk/src/index.ts",
     "packages/react/src/index.tsx"
   ],
-  "out": "docs/reference/sdk",
+  "out": "content/docs/reference/sdk-generated",
   "plugin": [
     "typedoc-plugin-markdown"
   ],
@@ -14,6 +14,8 @@
   "excludeInternal": true,
   "hideGenerator": true,
   "githubPages": false,
+  "fileExtension": ".mdx",
+  "entryFileName": "index",
   "gitRevision": "main",
   "navigation": {
     "includeGroups": true,

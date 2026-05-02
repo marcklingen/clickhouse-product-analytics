@@ -1,0 +1,90 @@
+---
+title: React Usage
+description: Provider, hook, and viewport tracking setup for React and Next.js apps.
+---
+
+# React Usage
+
+The React package wraps the browser SDK for client-rendered React and Next.js applications. Use it when you want analytics initialization at the app root and access to the client from components.
+
+For exact provider, hook, and viewport component signatures, see the [React reference](/reference/react).
+
+## Provider Setup
+
+Create a client provider:
+
+```tsx
+'use client'
+
+import { AnalyticsProvider } from '@clickhouse-product-analytics/react'
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <AnalyticsProvider
+      options={{
+        apiHost: 'http://127.0.0.1:8080',
+        capturePageview: 'history_change',
+        persistence: 'localStorage+cookie'
+      }}
+    >
+      {children}
+    </AnalyticsProvider>
+  )
+}
+```
+
+Wrap the app from `app/layout.tsx`:
+
+```tsx
+import { Providers } from './providers'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  )
+}
+```
+
+## Capturing From Components
+
+Capture from a component with `useAnalytics()`:
+
+```tsx
+'use client'
+
+import { useAnalytics } from '@clickhouse-product-analytics/react'
+
+export function SignupButton() {
+  const analytics = useAnalytics()
+
+  return (
+    <button onClick={() => analytics?.capture('signup_clicked', { placement: 'hero' })}>
+      Sign up
+    </button>
+  )
+}
+```
+
+`useAnalytics()` returns `undefined` before initialization and when no provider is present, so component code should tolerate that state.
+
+## Viewport Tracking
+
+Track impressions with `AnalyticsCaptureOnViewed`:
+
+```tsx
+import { AnalyticsCaptureOnViewed } from '@clickhouse-product-analytics/react'
+
+export function ProductCard() {
+  return (
+    <AnalyticsCaptureOnViewed name="product-card" properties={{ product_id: 'sku_123' }}>
+      <button>View product</button>
+    </AnalyticsCaptureOnViewed>
+  )
+}
+```
+
+`AnalyticsCaptureOnViewed` wraps children in a `div`. When `trackAllChildren` is enabled, each child is wrapped separately and receives a `child_index` property. Avoid that mode in table, list, and form structures where extra wrappers would be invalid.

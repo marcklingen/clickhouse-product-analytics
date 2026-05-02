@@ -1,0 +1,12 @@
+{
+  "title": "Operate",
+  "defaultOpen": true,
+  "pages": [
+    "architecture",
+    "clickhouse-schema",
+    "deployment",
+    "railway",
+    "helm",
+    "verification"
+  ]
+}

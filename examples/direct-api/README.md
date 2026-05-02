@@ -23,4 +23,4 @@ Optional environment variables:
 | `CPA_SERVICE_URL` | `http://127.0.0.1:8080` |
 | `CPA_API_KEY` | `local_dev_key` |
 
-The event shape is documented in `docs/reference/http-api.md`.
+The event shape is documented in the Fumadocs API reference at `content/docs/reference/api.mdx` and the committed OpenAPI spec at `openapi/clickhouse-product-analytics.openapi.yaml`.

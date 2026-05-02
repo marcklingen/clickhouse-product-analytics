@@ -48,4 +48,4 @@ npm run release:dry-run
 
 The dry-run also verifies that the runtime SDK version in event metadata matches the package version.
 
-The full publish checklist lives in `docs/publishing.md`.
+The full publish checklist lives in `content/docs/project/publishing.mdx`.

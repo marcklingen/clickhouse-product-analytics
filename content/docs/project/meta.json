@@ -1,0 +1,9 @@
+{
+  "title": "Project",
+  "defaultOpen": true,
+  "pages": [
+    "publishing",
+    "agent-skill",
+    "sdk-stability"
+  ]
+}

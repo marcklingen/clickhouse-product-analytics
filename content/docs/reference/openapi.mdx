@@ -1,0 +1,19 @@
+---
+title: OpenAPI Spec
+description: Download the machine-readable API contract for the ingest service.
+---
+
+# OpenAPI Spec
+
+The OpenAPI document is the formal machine-readable contract for the ingest service. The built docs site publishes it at [`/openapi.yaml`](/openapi.yaml), copied from the committed source at `openapi/clickhouse-product-analytics.openapi.yaml`.
+
+Use [API reference](/reference/api) for the rendered endpoint documentation.
+
+The spec covers:
+
+- `POST /batch/` event ingestion.
+- `GET /health` service health.
+- JSON batch payloads with optional batch-level and event-level `api_key`.
+- Allowed-origin browser requests and backend/no-origin API-key requests.
+- Gzip request bodies via `Content-Encoding: gzip`.
+- Successful ingestion, dropped-event counts, and documented error statuses.

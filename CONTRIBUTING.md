@@ -24,10 +24,10 @@ docker compose down -v --remove-orphans
 
 ## Development Rules
 
-- Keep docs in `docs/` as Markdown. Run `npm run docs:reference` after changing exported SDK or React APIs.
+- Keep curated docs in `content/docs/` as MDX and the docs app in `apps/docs/`. Run `npm run docs:reference` after changing exported SDK or React APIs.
 - Keep the ingest service single-dataset: no tenant ID, no project ID.
-- Add unit tests for internal behavior and E2E checks for public workflows documented in `docs/`.
-- Keep package release guidance centralized in `docs/publishing.md`.
+- Add unit tests for internal behavior and E2E checks for public workflows documented in `content/docs/`.
+- Keep package release guidance centralized in `content/docs/project/publishing.mdx`.
 - Do not commit generated build output, local env files, or private notes.
 
 ## Deployment Artifacts

@@ -1,0 +1,9 @@
+{
+  "title": "Start",
+  "defaultOpen": true,
+  "pages": [
+    "sending-events",
+    "identifying-users",
+    "react"
+  ]
+}

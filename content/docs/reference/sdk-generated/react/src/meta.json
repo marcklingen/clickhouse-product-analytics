@@ -1,0 +1,9 @@
+{
+  "title": "React Source",
+  "pages": [
+    "index",
+    "functions",
+    "type-aliases",
+    "variables"
+  ]
+}

@@ -13,9 +13,14 @@ on:
     branches:
       - main
     paths:
-      - docs/**
+      - apps/docs/**
+      - content/docs/**
+      - openapi/**
       - typedoc.json
+      - package.json
+      - package-lock.json
       - .github/workflows/pages.yml
+      - README.md
   workflow_dispatch:
 
 concurrency:
@@ -24,6 +29,7 @@ concurrency:
 
 env:
   PAGES_BRANCH: gh-pages
+  REPO_BASE_PATH: /${{ github.event.repository.name }}
 
 jobs:
   detect_pr_docs:
@@ -47,9 +53,14 @@ jobs:
           script: |
             const pr = context.payload.pull_request
             const docsMatchers = [
-              (path) => path.startsWith('docs/'),
+              (path) => path.startsWith('apps/docs/'),
+              (path) => path.startsWith('content/docs/'),
+              (path) => path.startsWith('openapi/'),
               (path) => path === 'typedoc.json',
-              (path) => path === '.github/workflows/pages.yml'
+              (path) => path === 'package.json',
+              (path) => path === 'package-lock.json',
+              (path) => path === '.github/workflows/pages.yml',
+              (path) => path === 'README.md'
             ]
             const matchesDocs = (files) => files.some((path) => docsMatchers.some((matcher) => matcher(path)))
             const listPrFiles = async () => {
@@ -122,16 +133,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate reference docs
+        run: npm run docs:reference
+
+      - name: Build production static docs
+        run: npm run docs:build
+        env:
+          NEXT_PUBLIC_DOCS_BASE_PATH: ${{ env.REPO_BASE_PATH }}
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
-
-      - name: Build Markdown docs
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./docs
-          destination: ./_site
 
       - name: Compose Pages tree
         env:
@@ -156,7 +178,7 @@ jobs:
           git -C _pages remote set-url origin "${remote_url}"
           mkdir -p _pages/pr-preview
           find _pages -mindepth 1 -maxdepth 1 ! -name .git ! -name pr-preview -exec rm -rf {} +
-          cp -a _site/. _pages/
+          cp -a apps/docs/out/. _pages/
           touch _pages/.nojekyll
 
           git -C _pages config user.name "github-actions[bot]"
@@ -202,28 +224,37 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate reference docs
+        run: npm run docs:reference
+
+      - name: Build preview static docs
+        run: npm run docs:build
+        env:
+          NEXT_PUBLIC_DOCS_BASE_PATH: ${{ env.REPO_BASE_PATH }}/${{ env.PREVIEW_PATH }}
+
+      - name: Validate preview export
+        run: |
+          set -euo pipefail
+          test -f apps/docs/out/index.html
+          test -f apps/docs/out/openapi.yaml
+          if grep -R "${REPO_BASE_PATH}/_next" apps/docs/out >/dev/null; then
+            echo "Found production asset prefix in preview output" >&2
+            exit 1
+          fi
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
-
-      - name: Build Markdown docs
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./docs
-          destination: ./_site
-
-      - name: Rewrite preview links
-        run: |
-          set -euo pipefail
-
-          sudo chown -R "$USER":"$USER" _site
-
-          site_base="/${GITHUB_REPOSITORY#*/}/"
-          preview_base="${site_base}${PREVIEW_PATH}/"
-
-          find _site -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.xml' \) \
-            -exec sed -i "s|${site_base}|${preview_base}|g" {} +
 
       - name: Compose preview Pages tree
         env:
@@ -248,7 +279,7 @@ jobs:
           git -C _pages remote set-url origin "${remote_url}"
           rm -rf "_pages/${PREVIEW_PATH}"
           mkdir -p "_pages/${PREVIEW_PATH}"
-          cp -a _site/. "_pages/${PREVIEW_PATH}/"
+          cp -a apps/docs/out/. "_pages/${PREVIEW_PATH}/"
           touch _pages/.nojekyll
 
           git -C _pages config user.name "github-actions[bot]"

@@ -14,7 +14,7 @@ const commands = [
   ['npm', ['run', 'release:check-version']],
   ['npm', ['run', 'verify']],
   ['npm', ['run', 'docs:reference']],
-  ['git', ['diff', '--exit-code', 'docs/reference/sdk']],
+  ['git', ['diff', '--exit-code', 'content/docs/reference/sdk-generated']],
   ['npm', ['pack', '--dry-run', '--workspace', '@clickhouse-product-analytics/sdk']],
   ['npm', ['pack', '--dry-run', '--workspace', '@clickhouse-product-analytics/react']],
   ['npm', ['publish', '--dry-run', '--workspace', '@clickhouse-product-analytics/sdk', '--access', 'public']],

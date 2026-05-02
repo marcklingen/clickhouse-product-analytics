@@ -6,15 +6,21 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "examples/*"
+    "examples/*",
+    "apps/docs"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "build:packages": "npm run build --workspace @clickhouse-product-analytics/sdk && npm run build --workspace @clickhouse-product-analytics/react && npm run build --workspace @clickhouse-product-analytics/ingest-service",
     "dev:ingest": "npm run dev --workspace @clickhouse-product-analytics/ingest-service",
     "dev:next": "npm run dev --workspace nextjs-smoke",
+    "docs:dev": "npm run dev --workspace @clickhouse-product-analytics/docs",
+    "docs:build": "node scripts/copy-openapi-spec.mjs && npm run build --workspace @clickhouse-product-analytics/docs",
+    "docs:preview": "npm run preview --workspace @clickhouse-product-analytics/docs",
+    "docs:typecheck": "npm run typecheck --workspace @clickhouse-product-analytics/docs",
+    "docs:validate": "npm run validate --workspace @clickhouse-product-analytics/docs",
     "migrate": "npm run build --workspace @clickhouse-product-analytics/ingest-service && npm run migrate --workspace @clickhouse-product-analytics/ingest-service",
-    "docs:reference": "typedoc",
+    "docs:reference": "typedoc && node scripts/normalize-typedoc.mjs",
     "benchmark:ingest": "npm run build --workspace @clickhouse-product-analytics/ingest-service && node scripts/benchmark-ingest.mjs",
     "release": "release-it",
     "release:check-version": "node scripts/check-sdk-version.mjs",

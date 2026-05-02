@@ -1,7 +1,7 @@
 # Repository Instructions
 
 - Use subagents aggressively to offload tasks and research.
-- When changing the public ingest HTTP API, update the committed OpenAPI spec, if present, and the Fumadocs API reference in the same change. The current committed API reference is `docs/reference/http-api.md`. This includes route aliases, request payloads, response payloads, authentication, accepted encodings, compression behavior, CORS/origin behavior, and documented error semantics.
+- When changing the public ingest HTTP API, update the committed OpenAPI spec and the Fumadocs API reference in the same change. The committed spec is `openapi/clickhouse-product-analytics.openapi.yaml`; the rendered reference is wired through the Fumadocs docs app under `apps/docs` and `content/docs/reference`. This includes route aliases, request payloads, response payloads, authentication, accepted encodings, compression behavior, CORS/origin behavior, and documented error semantics.
 - The OpenAPI/API reference must mirror the implemented API behavior exactly, including permissive request parsing, dropped-event semantics, route aliases, optional fields that are required only for successful ingestion, passthrough properties, accepted content types, compression options, and concrete error status behavior. Do not make the spec stricter or cleaner than the service actually is unless the service implementation changes in the same patch.
 
 ## Core Design Decisions
@@ -18,5 +18,5 @@
 - Request compression is gzip only via `Content-Encoding: gzip`. Do not reintroduce `text/plain`, `application/x-www-form-urlencoded`, base64 `data`, `Content-Encoding: deflate`, `Content-Encoding: br`, or `compression=gzip-js`.
 - Preserve the current API-key semantics: browser requests from allowed origins can omit `api_key`; backend/no-Origin requests require a configured `api_key`; `PUBLIC_API_KEYS` may contain comma-separated keys for rotation; API keys are not tenant, project, or person-resolution boundaries.
 - Preserve the explicitly supported tracking features: autocapture, `AnalyticsCaptureOnViewed`, identity helpers, persistence modes, `beforeSend`, and `propertyDenylist`.
-- When changing exported SDK/React types or public examples, regenerate `docs/reference/sdk` with `npm run docs:reference` and update docs, examples, benchmarks, and E2E assertions in the same change.
+- When changing exported SDK/React types or public examples, regenerate `content/docs/reference/sdk-generated` with `npm run docs:reference` and update docs, examples, benchmarks, and E2E assertions in the same change.
 - Treat older compatibility notes in `plans/fumadocs-migration-prd.md` as superseded by `plans/simplification.md` and current source when they mention removed aliases, form/base64 payloads, `text/plain`, `deflate`, `br`, `compression=gzip-js`, or `token`.

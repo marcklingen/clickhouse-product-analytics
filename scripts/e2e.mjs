@@ -39,7 +39,7 @@ console.log(JSON.stringify({
 }, null, 2))
 
 async function runBrowserSdkFlow() {
-  const dom = installDom('http://localhost:3000/docs/start')
+  const dom = installDom('http://localhost:3000/start')
   const client = createClient()
   const userId = `user_${runId}`
 
@@ -95,7 +95,7 @@ async function runBrowserSdkFlow() {
       first_seen_source: 'browser-sdk'
     })
 
-    window.history.pushState({}, '', '/docs/pricing')
+    window.history.pushState({}, '', '/pricing')
     document.body.innerHTML = '<button id="signup-button" class="primary">Sign up</button>'
     document.querySelector('#signup-button')?.dispatchEvent(new window.MouseEvent('click', {
       bubbles: true,
@@ -309,6 +309,27 @@ async function runDirectApiFlow() {
       source: 'gzip'
     }
   }))
+  const droppedResponse = await postJson(`${serviceUrl}/batch/`, {
+    api_key: apiKey,
+    batch: [
+      {
+        event: 'dropped_batch_valid_event',
+        distinct_id: directDistinctId,
+        properties: {
+          run_id: runId,
+          source: 'dropped-batch'
+        }
+      },
+      {
+        event: 'dropped_batch_missing_distinct_id',
+        properties: {
+          run_id: runId,
+          source: 'dropped-batch'
+        }
+      }
+    ]
+  })
+  assert(droppedResponse.ingested === 1 && droppedResponse.dropped === 1, 'Expected valid batch events to ingest while invalid events are dropped')
 
   await postJson(`${serviceUrl}/batch/`, batchPayload(apiKey, {
     event: 'historical_signup_started',
@@ -443,7 +464,7 @@ async function assertStoredData({ browser, pageLifecycle, react, direct }) {
   )
   assertCount(
     'history-change pageview',
-    await queryCount(`SELECT count() AS count FROM ${database}.events WHERE event = '$pageview' AND JSONExtractString(properties, 'run_id') = '${runId}' AND current_url LIKE '%/docs/pricing%'`),
+    await queryCount(`SELECT count() AS count FROM ${database}.events WHERE event = '$pageview' AND JSONExtractString(properties, 'run_id') = '${runId}' AND current_url LIKE '%/pricing%'`),
     1
   )
   assertCount(
@@ -685,23 +706,38 @@ async function assertClickHouseTables() {
 }
 
 async function assertDocsDeploymentWiring() {
-  const [docs, architecture, deployment, railway, helmDocs, sendingEvents, identifyingUsers, schema, sdkStability, verification, reference, apiReference, sdkReference, publishing, agentSkillDocs, config, pagesWorkflow, ciWorkflow, containerWorkflow, dockerfile, releaseConfig, releaseSync, chart, values, compose] = await Promise.all([
-    readFile('docs/index.md', 'utf8'),
-    readFile('docs/architecture.md', 'utf8'),
-    readFile('docs/deployment.md', 'utf8'),
-    readFile('docs/railway.md', 'utf8'),
-    readFile('docs/helm.md', 'utf8'),
-    readFile('docs/sending-events.md', 'utf8'),
-    readFile('docs/identifying-users.md', 'utf8'),
-    readFile('docs/clickhouse-schema.md', 'utf8'),
-    readFile('docs/sdk-stability.md', 'utf8'),
-    readFile('docs/verification.md', 'utf8'),
-    readFile('docs/reference/index.md', 'utf8'),
-    readFile('docs/reference/http-api.md', 'utf8'),
-    readFile('docs/reference/sdk/README.md', 'utf8'),
-    readFile('docs/publishing.md', 'utf8'),
-    readFile('docs/agent-skill.md', 'utf8'),
-    readFile('docs/_config.yml', 'utf8'),
+  const [docs, architecture, deployment, railway, helmDocs, sendingEvents, identifyingUsers, reactGuide, schema, sdkStability, verification, apiLanding, openapiLanding, sdkLanding, reactLanding, sdkGeneratedReference, publishing, agentSkillDocs, rootPackage, docsPackage, nextConfig, sourceConfig, sourceFile, openapiFile, apiPageComponent, docsLayout, docsPage, mdxComponents, searchRoute, openapiSpec, copiedOpenapiSpec, pagesWorkflow, ciWorkflow, containerWorkflow, dockerfile, releaseConfig, releaseSync, chart, values, compose, agents] = await Promise.all([
+    readFile('content/docs/index.mdx', 'utf8'),
+    readFile('content/docs/operate/architecture.mdx', 'utf8'),
+    readFile('content/docs/operate/deployment.mdx', 'utf8'),
+    readFile('content/docs/operate/railway.mdx', 'utf8'),
+    readFile('content/docs/operate/helm.mdx', 'utf8'),
+    readFile('content/docs/start/sending-events.mdx', 'utf8'),
+    readFile('content/docs/start/identifying-users.mdx', 'utf8'),
+    readFile('content/docs/start/react.mdx', 'utf8'),
+    readFile('content/docs/operate/clickhouse-schema.mdx', 'utf8'),
+    readFile('content/docs/project/sdk-stability.mdx', 'utf8'),
+    readFile('content/docs/operate/verification.mdx', 'utf8'),
+    readFile('content/docs/reference/api.mdx', 'utf8'),
+    readFile('content/docs/reference/openapi.mdx', 'utf8'),
+    readFile('content/docs/reference/sdk.mdx', 'utf8'),
+    readFile('content/docs/reference/react.mdx', 'utf8'),
+    readFile('content/docs/reference/sdk-generated/index.mdx', 'utf8'),
+    readFile('content/docs/project/publishing.mdx', 'utf8'),
+    readFile('content/docs/project/agent-skill.mdx', 'utf8'),
+    readFile('package.json', 'utf8'),
+    readFile('apps/docs/package.json', 'utf8'),
+    readFile('apps/docs/next.config.mjs', 'utf8'),
+    readFile('apps/docs/source.config.ts', 'utf8'),
+    readFile('apps/docs/lib/source.ts', 'utf8'),
+    readFile('apps/docs/lib/openapi.ts', 'utf8'),
+    readFile('apps/docs/components/api-page.tsx', 'utf8'),
+    readFile('apps/docs/app/layout.tsx', 'utf8'),
+    readFile('apps/docs/app/[[...slug]]/page.tsx', 'utf8'),
+    readFile('apps/docs/mdx-components.tsx', 'utf8'),
+    readFile('apps/docs/app/api/search/route.ts', 'utf8'),
+    readFile('openapi/clickhouse-product-analytics.openapi.yaml', 'utf8'),
+    readFile('apps/docs/public/openapi.yaml', 'utf8'),
     readFile('.github/workflows/pages.yml', 'utf8'),
     readFile('.github/workflows/ci.yml', 'utf8'),
     readFile('.github/workflows/container.yml', 'utf8'),
@@ -710,26 +746,31 @@ async function assertDocsDeploymentWiring() {
     readFile('scripts/sync-release-version.mjs', 'utf8'),
     readFile('deploy/helm/clickhouse-product-analytics/Chart.yaml', 'utf8'),
     readFile('deploy/helm/clickhouse-product-analytics/values.yaml', 'utf8'),
-    readFile('docker-compose.yml', 'utf8')
+    readFile('docker-compose.yml', 'utf8'),
+    readFile('AGENTS.md', 'utf8')
   ])
 
-  assert(docs.startsWith('---\n'), 'Expected docs/index.md to have frontmatter for GitHub Pages')
-  assert(docs.includes('# ClickHouse Product Analytics'), 'Expected docs/index.md to contain the docs page heading')
+  assert(docs.startsWith('---\n'), 'Expected content/docs/index.mdx to have frontmatter')
+  assert(docs.includes('# ClickHouse Product Analytics'), 'Expected docs overview to contain the docs page heading')
   for (const link of [
-    './architecture.md',
-    './deployment.md',
-    './railway.md',
-    './helm.md',
-    './sending-events.md',
-    './identifying-users.md',
-    './clickhouse-schema.md',
-    './sdk-stability.md',
-    './reference/index.md',
-    './publishing.md',
-    './agent-skill.md',
-    './verification.md'
+    '/start/sending-events',
+    '/start/identifying-users',
+    '/start/react',
+    '/operate/architecture',
+    '/operate/clickhouse-schema',
+    '/operate/deployment',
+    '/operate/railway',
+    '/operate/helm',
+    '/operate/verification',
+    '/reference/api',
+    '/reference/openapi',
+    '/reference/sdk',
+    '/reference/react',
+    '/project/publishing',
+    '/project/agent-skill',
+    '/project/sdk-stability'
   ]) {
-    assert(docs.includes(link), `Expected docs/index.md to link to ${link}`)
+    assert(docs.includes(link), `Expected docs overview to link to ${link}`)
   }
   assert(architecture.includes('# Architecture') && architecture.includes('HTTP ingest service'), 'Expected architecture docs to describe the ingest architecture')
   assert(deployment.includes('# Deployment') && deployment.includes('PUBLIC_API_KEYS'), 'Expected deployment docs to describe environment configuration')
@@ -739,25 +780,47 @@ async function assertDocsDeploymentWiring() {
   assert(railway.includes('node dist/migrate.js'), 'Expected Railway docs to include production-image migration command')
   assert(helmDocs.includes('# Helm Deployment') && helmDocs.includes('autoscaling'), 'Expected Helm docs to describe Kubernetes deployment and autoscaling')
   assert(helmDocs.includes('node dist/migrate.js'), 'Expected Helm docs to include production-image migration command')
-  assert(sendingEvents.includes('# Sending Events') && sendingEvents.includes('Browser SDK') && sendingEvents.includes('Batch API') && sendingEvents.includes('./reference/http-api.md'), 'Expected event docs to describe SDK/API usage and link references')
+  assert(sendingEvents.includes('# Sending Events') && sendingEvents.includes('Browser SDK') && sendingEvents.includes('Batch API') && sendingEvents.includes('/reference/api'), 'Expected event docs to describe SDK/API usage and link references')
+  assert(reactGuide.includes('# React Usage') && reactGuide.includes('AnalyticsProvider') && reactGuide.includes('AnalyticsCaptureOnViewed'), 'Expected React guide to cover provider and viewport tracking')
   assert(identifyingUsers.includes('# Identifying Users') && identifyingUsers.includes('$set_once'), 'Expected identity docs to describe user identification')
   assert(schema.includes('# ClickHouse Schema') && schema.includes('Agent Query Guidelines') && schema.includes('person_distinct_ids'), 'Expected schema docs to help agents query ClickHouse')
   assert(sdkStability.includes('# SDK Stability Review') && sdkStability.includes('CompressionStream'), 'Expected SDK stability docs to capture implementation review findings')
-  assert(verification.includes('# Verification') && verification.includes('npm run verify:e2e') && verification.includes('npm run release:dry-run') && verification.includes('helm lint'), 'Expected verification docs to describe E2E, release, and Helm coverage')
-  assert(reference.includes('# Reference') && reference.includes('./http-api.md') && reference.includes('./sdk/README.md'), 'Expected reference index to link API and SDK references')
-  assert(apiReference.includes('# HTTP API Reference') && apiReference.includes('/batch/') && apiReference.includes('content-encoding: gzip'), 'Expected HTTP API reference to document endpoints and compression')
-  assert(!apiReference.includes('/capture/') && !apiReference.includes('/i/v0/e/') && !apiReference.includes('compression=gzip-js') && !apiReference.includes('content-encoding: deflate'), 'Expected HTTP API reference to omit removed ingest aliases and compression modes')
+  assert(verification.includes('# Verification') && verification.includes('npm run verify:e2e') && verification.includes('npm run docs:build') && verification.includes('helm lint'), 'Expected verification docs to describe E2E, docs, and Helm coverage')
+  assert(apiLanding.includes('# API Reference') && apiLanding.includes('openapi/clickhouse-product-analytics.openapi.yaml'), 'Expected API landing to point at the OpenAPI source')
+  assert(openapiLanding.includes('# OpenAPI Spec') && openapiLanding.includes('/openapi.yaml'), 'Expected OpenAPI landing to link the downloadable spec')
+  assert(sdkLanding.includes('# SDK Reference') && sdkLanding.includes('/reference/sdk-generated/sdk/src'), 'Expected SDK landing to link generated docs')
+  assert(reactLanding.includes('# React Reference') && reactLanding.includes('/reference/sdk-generated/react/src'), 'Expected React landing to link generated docs')
+  assert(sdkGeneratedReference.includes('SDK and React Reference'), 'Expected generated SDK reference docs to exist')
+  assert(openapiSpec === copiedOpenapiSpec, 'Expected static /openapi.yaml copy to match committed OpenAPI spec')
+  assert(openapiSpec.includes('/batch/:') && openapiSpec.includes('/health:') && openapiSpec.includes('Content-Encoding') && openapiSpec.includes('- gzip'), 'Expected OpenAPI spec to document /batch/, /health, and gzip support')
+  assert(openapiSpec.includes('properties.distinct_id') && openapiSpec.includes('properties.$distinct_id') && openapiSpec.includes('dropped'), 'Expected OpenAPI spec to document permissive distinct ID and dropped-event semantics')
+  for (const removed of ['/capture/', '/i/v0/e/', 'compression=gzip-js', 'application/x-www-form-urlencoded', 'text/plain', 'token:']) {
+    assert(!openapiSpec.includes(removed), `Expected OpenAPI spec to omit removed API surface: ${removed}`)
+  }
   assert(sendingEvents.includes('apiHost') && !sendingEvents.includes('api_host'), 'Expected sending events docs to use camelCase SDK configuration')
-  assert(sdkReference.includes('SDK and React Reference') && sdkReference.includes('sdk/src') && sdkReference.includes('react/src'), 'Expected generated SDK reference docs to exist')
   assert(publishing.includes('# Publishing Packages') && publishing.includes('@clickhouse-product-analytics/sdk') && publishing.includes('@clickhouse-product-analytics/react'), 'Expected publishing docs to cover SDK and React packages')
   assert(publishing.includes('clean working tree') && publishing.includes('npm whoami') && publishing.includes('--otp') && publishing.includes('provenance'), 'Expected publishing docs to cover release and registry prerequisites')
   assert(agentSkillDocs.includes('# Coding Agent Skill') && agentSkillDocs.includes('skills/product-analytics-tracking/SKILL.md'), 'Expected docs to reference the repo-local tracking skill')
-  assert(config.includes('theme: jekyll-theme-primer'), 'Expected docs/_config.yml to configure the Pages theme')
-  assert(pagesWorkflow.includes('actions/jekyll-build-pages@v1'), 'Expected Pages workflow to build Markdown docs with Jekyll')
-  assert(pagesWorkflow.includes('source: ./docs'), 'Expected Pages workflow to publish docs/ as the source')
+  assert(rootPackage.includes('"apps/docs"') && rootPackage.includes('"docs:build"') && rootPackage.includes('"docs:typecheck"') && rootPackage.includes('"docs:validate"'), 'Expected root package scripts and workspace to include the docs app')
+  assert(docsPackage.includes('"@clickhouse-product-analytics/docs"') && docsPackage.includes('fumadocs-ui') && docsPackage.includes('fumadocs-openapi'), 'Expected docs app package to include Fumadocs dependencies')
+  assert(nextConfig.includes("output: 'export'") && nextConfig.includes('NEXT_PUBLIC_DOCS_BASE_PATH') && nextConfig.includes('trailingSlash: true'), 'Expected Next config to statically export with base path support')
+  assert(sourceConfig.includes("defineDocs") && sourceConfig.includes("../../content/docs"), 'Expected Fumadocs source config to read content/docs')
+  assert(sourceFile.includes('openapiSource') && sourceFile.includes("baseDir: 'reference/api'"), 'Expected source loader to include OpenAPI virtual pages')
+  assert(openapiFile.includes('createOpenAPI') && openapiFile.includes('clickhouse-product-analytics.openapi.yaml'), 'Expected centralized OpenAPI loader')
+  assert(apiPageComponent.includes('createAPIPage') && apiPageComponent.includes('enabled: false'), 'Expected OpenAPI playground to be disabled for the static docs')
+  assert(docsLayout.includes('RootProvider') && docsLayout.includes('DocsLayout') && docsLayout.includes("type: 'static'"), 'Expected docs layout to use Fumadocs static search')
+  assert(docsPage.includes('dynamicParams = false') && docsPage.includes('source.generateParams()') && docsPage.includes('page.data.type ===') && docsPage.includes('APIPage'), 'Expected catch-all route to statically render MDX and OpenAPI pages')
+  assert(mdxComponents.includes('fumadocs-ui/mdx'), 'Expected centralized MDX components')
+  assert(searchRoute.includes('staticGET') && searchRoute.includes('createFromSource'), 'Expected static Orama search route')
+  assert(!pagesWorkflow.includes('actions/jekyll-build-pages') && !pagesWorkflow.includes('sed -i'), 'Expected Pages workflow to avoid Jekyll and preview sed rewrites')
+  assert(pagesWorkflow.includes('apps/docs/**') && pagesWorkflow.includes('content/docs/**') && pagesWorkflow.includes('openapi/**'), 'Expected Pages workflow docs matcher to include new docs surfaces')
+  assert(pagesWorkflow.includes('npm run docs:reference') && pagesWorkflow.includes('npm run docs:build'), 'Expected Pages workflow to regenerate references and build docs')
+  assert(pagesWorkflow.includes('NEXT_PUBLIC_DOCS_BASE_PATH: ${{ env.REPO_BASE_PATH }}') && pagesWorkflow.includes('NEXT_PUBLIC_DOCS_BASE_PATH: ${{ env.REPO_BASE_PATH }}/${{ env.PREVIEW_PATH }}'), 'Expected production and preview builds to use distinct base paths')
   assert(pagesWorkflow.includes('actions/deploy-pages@v4'), 'Expected Pages workflow to deploy to GitHub Pages')
   assert(pagesWorkflow.includes('compareCommitsWithBasehead') && pagesWorkflow.includes('pr-preview/pr-${{ github.event.pull_request.number }}') && pagesWorkflow.includes('clickhouse-product-analytics-docs-preview'), 'Expected Pages workflow to deploy and comment on PR docs previews')
-  assert(ciWorkflow.includes('npm run verify:e2e') && ciWorkflow.includes('helm lint') && ciWorkflow.includes('helm template') && ciWorkflow.includes('git diff --exit-code docs/reference/sdk'), 'Expected CI workflow to run E2E, Helm, and generated docs checks')
+  assert(ciWorkflow.includes('npm run verify:e2e') && ciWorkflow.includes('helm lint') && ciWorkflow.includes('helm template') && ciWorkflow.includes('git diff --exit-code content/docs/reference/sdk-generated'), 'Expected CI workflow to run E2E, Helm, and generated docs checks')
+  assert(ciWorkflow.includes('npm run docs:typecheck') && ciWorkflow.includes('npm run docs:build') && ciWorkflow.includes('npm run docs:validate'), 'Expected CI workflow to run docs checks')
+  assert(agents.includes('openapi/clickhouse-product-analytics.openapi.yaml') && agents.includes('content/docs/reference/sdk-generated'), 'Expected AGENTS.md to point at migrated API and SDK docs artifacts')
   assert(containerWorkflow.includes('workflow_run') && containerWorkflow.includes('CI') && containerWorkflow.includes("workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'") && containerWorkflow.includes('Verify current main commit') && !containerWorkflow.includes('workflow_dispatch'), 'Expected container workflow to publish only after CI succeeds on the current main push')
   assert(containerWorkflow.includes('ghcr.io/${{ github.repository }}/ingest-service') && containerWorkflow.includes('docker/build-push-action@v6'), 'Expected container workflow to publish the ingest image to GHCR')
   assert(dockerfile.includes('node:22-alpine@sha256:') && dockerfile.includes('RUN npm ci') && dockerfile.includes('LICENSE THIRD_PARTY_NOTICES.md ATTRIBUTION.md'), 'Expected Dockerfile to pin Node, use lockfile install, and include notice files')

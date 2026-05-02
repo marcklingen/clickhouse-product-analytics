@@ -15,7 +15,7 @@ The repo scope is intentionally narrow: own the first mile of product analytics 
 - **ClickHouse migrations** (`packages/ingest-service/migrations`): `events`, `persons`, and `person_distinct_ids` tables plus the `sessions` view.
 - **Local stack** (`docker-compose.yml`): ClickHouse plus ingest service with migration-on-start for development.
 - **Examples** (`examples`): a Next.js browser smoke app and direct backend API capture script.
-- **Docs** (`docs/index.md`): a multi-page Markdown guide rendered by GitHub Pages.
+- **Docs** (`apps/docs`, `content/docs`): a Fumadocs/Next static site rendered from curated MDX, generated TypeDoc reference pages, and the committed OpenAPI spec.
 - **Attribution** (`ATTRIBUTION.md`, `THIRD_PARTY_NOTICES.md`): upstream inspiration and license notes.
 
 ## Quick Start
@@ -38,23 +38,25 @@ The Compose stack pins `clickhouse/clickhouse-server:26.3.9.8-alpine` so local d
 
 ## Documentation
 
-The public docs site is maintained as Markdown in [`docs/`](./docs/index.md). GitHub Pages renders it with Jekyll using [`docs/_config.yml`](./docs/_config.yml), and [`.github/workflows/pages.yml`](./.github/workflows/pages.yml) deploys the generated static site from the `docs` folder.
+The public docs site is a static Fumadocs/Next app in [`apps/docs`](./apps/docs/package.json). Curated pages live in [`content/docs`](./content/docs/index.mdx), the API contract lives in [`openapi/clickhouse-product-analytics.openapi.yaml`](./openapi/clickhouse-product-analytics.openapi.yaml), and [`.github/workflows/pages.yml`](./.github/workflows/pages.yml) deploys the exported site to GitHub Pages.
 
-In the repository settings, set **Pages > Build and deployment > Source** to **GitHub Actions**. After that, pushes to `main` that change `docs/**` or the Pages workflow publish the docs page automatically.
+In the repository settings, set **Pages > Build and deployment > Source** to **GitHub Actions**. After that, pushes to `main` that change `apps/docs/**`, `content/docs/**`, `openapi/**`, generated reference output, package metadata, or the Pages workflow publish the docs page automatically.
 
 Key pages:
 
-- [Architecture](./docs/architecture.md)
-- [Deployment](./docs/deployment.md), including ClickHouse Cloud configuration
-- [Railway deployment](./docs/railway.md)
-- [Helm deployment](./docs/helm.md)
-- [Sending events](./docs/sending-events.md)
-- [Identifying users](./docs/identifying-users.md)
-- [ClickHouse schema](./docs/clickhouse-schema.md)
-- [Reference](./docs/reference/index.md), including the public HTTP API and generated SDK/React reference
-- [Publishing packages](./docs/publishing.md)
-- [Coding agent skill](./docs/agent-skill.md)
-- [Verification](./docs/verification.md)
+- [Architecture](./content/docs/operate/architecture.mdx)
+- [Deployment](./content/docs/operate/deployment.mdx), including ClickHouse Cloud configuration
+- [Railway deployment](./content/docs/operate/railway.mdx)
+- [Helm deployment](./content/docs/operate/helm.mdx)
+- [Sending events](./content/docs/start/sending-events.mdx)
+- [Identifying users](./content/docs/start/identifying-users.mdx)
+- [React usage](./content/docs/start/react.mdx)
+- [ClickHouse schema](./content/docs/operate/clickhouse-schema.mdx)
+- [API reference landing](./content/docs/reference/api.mdx) and [OpenAPI spec](./openapi/clickhouse-product-analytics.openapi.yaml)
+- [SDK reference landing](./content/docs/reference/sdk.mdx) and [React reference landing](./content/docs/reference/react.mdx)
+- [Publishing packages](./content/docs/project/publishing.mdx)
+- [Coding agent skill](./content/docs/project/agent-skill.mdx)
+- [Verification](./content/docs/operate/verification.mdx)
 - [Contributing](./CONTRIBUTING.md)
 - [Security](./SECURITY.md)
 
@@ -125,7 +127,7 @@ export function SignupButton() {
 
 For Next.js App Router, put the provider in a small client component such as `app/providers.tsx`, then wrap `{children}` from `app/layout.tsx`. The provider initializes only in the browser, returns `undefined` from `useAnalytics()` until ready, and keeps children rendering if analytics is not initialized yet.
 
-For the full React API, including viewport tracking caveats, see [Sending events](./docs/sending-events.md).
+For the full React setup, including viewport tracking caveats, see [React usage](./content/docs/start/react.mdx).
 
 ## Direct API
 
@@ -194,7 +196,7 @@ npm run dev:next
 
 The E2E verifier builds the Next.js smoke app, exercises the documented browser SDK, React, direct API, identity, CORS, gzip, pageview/pageleave, autocapture, and docs deployment wiring flows, then queries ClickHouse for matching `events`, `persons`, `person_distinct_ids`, and `sessions` rows.
 
-Use `npm run release:dry-run` before publishing the SDK and React packages. The full npm release workflow is documented in [Publishing packages](./docs/publishing.md).
+Use `npm run release:dry-run` before publishing the SDK and React packages. The full npm release workflow is documented in [Publishing packages](./content/docs/project/publishing.mdx).
 
 ## Attribution
 
