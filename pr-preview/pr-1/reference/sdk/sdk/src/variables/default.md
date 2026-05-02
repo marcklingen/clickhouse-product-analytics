@@ -8,4 +8,4 @@
 
 > `const` **default**: [`ClickHouseProductAnalytics`](../classes/ClickHouseProductAnalytics.md)
 
-Defined in: [sdk/src/index.ts:499](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L499)
+Defined in: [sdk/src/index.ts:506](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L506)

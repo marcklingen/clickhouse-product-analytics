@@ -8,7 +8,7 @@
 
 > **BeforeSendHook** = (`event`) => `BeforeSendEvent` \| `false` \| `null` \| `undefined`
 
-Defined in: [sdk/src/types.ts:48](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L48)
+Defined in: [sdk/src/types.ts:49](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L49)
 
 Hook that can mutate an event before enqueueing it, or return a falsy value to drop it.
 

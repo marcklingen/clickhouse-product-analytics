@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Tables, views, and query patterns for humans and agents.","headline":"ClickHouse Schema","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/clickhouse-schema.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=fa4c70fad5efb73c6b7db759abf5bc3f6479eb12">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -45,7 +45,7 @@
 
 <p>The ClickHouse database is the analytics source of truth. The default database name is <code class="language-plaintext highlighter-rouge">product_analytics</code>, but deployments can set <code class="language-plaintext highlighter-rouge">CLICKHOUSE_DATABASE</code>.</p>
 
-<p>There is no project ID and no tenant column. <code class="language-plaintext highlighter-rouge">api_key</code> is stored on events as the accepted publishable credential, but it is not a tenant boundary. Do not write queries that assume <code class="language-plaintext highlighter-rouge">project_id</code>, <code class="language-plaintext highlighter-rouge">team_id</code>, or multi-tenancy.</p>
+<p>There is no project ID and no tenant column. <code class="language-plaintext highlighter-rouge">api_key</code> is stored on events when supplied as an ingest credential, but it is not a tenant or identity boundary. Do not write queries that assume <code class="language-plaintext highlighter-rouge">project_id</code>, <code class="language-plaintext highlighter-rouge">team_id</code>, or multi-tenancy.</p>
 
 <h2 id="agent-query-guidelines">Agent Query Guidelines</h2>
 
@@ -82,7 +82,7 @@
     <tr>
       <td><code class="language-plaintext highlighter-rouge">api_key</code></td>
       <td><code class="language-plaintext highlighter-rouge">LowCardinality(String)</code></td>
-      <td>Accepted publishable API key.</td>
+      <td>Ingest API key supplied on the request, or an empty string for keyless allowed-origin browser requests.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">event</code></td>
@@ -312,7 +312,7 @@
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">api_key</code></td>
-      <td>Publishable API key on the events in the session.</td>
+      <td>Ingest API key on the session events, or an empty string for keyless allowed-origin browser sessions.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">session_id</code></td>

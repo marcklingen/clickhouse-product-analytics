@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Browser SDK, React, direct API, batch API, and event naming examples.","headline":"Sending Events","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/sending-events.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=fa4c70fad5efb73c6b7db759abf5bc3f6479eb12">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -76,7 +76,7 @@
 
 <div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nx">analytics</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@clickhouse-product-analytics/sdk</span><span class="dl">'</span>
 
-<span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+<span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">({</span>
   <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://127.0.0.1:8080</span><span class="dl">'</span><span class="p">,</span>
   <span class="na">capture_pageview</span><span class="p">:</span> <span class="dl">'</span><span class="s1">history_change</span><span class="dl">'</span><span class="p">,</span>
   <span class="na">autocapture</span><span class="p">:</span> <span class="p">{</span>
@@ -155,7 +155,7 @@
 
 <p>For single-page applications, use <code class="language-plaintext highlighter-rouge">capture_pageview: "history_change"</code> so route changes emit <code class="language-plaintext highlighter-rouge">$pageview</code>:</p>
 
-<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">({</span>
   <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
   <span class="na">capture_pageview</span><span class="p">:</span> <span class="dl">'</span><span class="s1">history_change</span><span class="dl">'</span>
 <span class="p">})</span>
@@ -174,7 +174,7 @@
 
 <p>Autocapture is opt-in. Keep it narrow and explicit:</p>
 
-<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">({</span>
   <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
   <span class="na">autocapture</span><span class="p">:</span> <span class="p">{</span>
     <span class="na">captureText</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
@@ -190,7 +190,7 @@
 
 <p>Use <code class="language-plaintext highlighter-rouge">before_send</code> to enforce a local event contract:</p>
 
-<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">({</span>
   <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
   <span class="na">before_send</span><span class="p">:</span> <span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">event</span> <span class="o">===</span> <span class="dl">'</span><span class="s1">debug_event</span><span class="dl">'</span><span class="p">)</span> <span class="p">{</span>
@@ -224,7 +224,6 @@
 <span class="k">export</span> <span class="kd">function</span> <span class="nx">Providers</span><span class="p">({</span> <span class="nx">children</span> <span class="p">}:</span> <span class="p">{</span> <span class="nl">children</span><span class="p">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">ReactNode</span> <span class="p">})</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span>
     <span class="p">&lt;</span><span class="nc">AnalyticsProvider</span>
-      <span class="na">apiKey</span><span class="p">=</span><span class="s">"local_dev_key"</span>
       <span class="na">options</span><span class="p">=</span>
     <span class="p">&gt;</span>
       <span class="si">{</span><span class="nx">children</span><span class="si">}</span>
@@ -332,7 +331,7 @@
   }'</span>
 </code></pre></div></div>
 
-<p>The service also accepts an array of event objects as the request body. At least one event must carry <code class="language-plaintext highlighter-rouge">api_key</code> or <code class="language-plaintext highlighter-rouge">token</code>; events without a key inherit that value, and any provided keys in the same array must match.</p>
+<p>The service also accepts an array of event objects as the request body. Browser-origin arrays can omit keys. No-origin backend arrays need a valid <code class="language-plaintext highlighter-rouge">api_key</code> on at least one event, and any provided keys in the same request must match.</p>
 
 <h2 id="compressed-requests">Compressed Requests</h2>
 
@@ -365,7 +364,7 @@
 
 <h2 id="invalid-events">Invalid Events</h2>
 
-<p>The service rejects malformed requests such as missing API keys, invalid timestamps, mixed API keys in one batch, disallowed origins, invalid keys, oversized bodies, and oversized batches.</p>
+<p>The service rejects malformed requests such as invalid timestamps, mixed API keys in one request, disallowed origins, invalid keys, missing keys on no-origin backend requests, oversized bodies, and oversized batches.</p>
 
 <p>Inside an otherwise valid batch, events missing an event name or distinct ID are dropped and counted in the response:</p>
 

@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Local and production deployment model.","headline":"Deployment","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/deployment.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=fa4c70fad5efb73c6b7db759abf5bc3f6479eb12">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -83,7 +83,7 @@ docker compose up <span class="nt">-d</span> <span class="nt">--build</span>
 <ul>
   <li>one or more ingest service containers,</li>
   <li>shared ClickHouse database on a supported stable or LTS ClickHouse release,</li>
-  <li>stable <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code>,</li>
+  <li>stable <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code> when backend or no-origin requests are used,</li>
   <li>explicit <code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code>,</li>
   <li><code class="language-plaintext highlighter-rouge">LOG_LEVEL=warn</code> or stricter for high-volume traffic,</li>
   <li>migrations run manually before deploy,</li>
@@ -118,10 +118,9 @@ ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service:latest
 
 <p>Then configure the ingest service the same way you would for a self-hosted production deployment:</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">PUBLIC_API_KEYS</span><span class="o">=</span>&lt;publishable-ingest-key&gt;
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">PUBLIC_API_KEYS</span><span class="o">=</span>&lt;backend-ingest-key-old&gt;,&lt;backend-ingest-key-new&gt;
 <span class="nv">ALLOWED_ORIGINS</span><span class="o">=</span>https://app.example.com
-<span class="nv">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN</span><span class="o">=</span><span class="nb">true
-</span><span class="nv">MIGRATE_ON_START</span><span class="o">=</span><span class="nb">false</span>
+<span class="nv">MIGRATE_ON_START</span><span class="o">=</span><span class="nb">false</span>
 </code></pre></div></div>
 
 <p>Run migrations from a trusted environment that can reach the ClickHouse Cloud service:</p>
@@ -156,9 +155,9 @@ npm run migrate
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code></td>
-      <td>yes</td>
-      <td>none</td>
-      <td>Comma-separated publishable API keys accepted by the service. These are dataset credentials, not tenant IDs.</td>
+      <td>for no-origin backend ingest</td>
+      <td>empty</td>
+      <td>Comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest. Browser requests from allowed origins can omit <code class="language-plaintext highlighter-rouge">api_key</code>; provided keys are still validated. Include old and new keys during rotation.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code></td>
@@ -171,12 +170,6 @@ npm run migrate
       <td>no</td>
       <td>empty</td>
       <td>Optional explicit host allowlist. Use only when host-level matching across schemes is intentional.</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN</code></td>
-      <td>no</td>
-      <td><code class="language-plaintext highlighter-rouge">true</code></td>
-      <td>Allows backend requests without an <code class="language-plaintext highlighter-rouge">Origin</code> header.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">MAX_BATCH_BYTES</code></td>
@@ -261,7 +254,7 @@ node dist/migrate.js
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">ALLOWED_ORIGINS</span><span class="o">=</span>https://app.example.com,https://www.example.com
 </code></pre></div></div>
 
-<p>Backend requests often omit <code class="language-plaintext highlighter-rouge">Origin</code>. Keep <code class="language-plaintext highlighter-rouge">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN=true</code> when server-side services need to send events directly.</p>
+<p>Backend requests often omit <code class="language-plaintext highlighter-rouge">Origin</code>. They are accepted when they send one of the configured <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code>. To disable no-origin backend ingest, leave <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code> empty.</p>
 
 <h2 id="scaling">Scaling</h2>
 
@@ -269,7 +262,7 @@ node dist/migrate.js
 
 <ul>
   <li>the same ClickHouse database,</li>
-  <li>the same accepted API keys,</li>
+  <li>the same accepted API keys when backend ingest uses them,</li>
   <li>the same origin policy,</li>
   <li>the same request limits.</li>
 </ul>

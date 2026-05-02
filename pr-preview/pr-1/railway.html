@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Deploy the ingest service on Railway with ClickHouse or ClickHouse Cloud.","headline":"Railway Deployment","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/railway.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=fa4c70fad5efb73c6b7db759abf5bc3f6479eb12">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -85,15 +85,11 @@
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code></td>
-      <td>Comma-separated publishable keys accepted by the service.</td>
+      <td>Optional comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code></td>
       <td>Comma-separated browser origins, for example <code class="language-plaintext highlighter-rouge">https://app.example.com</code>.</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN</code></td>
-      <td><code class="language-plaintext highlighter-rouge">true</code> if backend services send events without an <code class="language-plaintext highlighter-rouge">Origin</code> header.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">CLICKHOUSE_URL</code></td>

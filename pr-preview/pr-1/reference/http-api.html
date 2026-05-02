@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Public ingest endpoints, payloads, responses, and error semantics.","headline":"HTTP API Reference","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/reference/http-api.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=fa4c70fad5efb73c6b7db759abf5bc3f6479eb12">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -43,7 +43,7 @@
 
       <h1 id="http-api-reference">HTTP API Reference</h1>
 
-<p>The ingest service exposes a small public event API. It accepts browser SDK batches, backend service events, and compatibility-style capture calls. There is no project or tenant ID in this service; each deployment writes to one ClickHouse database and validates requests with <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code>.</p>
+<p>The ingest service exposes a small public event API. It accepts browser SDK batches, backend service events, and compatibility-style capture calls. There is no project or tenant ID in this service; each deployment writes to one ClickHouse database. Browser requests are validated by <code class="language-plaintext highlighter-rouge">Origin</code>, while backend or no-origin requests use <code class="language-plaintext highlighter-rouge">api_key</code> credentials from <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code>.</p>
 
 <h2 id="endpoints">Endpoints</h2>
 
@@ -82,7 +82,9 @@
 
 <h2 id="authentication">Authentication</h2>
 
-<p>Send <code class="language-plaintext highlighter-rouge">api_key</code> or <code class="language-plaintext highlighter-rouge">token</code> in the request body. The value must be listed in the service’s <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code> environment variable.</p>
+<p>Browser requests from an allowed <code class="language-plaintext highlighter-rouge">Origin</code> can omit <code class="language-plaintext highlighter-rouge">api_key</code>. If a browser request includes <code class="language-plaintext highlighter-rouge">api_key</code>, the value must be listed in <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code>; unknown provided keys return <code class="language-plaintext highlighter-rouge">401</code>.</p>
+
+<p>Backend requests commonly omit <code class="language-plaintext highlighter-rouge">Origin</code>. Those requests require a valid <code class="language-plaintext highlighter-rouge">api_key</code>. <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code> accepts a comma-separated list so operators can keep old and new backend keys active during rotation. To disable no-origin backend ingest, leave <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code> empty.</p>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
   </span><span class="nl">"api_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"local_dev_key"</span><span class="p">,</span><span class="w">
@@ -91,7 +93,7 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>Requests with unknown keys return <code class="language-plaintext highlighter-rouge">401</code>.</p>
+<p>Requests from disallowed origins return <code class="language-plaintext highlighter-rouge">403</code>. No-origin requests with missing or unknown keys return <code class="language-plaintext highlighter-rouge">401</code>.</p>
 
 <h2 id="single-event-payload">Single Event Payload</h2>
 
@@ -119,9 +121,9 @@
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">api_key</code> or <code class="language-plaintext highlighter-rouge">token</code></td>
-      <td>Yes</td>
-      <td>Publishable key accepted by the service.</td>
+      <td><code class="language-plaintext highlighter-rouge">api_key</code></td>
+      <td>Browser: no. No-origin backend: yes.</td>
+      <td>Ingest credential accepted by the service. It does not scope identity or create tenants.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">event</code></td>
@@ -163,9 +165,9 @@
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
-<p>All events in a batch must resolve to the same API key. Mixed keys return <code class="language-plaintext highlighter-rouge">400</code>. Batches larger than <code class="language-plaintext highlighter-rouge">MAX_EVENTS_PER_BATCH</code> return <code class="language-plaintext highlighter-rouge">413</code>.</p>
+<p>If a batch includes keys in more than one place, all provided keys must match. Mixed keys return <code class="language-plaintext highlighter-rouge">400</code>. Batches larger than <code class="language-plaintext highlighter-rouge">MAX_EVENTS_PER_BATCH</code> return <code class="language-plaintext highlighter-rouge">413</code>.</p>
 
-<p>The service also accepts an array of event objects as the request body when each event carries <code class="language-plaintext highlighter-rouge">api_key</code> or <code class="language-plaintext highlighter-rouge">token</code>.</p>
+<p>The service also accepts an array of event objects as the request body. Browser-origin arrays can omit keys. No-origin backend arrays need a valid key on at least one event, and all provided keys must match.</p>
 
 <h2 id="form-encoded-payloads">Form-Encoded Payloads</h2>
 
@@ -209,7 +211,7 @@ curl <span class="nt">-X</span> POST http://127.0.0.1:8080/capture/ <span class=
 
 <h2 id="cors-and-origins">CORS and Origins</h2>
 
-<p>Browser requests must use an <code class="language-plaintext highlighter-rouge">Origin</code> listed in <code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code>. Backend requests usually omit <code class="language-plaintext highlighter-rouge">Origin</code>; they are accepted when <code class="language-plaintext highlighter-rouge">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN=true</code>.</p>
+<p>Browser requests must use an <code class="language-plaintext highlighter-rouge">Origin</code> listed in <code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code>. Backend requests usually omit <code class="language-plaintext highlighter-rouge">Origin</code>; they are accepted when the payload includes one of the configured API keys.</p>
 
 <h2 id="responses">Responses</h2>
 
@@ -236,11 +238,11 @@ curl <span class="nt">-X</span> POST http://127.0.0.1:8080/capture/ <span class=
   <tbody>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">400</code></td>
-      <td>Invalid payload, invalid timestamp, missing API key, or mixed batch keys.</td>
+      <td>Invalid payload, invalid timestamp, or mixed batch keys.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">401</code></td>
-      <td>Unknown API key.</td>
+      <td>Missing key on no-origin backend requests, unknown provided key, or invalid provided browser key.</td>
     </tr>
     <tr>
       <td><code class="language-plaintext highlighter-rouge">403</code></td>

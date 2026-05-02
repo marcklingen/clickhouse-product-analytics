@@ -8,7 +8,7 @@
 
 > **InitOptions** = `AnalyticsClientConfig` & `object`
 
-Defined in: [sdk/src/types.ts:106](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L106)
+Defined in: [sdk/src/types.ts:105](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L105)
 
 Complete initialization options, including camelCase aliases and advanced controls.
 
@@ -24,7 +24,7 @@ CamelCase alias of `api_host`.
 
 > `optional` **apiKey?**: `string`
 
-CamelCase alias of `token`.
+Optional client-supplied API key. Required for no-origin backend calls; optional for allowed-origin browser calls.
 
 ### batchEndpoint?
 

@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Anonymous IDs, identify, person properties, aliases, and reset.","headline":"Identifying Users","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/identifying-users.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=fa4c70fad5efb73c6b7db759abf5bc3f6479eb12">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -51,7 +51,7 @@
 
 <p>Every event has a <code class="language-plaintext highlighter-rouge">distinct_id</code>. In the browser, the SDK creates one automatically and stores it using the configured persistence layer. Backend events must provide a <code class="language-plaintext highlighter-rouge">distinct_id</code> directly.</p>
 
-<p>The ingest service resolves each <code class="language-plaintext highlighter-rouge">distinct_id</code> to a <code class="language-plaintext highlighter-rouge">person_id</code>:</p>
+<p>The ingest service resolves each <code class="language-plaintext highlighter-rouge">distinct_id</code> to a <code class="language-plaintext highlighter-rouge">person_id</code> globally within the deployment:</p>
 
 <ul>
   <li>If the distinct ID already exists in <code class="language-plaintext highlighter-rouge">person_distinct_ids</code>, the existing <code class="language-plaintext highlighter-rouge">person_id</code> is used.</li>

@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"System boundaries, event flow, and identity flow.","headline":"Architecture","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/architecture.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=fa4c70fad5efb73c6b7db759abf5bc3f6479eb12">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -51,7 +51,7 @@
 Backend services     -&gt;  Direct API   -&gt;  HTTP ingest service  -&gt;  ClickHouse
 </code></pre></div></div>
 
-<p>The ingest service has no settings UI and no runtime project model. Configuration comes from environment variables. API keys are publishable credentials for one analytics dataset, not tenant or project boundaries.</p>
+<p>The ingest service has no settings UI and no runtime project model. Configuration comes from environment variables. Browser traffic is gated by allowed origins. <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code> is optional to configure; when configured, keys are required for backend or no-origin requests and optional for allowed-origin browser requests. API keys are not tenant or identity boundaries.</p>
 
 <h2 id="components">Components</h2>
 
@@ -105,8 +105,8 @@ Backend services     -&gt;  Direct API   -&gt;  HTTP ingest service  -&gt;  Clic
 <h2 id="event-flow">Event Flow</h2>
 
 <ol>
-  <li>A browser or backend sends an event with an API key, event name, distinct ID, optional timestamp, and properties.</li>
-  <li>The service validates the API key and request source.</li>
+  <li>A browser or backend sends an event with an event name, distinct ID, optional timestamp, optional API key, and properties.</li>
+  <li>The service validates the request source: browser requests must match the origin allowlist, while no-origin backend requests need a configured API key.</li>
   <li>The payload is decoded. Plain JSON, form-encoded <code class="language-plaintext highlighter-rouge">data</code>, gzip, deflate, and Brotli request bodies are supported.</li>
   <li>Invalid events inside a batch are dropped when the event name or distinct ID is missing. The response remains successful and includes a <code class="language-plaintext highlighter-rouge">dropped</code> count.</li>
   <li>Each accepted event is normalized with promoted fields such as <code class="language-plaintext highlighter-rouge">event</code>, <code class="language-plaintext highlighter-rouge">distinct_id</code>, <code class="language-plaintext highlighter-rouge">person_id</code>, <code class="language-plaintext highlighter-rouge">session_id</code>, <code class="language-plaintext highlighter-rouge">window_id</code>, <code class="language-plaintext highlighter-rouge">current_url</code>, <code class="language-plaintext highlighter-rouge">host</code>, timestamp, IP, and user agent.</li>

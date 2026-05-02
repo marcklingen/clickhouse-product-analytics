@@ -8,7 +8,7 @@
 
 > **AnalyticsCaptureOnViewed**(`__namedParameters`): `Element`
 
-Defined in: [react/src/index.tsx:139](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/react/src/index.tsx#L139)
+Defined in: [react/src/index.tsx:143](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/react/src/index.tsx#L143)
 
 Capture one event when wrapped content enters the viewport.
 

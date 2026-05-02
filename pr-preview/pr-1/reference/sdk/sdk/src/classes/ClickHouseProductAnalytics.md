@@ -188,21 +188,21 @@ Associate future events with a known user and optionally set person properties.
 
 #### Call Signature
 
-> **init**(`token`, `config?`): `this`
+> **init**(`apiKey`, `config?`): `this`
 
 Defined in: [sdk/src/index.ts:79](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L79)
 
-Initialize the client with a publishable API key and browser SDK options.
+Initialize the client with an ingest API key and browser SDK options.
 
 ##### Parameters
 
-###### token
+###### apiKey
 
 `string`
 
 ###### config?
 
-`Omit`\<[`InitOptions`](../type-aliases/InitOptions.md), `"apiKey"` \| `"token"`\>
+`Omit`\<[`InitOptions`](../type-aliases/InitOptions.md), `"apiKey"`\>
 
 ##### Returns
 
@@ -214,7 +214,7 @@ Initialize the client with a publishable API key and browser SDK options.
 
 Defined in: [sdk/src/index.ts:81](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L81)
 
-Initialize the client with a complete options object.
+Initialize the client with a complete options object. Allowed-origin browser requests can omit the API key.
 
 ##### Parameters
 

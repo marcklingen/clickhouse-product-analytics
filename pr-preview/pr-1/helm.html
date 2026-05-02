@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Install the ingest service on Kubernetes with autoscaling.","headline":"Helm Deployment","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/helm.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=fa4c70fad5efb73c6b7db759abf5bc3f6479eb12">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -61,7 +61,7 @@
   <span class="nt">--create-namespace</span> <span class="se">\</span>
   <span class="nt">--set</span> image.repository<span class="o">=</span>ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service <span class="se">\</span>
   <span class="nt">--set</span> image.tag<span class="o">=</span>sha-&lt;commit&gt; <span class="se">\</span>
-  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span><span class="s2">"&lt;publishable-key&gt;"</span> <span class="se">\</span>
+  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span><span class="s2">"&lt;backend-key-old&gt;,&lt;backend-key-new&gt;"</span> <span class="se">\</span>
   <span class="nt">--set</span> ingest.allowedOrigins<span class="o">=</span><span class="s2">"https://app.example.com"</span> <span class="se">\</span>
   <span class="nt">--set</span> clickhouse.url<span class="o">=</span><span class="s2">"https://&lt;clickhouse-cloud-host&gt;:8443"</span> <span class="se">\</span>
   <span class="nt">--set</span> clickhouse.database<span class="o">=</span><span class="s2">"product_analytics"</span> <span class="se">\</span>
@@ -72,7 +72,7 @@
 <p>Use an existing Kubernetes secret for ClickHouse credentials when possible:</p>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm upgrade <span class="nt">--install</span> cpa ./deploy/helm/clickhouse-product-analytics <span class="se">\</span>
-  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span><span class="s2">"&lt;publishable-key&gt;"</span> <span class="se">\</span>
+  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span><span class="s2">"&lt;backend-key-old&gt;,&lt;backend-key-new&gt;"</span> <span class="se">\</span>
   <span class="nt">--set</span> clickhouse.url<span class="o">=</span><span class="s2">"https://&lt;clickhouse-cloud-host&gt;:8443"</span> <span class="se">\</span>
   <span class="nt">--set</span> clickhouse.existingSecret<span class="o">=</span>clickhouse-credentials
 </code></pre></div></div>
@@ -84,12 +84,12 @@
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm upgrade <span class="nt">--install</span> cpa ./deploy/helm/clickhouse-product-analytics <span class="se">\</span>
   <span class="nt">--set</span> image.repository<span class="o">=</span>ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service <span class="se">\</span>
   <span class="nt">--set</span> image.digest<span class="o">=</span>sha256:&lt;digest&gt; <span class="se">\</span>
-  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span><span class="s2">"&lt;publishable-key&gt;"</span> <span class="se">\</span>
+  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span><span class="s2">"&lt;backend-key-old&gt;,&lt;backend-key-new&gt;"</span> <span class="se">\</span>
   <span class="nt">--set</span> clickhouse.url<span class="o">=</span><span class="s2">"https://&lt;clickhouse-cloud-host&gt;:8443"</span> <span class="se">\</span>
   <span class="nt">--set</span> clickhouse.existingSecret<span class="o">=</span>clickhouse-credentials
 </code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">clickhouse.url</code> is required. Rendering fails early when it is missing so an invalid deployment is not applied.</p>
+<p><code class="language-plaintext highlighter-rouge">clickhouse.url</code> is required. Rendering fails early when it is missing so an invalid deployment is not applied. Set <code class="language-plaintext highlighter-rouge">ingest.publicApiKeys</code> to a comma-separated list when backend or no-origin ingest is enabled; browser-only deployments that rely on <code class="language-plaintext highlighter-rouge">ingest.allowedOrigins</code> can omit API keys.</p>
 
 <h2 id="autoscaling-defaults">Autoscaling Defaults</h2>
 
