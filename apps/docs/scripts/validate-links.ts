@@ -1,5 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises'
-import { dirname, join, relative, resolve } from 'node:path'
+import { basename, dirname, join, relative, resolve } from 'node:path'
 const contentRoot = join(process.cwd(), '../../content/docs')
 const staticRoot = join(process.cwd(), 'out')
 const knownRoutes = new Set<string>()
@@ -23,6 +23,10 @@ for (const file of files) {
   for (const [, rawHref] of links) {
     const href = rawHref.trim()
     if (!href || href.startsWith('http:') || href.startsWith('https:') || href.startsWith('mailto:') || href.startsWith('#')) {
+      continue
+    }
+    if (href.split('#')[0].split('?')[0].endsWith('.mdx')) {
+      errors.push(`${relative(contentRoot, file)} links to a source MDX file instead of a docs route: ${href}`)
       continue
     }
     const route = href.startsWith('/')
@@ -76,7 +80,11 @@ function resolveRelativeRoute(file: string, href: string): string {
   }
 
   const currentRoute = routeFromContentFile(file)
-  const baseRoute = currentRoute === '/' ? '/' : `${currentRoute.slice(0, currentRoute.lastIndexOf('/') + 1)}`
+  const baseRoute = currentRoute === '/'
+    ? '/'
+    : basename(file) === 'index.mdx'
+      ? `${currentRoute}/`
+      : `${currentRoute.slice(0, currentRoute.lastIndexOf('/') + 1)}`
   return normalizeRoute(new URL(withoutQuery, `https://docs.local${baseRoute}`).pathname)
 }
 

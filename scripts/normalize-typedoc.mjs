@@ -20,12 +20,17 @@ async function normalizeDirectory(directory) {
     }
 
     const content = await readFile(path, 'utf8')
-    if (content.startsWith('---\n')) {
+    const normalizedContent = normalizeMdxLinks(content)
+
+    if (normalizedContent.startsWith('---\n')) {
+      if (normalizedContent !== content) {
+        await writeFile(path, normalizedContent)
+      }
       continue
     }
 
-    const title = inferTitle(content, path)
-    await writeFile(path, `---\ntitle: ${JSON.stringify(title)}\ndescription: Generated TypeDoc reference.\n---\n\n${content}`)
+    const title = inferTitle(normalizedContent, path)
+    await writeFile(path, `---\ntitle: ${JSON.stringify(title)}\ndescription: Generated TypeDoc reference.\n---\n\n${normalizedContent}`)
   }
 }
 
@@ -75,6 +80,31 @@ function stripMarkdown(value) {
     .replaceAll('`', '')
     .replace(/\[(.+?)\]\(.+?\)/g, '$1')
     .trim()
+}
+
+function normalizeMdxLinks(content) {
+  return content.replace(/\]\(([^)\s]+\.mdx(?:#[^)]+)?)\)/g, (_match, href) => {
+    return `](${normalizeMdxHref(href)})`
+  })
+}
+
+function normalizeMdxHref(href) {
+  const hashIndex = href.indexOf('#')
+  const path = hashIndex === -1 ? href : href.slice(0, hashIndex)
+  const hash = hashIndex === -1 ? '' : href.slice(hashIndex)
+  let route = path.replace(/\.mdx$/, '')
+
+  if (route === 'index') {
+    route = '.'
+  } else if (route.endsWith('/index')) {
+    route = route.slice(0, -'/index'.length)
+  }
+
+  if (!route.endsWith('/')) {
+    route = `${route}/`
+  }
+
+  return `${route}${hash}`
 }
 
 function titleCase(value) {
