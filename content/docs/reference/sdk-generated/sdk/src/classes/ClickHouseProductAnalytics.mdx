@@ -3,11 +3,11 @@ title: "Class: ClickHouseProductAnalytics"
 description: Generated TypeDoc reference.
 ---
 
-[**SDK and React Reference**](../../../)
+[**SDK and React Reference**](/reference/sdk-generated/)
 
 ***
 
-[SDK and React Reference](../../../) / [sdk/src](../) / ClickHouseProductAnalytics
+[SDK and React Reference](/reference/sdk-generated/) / [sdk/src](/reference/sdk-generated/sdk/src/) / ClickHouseProductAnalytics
 
 # Class: ClickHouseProductAnalytics
 
@@ -29,7 +29,7 @@ Browser analytics client for capturing product events into the ingest service.
 
 ### alias()
 
-> **alias**(`alias`, `original?`): [`QueuedEvent`](../type-aliases/QueuedEvent/) \| `undefined`
+> **alias**(`alias`, `original?`): [`QueuedEvent`](/reference/sdk-generated/sdk/src/type-aliases/QueuedEvent/) \| `undefined`
 
 Defined in: [sdk/src/index.ts:203](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L203)
 
@@ -47,13 +47,13 @@ Link another distinct ID to the current or supplied original distinct ID.
 
 #### Returns
 
-[`QueuedEvent`](../type-aliases/QueuedEvent/) \| `undefined`
+[`QueuedEvent`](/reference/sdk-generated/sdk/src/type-aliases/QueuedEvent/) \| `undefined`
 
 ***
 
 ### capture()
 
-> **capture**(`eventName`, `properties?`, `options?`): [`QueuedEvent`](../type-aliases/QueuedEvent/) \| `undefined`
+> **capture**(`eventName`, `properties?`, `options?`): [`QueuedEvent`](/reference/sdk-generated/sdk/src/type-aliases/QueuedEvent/) \| `undefined`
 
 Defined in: [sdk/src/index.ts:110](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L110)
 
@@ -67,15 +67,15 @@ Capture a named event with optional properties.
 
 ##### properties?
 
-[`CaptureProperties`](../type-aliases/CaptureProperties/) \| `null`
+[`CaptureProperties`](/reference/sdk-generated/sdk/src/type-aliases/CaptureProperties/) \| `null`
 
 ##### options?
 
-[`CaptureOptions`](../type-aliases/CaptureOptions/) = `{}`
+[`CaptureOptions`](/reference/sdk-generated/sdk/src/type-aliases/CaptureOptions/) = `{}`
 
 #### Returns
 
-[`QueuedEvent`](../type-aliases/QueuedEvent/) \| `undefined`
+[`QueuedEvent`](/reference/sdk-generated/sdk/src/type-aliases/QueuedEvent/) \| `undefined`
 
 ***
 
@@ -177,11 +177,11 @@ Associate future events with a known user and optionally set person properties.
 
 ##### userPropertiesToSet?
 
-[`CaptureProperties`](../type-aliases/CaptureProperties/) = `{}`
+[`CaptureProperties`](/reference/sdk-generated/sdk/src/type-aliases/CaptureProperties/) = `{}`
 
 ##### userPropertiesToSetOnce?
 
-[`CaptureProperties`](../type-aliases/CaptureProperties/) = `{}`
+[`CaptureProperties`](/reference/sdk-generated/sdk/src/type-aliases/CaptureProperties/) = `{}`
 
 #### Returns
 
@@ -207,7 +207,7 @@ Initialize the client with an ingest API key and browser SDK options.
 
 ###### config
 
-`Omit`\<[`InitOptions`](../type-aliases/InitOptions/), `"apiKey"`\>
+`Omit`\<[`InitOptions`](/reference/sdk-generated/sdk/src/type-aliases/InitOptions/), `"apiKey"`\>
 
 ##### Returns
 
@@ -225,7 +225,7 @@ Initialize the client with a complete options object. Allowed-origin browser req
 
 ###### config
 
-[`InitOptions`](../type-aliases/InitOptions/)
+[`InitOptions`](/reference/sdk-generated/sdk/src/type-aliases/InitOptions/)
 
 ##### Returns
 
@@ -287,7 +287,7 @@ Register properties that are attached to all future events.
 
 ##### properties
 
-[`CaptureProperties`](../type-aliases/CaptureProperties/)
+[`CaptureProperties`](/reference/sdk-generated/sdk/src/type-aliases/CaptureProperties/)
 
 #### Returns
 
@@ -307,7 +307,7 @@ Register properties only when their current value is absent or equal to `default
 
 ##### properties
 
-[`CaptureProperties`](../type-aliases/CaptureProperties/)
+[`CaptureProperties`](/reference/sdk-generated/sdk/src/type-aliases/CaptureProperties/)
 
 ##### defaultValue?
 
@@ -351,11 +351,11 @@ Set or set-once person properties for the current distinct ID.
 
 ##### userPropertiesToSet?
 
-[`CaptureProperties`](../type-aliases/CaptureProperties/) = `{}`
+[`CaptureProperties`](/reference/sdk-generated/sdk/src/type-aliases/CaptureProperties/) = `{}`
 
 ##### userPropertiesToSetOnce?
 
-[`CaptureProperties`](../type-aliases/CaptureProperties/) = `{}`
+[`CaptureProperties`](/reference/sdk-generated/sdk/src/type-aliases/CaptureProperties/) = `{}`
 
 #### Returns
 

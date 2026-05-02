@@ -1,5 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises'
-import { basename, dirname, join, relative, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 const contentRoot = join(process.cwd(), '../../content/docs')
 const staticRoot = join(process.cwd(), 'out')
 const knownRoutes = new Set<string>()
@@ -73,18 +73,14 @@ function normalizeRoute(href: string): string {
 function resolveRelativeRoute(file: string, href: string): string {
   const withoutHash = href.split('#')[0]
   const withoutQuery = withoutHash.split('?')[0]
-  const target = resolve(dirname(file), withoutQuery)
 
   if (withoutQuery.endsWith('.mdx')) {
+    const target = resolve(dirname(file), withoutQuery)
     return routeFromContentFile(target)
   }
 
   const currentRoute = routeFromContentFile(file)
-  const baseRoute = currentRoute === '/'
-    ? '/'
-    : basename(file) === 'index.mdx'
-      ? `${currentRoute}/`
-      : `${currentRoute.slice(0, currentRoute.lastIndexOf('/') + 1)}`
+  const baseRoute = currentRoute === '/' ? '/' : `${currentRoute}/`
   return normalizeRoute(new URL(withoutQuery, `https://docs.local${baseRoute}`).pathname)
 }
 
