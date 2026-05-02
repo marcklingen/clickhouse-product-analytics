@@ -39,13 +39,13 @@ For exact method and option signatures, see the [generated SDK reference](./refe
 import analytics from '@clickhouse-product-analytics/sdk'
 
 analytics.init({
-  api_host: 'http://127.0.0.1:8080',
-  capture_pageview: 'history_change',
+  apiHost: 'http://127.0.0.1:8080',
+  capturePageview: 'history_change',
   autocapture: {
     captureText: true,
-    element_allowlist: ['button', 'a']
+    elementAllowlist: ['button', 'a']
   },
-  property_denylist: ['secret']
+  propertyDenylist: ['secret']
 })
 
 analytics.capture('signup_started', {
@@ -60,26 +60,25 @@ Important options:
 
 | Option | Purpose |
 | --- | --- |
-| `api_host` | Ingest service URL. |
-| `capture_pageview` | `true`, `false`, or `"history_change"` for browser apps with client-side routing. |
-| `capture_pageleave` | `true`, `false`, or `"if_capture_pageview"`. |
+| `apiHost` | Ingest service URL. |
+| `capturePageview` | `true`, `false`, or `"history_change"` for browser apps with client-side routing. |
+| `capturePageleave` | `true`, `false`, or `"if_capture_pageview"`. |
 | `autocapture` | Disabled by default. Pass an object to capture safe click/change/submit events. |
 | `persistence` | `localStorage+cookie`, `localStorage`, or `memory`. |
-| `request_batching` | Enables batched SDK sends. |
+| `requestBatching` | Enables batched SDK sends. |
 | `flushAt` | Queue size that triggers a flush. |
-| `request_queue_config.flush_interval_ms` | Timed flush interval. |
-| `before_send` | Mutate or drop events before they enter the queue. |
-| `property_denylist` | Remove sensitive properties before sending. |
-| `disable_compression` | Disable fetch request gzip compression. The SDK uses browser `CompressionStream` when available and falls back to plain JSON otherwise. SendBeacon unload flushes are always uncompressed. |
+| `flushIntervalMs` | Timed flush interval. |
+| `beforeSend` | Mutate or drop events before they enter the queue. |
+| `propertyDenylist` | Remove sensitive properties before sending. |
 
 ## Pageviews
 
-For single-page applications, use `capture_pageview: "history_change"` so route changes emit `$pageview`:
+For single-page applications, use `capturePageview: "history_change"` so route changes emit `$pageview`:
 
 ```ts
 analytics.init({
-  api_host: 'https://analytics.example.com',
-  capture_pageview: 'history_change'
+  apiHost: 'https://analytics.example.com',
+  capturePageview: 'history_change'
 })
 ```
 
@@ -96,11 +95,11 @@ Autocapture is opt-in. Keep it narrow and explicit:
 
 ```ts
 analytics.init({
-  api_host: 'https://analytics.example.com',
+  apiHost: 'https://analytics.example.com',
   autocapture: {
     captureText: true,
-    element_allowlist: ['button', 'a'],
-    dom_event_allowlist: ['click', 'submit']
+    elementAllowlist: ['button', 'a'],
+    domEventAllowlist: ['click', 'submit']
   }
 })
 ```
@@ -109,12 +108,12 @@ The SDK avoids hidden/password inputs, common payment and secret field names, cr
 
 ## Event Hooks and Privacy
 
-Use `before_send` to enforce a local event contract:
+Use `beforeSend` to enforce a local event contract:
 
 ```ts
 analytics.init({
-  api_host: 'https://analytics.example.com',
-  before_send: (event) => {
+  apiHost: 'https://analytics.example.com',
+  beforeSend: (event) => {
     if (event.event === 'debug_event') {
       return undefined
     }
@@ -122,7 +121,7 @@ analytics.init({
     event.properties.app_version = '1.2.3'
     return event
   },
-  property_denylist: ['token', 'secret', 'password']
+  propertyDenylist: ['token', 'secret', 'password']
 })
 ```
 
@@ -149,8 +148,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AnalyticsProvider
       options={{
-        api_host: 'http://127.0.0.1:8080',
-        capture_pageview: 'history_change',
+        apiHost: 'http://127.0.0.1:8080',
+        capturePageview: 'history_change',
         persistence: 'localStorage+cookie'
       }}
     >
@@ -210,32 +209,34 @@ export function ProductCard() {
 
 `AnalyticsCaptureOnViewed` wraps children in a `div`. When `trackAllChildren` is enabled, each child is wrapped separately and receives a `child_index` property. Avoid that mode in table/list/form structures where extra wrappers would be invalid.
 
-## Direct Single Event API
+## Direct API
 
 For exact endpoint, payload, response, and error details, see the [HTTP API reference](./reference/http-api.md).
 
-Backend services can send events directly:
+Backend services send JSON batch payloads to `POST /batch/`. A single event is sent as a one-item batch:
 
 ```bash
-curl -X POST http://127.0.0.1:8080/i/v0/e/ \
+curl -X POST http://127.0.0.1:8080/batch/ \
   -H 'content-type: application/json' \
   -d '{
     "api_key": "local_dev_key",
-    "event": "backend_job_completed",
-    "distinct_id": "user_123",
-    "properties": {
-      "job_id": "job_456",
-      "duration_ms": 481,
-      "status": "success"
-    }
+    "batch": [
+      {
+        "event": "backend_job_completed",
+        "distinct_id": "user_123",
+        "properties": {
+          "job_id": "job_456",
+          "duration_ms": 481,
+          "status": "success"
+        }
+      }
+    ]
   }'
 ```
 
-The same payload shape is accepted at `/capture/` and `/e/`.
-
 ## Batch API
 
-Use `/batch/` for multiple events:
+Use the same envelope for multiple events:
 
 ```bash
 curl -X POST http://127.0.0.1:8080/batch/ \
@@ -264,22 +265,16 @@ curl -X POST http://127.0.0.1:8080/batch/ \
   }'
 ```
 
-The service also accepts an array of event objects as the request body. Browser-origin arrays can omit keys. No-origin backend arrays need a valid `api_key` on at least one event, and any provided keys in the same request must match.
-
 ## Compressed Requests
 
-The ingest service accepts compressed request bodies:
-
-- `Content-Encoding: gzip`
-- `Content-Encoding: deflate`
-- `Content-Encoding: br`
+The ingest service accepts gzip-compressed JSON request bodies with `Content-Encoding: gzip`.
 
 Example:
 
 ```js
 import { gzipSync } from 'node:zlib'
 
-await fetch('http://127.0.0.1:8080/capture/', {
+await fetch('http://127.0.0.1:8080/batch/', {
   method: 'POST',
   headers: {
     'content-type': 'application/json',
@@ -287,9 +282,13 @@ await fetch('http://127.0.0.1:8080/capture/', {
   },
   body: gzipSync(JSON.stringify({
     api_key: 'local_dev_key',
-    event: 'backend_job_completed',
-    distinct_id: 'user_123',
-    properties: { job_id: 'job_456' }
+    batch: [
+      {
+        event: 'backend_job_completed',
+        distinct_id: 'user_123',
+        properties: { job_id: 'job_456' }
+      }
+    ]
   }))
 })
 ```

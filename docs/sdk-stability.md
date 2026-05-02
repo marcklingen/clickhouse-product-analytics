@@ -16,7 +16,7 @@ The browser SDK is intentionally small. This review focuses on performance and s
 
 ## Improvements Applied
 
-- Fetch requests now honor SDK compression settings with browser `CompressionStream` when available, and fall back to plain JSON if compression is unavailable or fails.
+- Fetch requests use gzip with browser `CompressionStream` when available, and fall back to plain JSON if compression is unavailable or fails.
 - SendBeacon unload flushes remain uncompressed because browsers do not let callers attach arbitrary `content-encoding` headers to beacon bodies.
 - The E2E test now exercises SDK compression in addition to direct API gzip requests.
 - Event properties are sanitized before enqueueing so circular objects and `bigint` values do not crash capture or flush.
@@ -33,7 +33,7 @@ The browser SDK is intentionally small. This review focuses on performance and s
 | Navigation-critical events | Pageleave uses best-effort `sendBeacon`, then fetch fallback if beacon rejects. | For form submissions or payment handoffs, call `flush()` before navigating when the event is business-critical. |
 | Cross-tab coordination | Each tab has its own in-memory queue and shared persisted identity state. | Keep as-is until duplicate or ordering issues appear; cross-tab queue ownership adds complexity. |
 | Autocapture privacy | The SDK denies obvious sensitive inputs and values, but autocapture remains opt-in. | Keep autocapture disabled by default and document explicit allowlists. |
-| Custom transport behavior | Custom transports receive payload and compression intent, but own all request semantics. | Document custom transport tests in downstream apps that override delivery. |
+| Custom transport behavior | Custom transports receive the canonical batch payload and own all request semantics. | Document custom transport tests in downstream apps that override delivery. |
 
 ## Decision
 

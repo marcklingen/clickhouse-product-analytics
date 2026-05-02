@@ -23,8 +23,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AnalyticsProvider
       options={{
-        api_host: 'https://analytics.example.com',
-        capture_pageview: 'history_change'
+        apiHost: 'https://analytics.example.com',
+        capturePageview: 'history_change'
       }}
     >
       {children}

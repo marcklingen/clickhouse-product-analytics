@@ -45,14 +45,14 @@ async function runBrowserSdkFlow() {
 
   try {
     client.init({
-      api_host: serviceUrl,
-      capture_pageview: 'history_change',
+      apiHost: serviceUrl,
+      capturePageview: 'history_change',
       autocapture: {
         captureText: true,
-        element_allowlist: ['button', 'a']
+        elementAllowlist: ['button', 'a']
       },
-      property_denylist: ['secret'],
-      before_send: [
+      propertyDenylist: ['secret'],
+      beforeSend: [
         (event) => event.event === 'before_send_drop' ? undefined : event,
         (event) => {
           if (event.event === 'before_send_mutated') {
@@ -63,9 +63,7 @@ async function runBrowserSdkFlow() {
       ],
       persistence: 'localStorage+cookie',
       flushAt: 10,
-      request_queue_config: {
-        flush_interval_ms: 250
-      }
+      flushIntervalMs: 250
     })
 
     client.register({
@@ -121,12 +119,9 @@ async function withBrowserClient(url, options, callback) {
   const client = createClient()
   try {
     client.init({
-      api_host: serviceUrl,
+      apiHost: serviceUrl,
       persistence: 'memory',
-      request_queue_config: {
-        flush_interval_ms: 250
-      },
-      disable_compression: true,
+      flushIntervalMs: 250,
       ...options
     })
     await callback({ client, window })
@@ -141,9 +136,9 @@ async function runPageLifecycleFlow() {
   const disabledFlow = `page_lifecycle_disabled_${runId}`
 
   await withBrowserClient('http://localhost:3000/page-lifecycle-enabled', {
-    capture_pageview: true,
-    capture_pageleave: true,
-    before_send: (event) => {
+    capturePageview: true,
+    capturePageleave: true,
+    beforeSend: (event) => {
       event.properties.run_id = runId
       event.properties.lifecycle_flow = enabledFlow
       return event
@@ -155,9 +150,9 @@ async function runPageLifecycleFlow() {
   })
 
   await withBrowserClient('http://localhost:3000/page-lifecycle-disabled', {
-    capture_pageview: false,
-    capture_pageleave: 'if_capture_pageview',
-    before_send: (event) => {
+    capturePageview: false,
+    capturePageleave: 'if_capture_pageview',
+    beforeSend: (event) => {
       event.properties.run_id = runId
       event.properties.lifecycle_flow = disabledFlow
       return event
@@ -241,12 +236,10 @@ async function runReactFlow() {
         AnalyticsProvider,
         {
           options: {
-            api_host: serviceUrl,
-            capture_pageview: false,
+            apiHost: serviceUrl,
+            capturePageview: false,
             persistence: 'memory',
-            request_queue_config: {
-              flush_interval_ms: 250
-            }
+            flushIntervalMs: 250
           }
         },
         React.createElement(HookCapture)
@@ -282,8 +275,7 @@ async function runDirectApiFlow() {
   const historicalAnonymousDistinctId = `historical_anon_${runId}`
   const sessionId = `session_${runId}`
 
-  await postJson(`${serviceUrl}/i/v0/e/`, {
-    api_key: apiKey,
+  await postJson(`${serviceUrl}/batch/`, batchPayload(apiKey, {
     event: 'backend_job_completed',
     distinct_id: directDistinctId,
     properties: {
@@ -292,31 +284,33 @@ async function runDirectApiFlow() {
       job_id: 'job_456',
       duration_ms: 481
     }
-  })
+  }))
 
-  await postJson(`${serviceUrl}/i/v0/e/`, {
-    event: 'allowed_origin_event',
-    distinct_id: directDistinctId,
-    properties: {
-      run_id: runId,
-      source: 'allowed-origin'
-    }
+  await postJson(`${serviceUrl}/batch/`, {
+    batch: [
+      {
+        event: 'allowed_origin_event',
+        distinct_id: directDistinctId,
+        properties: {
+          run_id: runId,
+          source: 'allowed-origin'
+        }
+      }
+    ]
   }, {
     origin: 'http://localhost:3000'
   })
 
-  await postGzipJson(`${serviceUrl}/capture/`, {
-    api_key: apiKey,
+  await postGzipJson(`${serviceUrl}/batch/`, batchPayload(apiKey, {
     event: 'gzip_event',
     distinct_id: directDistinctId,
     properties: {
       run_id: runId,
       source: 'gzip'
     }
-  })
+  }))
 
-  await postJson(`${serviceUrl}/capture/`, {
-    api_key: apiKey,
+  await postJson(`${serviceUrl}/batch/`, batchPayload(apiKey, {
     event: 'historical_signup_started',
     distinct_id: historicalAnonymousDistinctId,
     properties: {
@@ -324,10 +318,9 @@ async function runDirectApiFlow() {
       source: 'direct-api',
       identity_flow: 'separate-requests'
     }
-  })
+  }))
 
-  await postJson(`${serviceUrl}/capture/`, {
-    api_key: apiKey,
+  await postJson(`${serviceUrl}/batch/`, batchPayload(apiKey, {
     event: '$identify',
     distinct_id: historicalKnownDistinctId,
     properties: {
@@ -338,7 +331,7 @@ async function runDirectApiFlow() {
         email: `historical-${runId}@example.com`
       }
     }
-  })
+  }))
 
   await postJson(`${serviceUrl}/batch/`, {
     api_key: apiKey,
@@ -396,31 +389,33 @@ async function runDirectApiFlow() {
 }
 
 async function assertRejectedRequests() {
-  await expectStatus(`${serviceUrl}/capture/`, {
-    api_key: 'invalid_key',
+  await expectStatus(`${serviceUrl}/batch/`, batchPayload('invalid_key', {
     event: 'invalid_key_event',
     distinct_id: `invalid_${runId}`,
     properties: {
       run_id: runId
     }
+  }), 401)
+
+  await expectStatus(`${serviceUrl}/batch/`, {
+    batch: [
+      {
+        event: 'missing_key_no_origin_event',
+        distinct_id: `missing_key_${runId}`,
+        properties: {
+          run_id: runId
+        }
+      }
+    ]
   }, 401)
 
-  await expectStatus(`${serviceUrl}/capture/`, {
-    event: 'missing_key_no_origin_event',
-    distinct_id: `missing_key_${runId}`,
-    properties: {
-      run_id: runId
-    }
-  }, 401)
-
-  await expectStatus(`${serviceUrl}/capture/`, {
-    api_key: apiKey,
+  await expectStatus(`${serviceUrl}/batch/`, batchPayload(apiKey, {
     event: 'blocked_origin_event',
     distinct_id: `blocked_${runId}`,
     properties: {
       run_id: runId
     }
-  }, 403, {
+  }), 403, {
     origin: 'https://not-allowed.example'
   })
 
@@ -497,23 +492,23 @@ async function assertStoredData({ browser, pageLifecycle, react, direct }) {
     1
   )
   assertCount(
-    'capture_pageview true',
+    'capturePageview true',
     await queryCount(`SELECT count() AS count FROM ${database}.events WHERE event = '$pageview' AND JSONExtractString(properties, 'lifecycle_flow') = '${pageLifecycle.enabledFlow}'`),
     1
   )
   assertCount(
-    'capture_pageleave true',
+    'capturePageleave true',
     await queryCount(`SELECT count() AS count FROM ${database}.events WHERE event = '$pageleave' AND JSONExtractString(properties, 'lifecycle_flow') = '${pageLifecycle.enabledFlow}'`),
     1
   )
   assertCount(
-    'capture_pageview false',
+    'capturePageview false',
     await queryCount(`SELECT count() AS count FROM ${database}.events WHERE event = '$pageview' AND JSONExtractString(properties, 'lifecycle_flow') = '${pageLifecycle.disabledFlow}'`),
     0,
     'exact'
   )
   assertCount(
-    'capture_pageleave if_capture_pageview disabled',
+    'capturePageleave if_capture_pageview disabled',
     await queryCount(`SELECT count() AS count FROM ${database}.events WHERE event = '$pageleave' AND JSONExtractString(properties, 'lifecycle_flow') = '${pageLifecycle.disabledFlow}'`),
     0,
     'exact'
@@ -751,6 +746,8 @@ async function assertDocsDeploymentWiring() {
   assert(verification.includes('# Verification') && verification.includes('npm run verify:e2e') && verification.includes('npm run release:dry-run') && verification.includes('helm lint'), 'Expected verification docs to describe E2E, release, and Helm coverage')
   assert(reference.includes('# Reference') && reference.includes('./http-api.md') && reference.includes('./sdk/README.md'), 'Expected reference index to link API and SDK references')
   assert(apiReference.includes('# HTTP API Reference') && apiReference.includes('/batch/') && apiReference.includes('content-encoding: gzip'), 'Expected HTTP API reference to document endpoints and compression')
+  assert(!apiReference.includes('/capture/') && !apiReference.includes('/i/v0/e/') && !apiReference.includes('compression=gzip-js') && !apiReference.includes('content-encoding: deflate'), 'Expected HTTP API reference to omit removed ingest aliases and compression modes')
+  assert(sendingEvents.includes('apiHost') && !sendingEvents.includes('api_host'), 'Expected sending events docs to use camelCase SDK configuration')
   assert(sdkReference.includes('SDK and React Reference') && sdkReference.includes('sdk/src') && sdkReference.includes('react/src'), 'Expected generated SDK reference docs to exist')
   assert(publishing.includes('# Publishing Packages') && publishing.includes('@clickhouse-product-analytics/sdk') && publishing.includes('@clickhouse-product-analytics/react'), 'Expected publishing docs to cover SDK and React packages')
   assert(publishing.includes('clean working tree') && publishing.includes('npm whoami') && publishing.includes('--otp') && publishing.includes('provenance'), 'Expected publishing docs to cover release and registry prerequisites')
@@ -865,6 +862,13 @@ async function expectStatus(url, body, status, headers = {}) {
     body: JSON.stringify(body)
   })
   assert(response.status === status, `Expected POST ${url} to return HTTP ${status}, got ${response.status}: ${await response.text()}`)
+}
+
+function batchPayload(apiKey, ...events) {
+  return {
+    api_key: apiKey,
+    batch: events
+  }
 }
 
 function installDom(url) {

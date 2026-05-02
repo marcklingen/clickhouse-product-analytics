@@ -6,76 +6,168 @@
 
 # Type Alias: InitOptions
 
-> **InitOptions** = `AnalyticsClientConfig` & `object`
+> **InitOptions** = `object`
 
-Defined in: [sdk/src/types.ts:105](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L105)
+Defined in: [sdk/src/types.ts:68](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L68)
 
-Complete initialization options, including camelCase aliases and advanced controls.
+Browser SDK initialization options.
 
-## Type Declaration
+## Properties
 
-### apiHost?
+### apiHost
 
-> `optional` **apiHost?**: `string`
+> **apiHost**: `string`
 
-CamelCase alias of `api_host`.
+Defined in: [sdk/src/types.ts:70](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L70)
+
+Ingest service base URL, for example `https://analytics.example.com`.
+
+***
 
 ### apiKey?
 
 > `optional` **apiKey?**: `string`
 
+Defined in: [sdk/src/types.ts:72](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L72)
+
 Optional client-supplied API key. Required for no-origin backend calls; optional for allowed-origin browser calls.
 
-### batchEndpoint?
+***
 
-> `optional` **batchEndpoint?**: `string`
+### autocapture?
 
-Path appended to `apiHost` for batch ingestion. Defaults to `/batch/`.
+> `optional` **autocapture?**: `boolean` \| [`AutocaptureConfig`](AutocaptureConfig.md)
+
+Defined in: [sdk/src/types.ts:74](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L74)
+
+Enable or configure privacy-aware autocapture.
+
+***
+
+### beforeSend?
+
+> `optional` **beforeSend?**: [`BeforeSendHook`](BeforeSendHook.md) \| [`BeforeSendHook`](BeforeSendHook.md)[]
+
+Defined in: [sdk/src/types.ts:96](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L96)
+
+Mutate or drop events before they enter the queue.
+
+***
 
 ### capturePageleave?
 
 > `optional` **capturePageleave?**: `boolean` \| `"if_capture_pageview"`
 
-CamelCase alias of `capture_pageleave`.
+Defined in: [sdk/src/types.ts:78](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L78)
+
+Capture pageleave events always, never, or only when pageview capture is enabled.
+
+***
 
 ### capturePageview?
 
 > `optional` **capturePageview?**: `boolean` \| `"history_change"`
 
-CamelCase alias of `capture_pageview`.
+Defined in: [sdk/src/types.ts:76](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L76)
+
+Capture an initial pageview, no pageviews, or pageviews on history changes.
+
+***
+
+### disablePersistence?
+
+> `optional` **disablePersistence?**: `boolean`
+
+Defined in: [sdk/src/types.ts:82](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L82)
+
+Keep all state in memory for the lifetime of the client instance.
+
+***
 
 ### flushAt?
 
 > `optional` **flushAt?**: `number`
 
+Defined in: [sdk/src/types.ts:86](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L86)
+
 Number of queued events that triggers an immediate flush.
+
+***
 
 ### flushIntervalMs?
 
 > `optional` **flushIntervalMs?**: `number`
 
+Defined in: [sdk/src/types.ts:88](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L88)
+
 Flush interval in milliseconds.
+
+***
 
 ### maxQueueSize?
 
 > `optional` **maxQueueSize?**: `number`
 
+Defined in: [sdk/src/types.ts:92](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L92)
+
 Maximum queued event count before oldest events are dropped.
+
+***
+
+### persistence?
+
+> `optional` **persistence?**: `"localStorage"` \| `"memory"` \| `"localStorage+cookie"`
+
+Defined in: [sdk/src/types.ts:80](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L80)
+
+Browser persistence backend for IDs, session state, and registered properties.
+
+***
+
+### propertyDenylist?
+
+> `optional` **propertyDenylist?**: `string`[]
+
+Defined in: [sdk/src/types.ts:98](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L98)
+
+Property names removed from every event before sending.
+
+***
+
+### requestBatching?
+
+> `optional` **requestBatching?**: `boolean`
+
+Defined in: [sdk/src/types.ts:84](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L84)
+
+Enable batched delivery.
+
+***
 
 ### requestTimeoutMs?
 
 > `optional` **requestTimeoutMs?**: `number`
 
+Defined in: [sdk/src/types.ts:90](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L90)
+
 Request timeout in milliseconds.
+
+***
 
 ### sessionTimeoutMs?
 
 > `optional` **sessionTimeoutMs?**: `number`
 
+Defined in: [sdk/src/types.ts:94](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L94)
+
 Inactivity window after which the next event starts a new session.
+
+***
 
 ### transport?
 
 > `optional` **transport?**: [`Transport`](Transport.md)
+
+Defined in: [sdk/src/types.ts:100](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L100)
 
 Custom delivery implementation.

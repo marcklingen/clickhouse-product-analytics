@@ -40,7 +40,6 @@ type StoredState = {
 type NormalizedOptions = {
   apiHost: string
   apiKey?: string
-  batchEndpoint: string
   capturePageview: boolean | 'history_change'
   capturePageleave: boolean | 'if_capture_pageview'
   autocapture: boolean | AutocaptureConfig
@@ -54,9 +53,6 @@ type NormalizedOptions = {
   disablePersistence: boolean
   beforeSend: BeforeSendHook[]
   propertyDenylist: string[]
-  compression: boolean
-  loaded?: (client: ClickHouseProductAnalytics) => void
-  debug: boolean
   transport: Transport
 }
 
@@ -76,12 +72,12 @@ export class ClickHouseProductAnalytics {
   private pageleaveCaptured = false
 
   /** Initialize the client with an ingest API key and browser SDK options. */
-  init(apiKey: string, config?: Omit<InitOptions, 'apiKey'>): this
+  init(apiKey: string, config: Omit<InitOptions, 'apiKey'>): this
   /** Initialize the client with a complete options object. Allowed-origin browser requests can omit the API key. */
   init(config: InitOptions): this
-  init(apiKeyOrConfig: string | InitOptions, maybeConfig: Omit<InitOptions, 'apiKey'> = {}): this {
+  init(apiKeyOrConfig: string | InitOptions, maybeConfig?: Omit<InitOptions, 'apiKey'>): this {
     const input = typeof apiKeyOrConfig === 'string'
-      ? { ...maybeConfig, apiKey: apiKeyOrConfig }
+      ? { ...maybeConfig, apiKey: apiKeyOrConfig } as InitOptions
       : apiKeyOrConfig
 
     this.options = normalizeOptions(input)
@@ -96,7 +92,7 @@ export class ClickHouseProductAnalytics {
       requestTimeoutMs: this.options.requestTimeoutMs,
       requestBatching: this.options.requestBatching,
       maxQueueSize: this.options.maxQueueSize,
-      compression: this.options.compression,
+      compression: true,
       transport: this.options.transport
     })
 
@@ -107,7 +103,6 @@ export class ClickHouseProductAnalytics {
     if (this.options.capturePageview) {
       this.capture('$pageview', this.currentPageProperties(), { send_instantly: true })
     }
-    this.options.loaded?.(this)
     return this
   }
 
@@ -496,7 +491,7 @@ export class ClickHouseProductAnalytics {
   }
 
   private endpointUrl(): string {
-    return `${this.options!.apiHost}${this.options!.batchEndpoint}`
+    return `${this.options!.apiHost}/batch/`
   }
 }
 
@@ -509,35 +504,31 @@ export default defaultClient
 
 function normalizeOptions(input: InitOptions): NormalizedOptions {
   const apiKey = input.apiKey
-  const apiHost = input.apiHost ?? input.api_host
+  const apiHost = input.apiHost
   if (!apiHost) {
-    throw new Error('apiHost/api_host is required')
+    throw new Error('apiHost is required')
   }
 
-  const beforeSend = input.before_send
-    ? Array.isArray(input.before_send) ? input.before_send : [input.before_send]
+  const beforeSend = input.beforeSend
+    ? Array.isArray(input.beforeSend) ? input.beforeSend : [input.beforeSend]
     : []
 
   return {
     apiHost: apiHost.replace(/\/+$/, ''),
     apiKey,
-    batchEndpoint: input.batchEndpoint ?? '/batch/',
-    capturePageview: input.capturePageview ?? input.capture_pageview ?? true,
-    capturePageleave: input.capturePageleave ?? input.capture_pageleave ?? 'if_capture_pageview',
+    capturePageview: input.capturePageview ?? true,
+    capturePageleave: input.capturePageleave ?? 'if_capture_pageview',
     autocapture: input.autocapture ?? false,
-    requestBatching: input.request_batching ?? true,
+    requestBatching: input.requestBatching ?? true,
     flushAt: input.flushAt ?? DEFAULT_FLUSH_AT,
-    flushIntervalMs: input.flushIntervalMs ?? input.request_queue_config?.flush_interval_ms ?? 3000,
+    flushIntervalMs: input.flushIntervalMs ?? 3000,
     requestTimeoutMs: input.requestTimeoutMs ?? DEFAULT_TIMEOUT_MS,
     maxQueueSize: input.maxQueueSize ?? DEFAULT_MAX_QUEUE_SIZE,
     sessionTimeoutMs: input.sessionTimeoutMs ?? DEFAULT_SESSION_TIMEOUT_MS,
     persistence: input.persistence ?? 'localStorage+cookie',
-    disablePersistence: input.disable_persistence ?? false,
+    disablePersistence: input.disablePersistence ?? false,
     beforeSend,
-    propertyDenylist: input.property_denylist ?? [],
-    compression: !(input.disable_compression ?? false),
-    loaded: input.loaded as ((client: ClickHouseProductAnalytics) => void) | undefined,
-    debug: input.debug ?? false,
+    propertyDenylist: input.propertyDenylist ?? [],
     transport: input.transport ?? browserTransport
   }
 }

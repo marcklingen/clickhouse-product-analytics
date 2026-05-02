@@ -52,13 +52,13 @@ Local endpoints:
 import analytics from '@clickhouse-product-analytics/sdk'
 
 analytics.init({
-  api_host: 'http://127.0.0.1:8080',
-  capture_pageview: 'history_change',
+  apiHost: 'http://127.0.0.1:8080',
+  capturePageview: 'history_change',
   autocapture: {
     captureText: true,
-    element_allowlist: ['button', 'a']
+    elementAllowlist: ['button', 'a']
   },
-  property_denylist: ['secret']
+  propertyDenylist: ['secret']
 })
 
 analytics.capture('signup_started', { plan: 'pro' })
@@ -69,16 +69,20 @@ await analytics.flush()
 ## Minimal Backend Example
 
 ```bash
-curl -X POST http://127.0.0.1:8080/i/v0/e/ \
+curl -X POST http://127.0.0.1:8080/batch/ \
   -H 'content-type: application/json' \
   -d '{
     "api_key": "local_dev_key",
-    "event": "backend_job_completed",
-    "distinct_id": "user_123",
-    "properties": {
-      "job_id": "job_456",
-      "duration_ms": 481
-    }
+    "batch": [
+      {
+        "event": "backend_job_completed",
+        "distinct_id": "user_123",
+        "properties": {
+          "job_id": "job_456",
+          "duration_ms": 481
+        }
+      }
+    ]
   }'
 ```
 

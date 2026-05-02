@@ -24,7 +24,7 @@ describe('ingest service', () => {
     await app.close()
   })
 
-  it('accepts batch events and writes normalized rows', async () => {
+  it('accepts browser-origin batch payloads without api_key', async () => {
     const response = await app.inject({
       method: 'POST',
       url: '/batch/',
@@ -61,15 +61,133 @@ describe('ingest service', () => {
     })
   })
 
+  it('accepts no-origin batch payloads with valid api_key values', async () => {
+    const backendWriter = new MemoryAnalyticsWriter()
+    const backendApp = await createServer({
+      config: loadConfig({
+        PUBLIC_API_KEYS: 'primary_key,secondary_key'
+      }),
+      writer: backendWriter
+    })
+
+    const primary = await backendApp.inject({
+      method: 'POST',
+      url: '/batch/',
+      payload: batchPayload('primary_key', {
+        event: 'backend_primary',
+        distinct_id: 'backend_1'
+      })
+    })
+    const secondary = await backendApp.inject({
+      method: 'POST',
+      url: '/batch/',
+      payload: batchPayload('secondary_key', {
+        event: 'backend_secondary',
+        distinct_id: 'backend_2'
+      })
+    })
+
+    expect(primary.statusCode).toBe(200)
+    expect(secondary.statusCode).toBe(200)
+    expect(backendWriter.events.map((event) => event.event)).toEqual(['backend_primary', 'backend_secondary'])
+    await backendApp.close()
+  })
+
+  it('rejects no-origin batch payloads without valid api_key values', async () => {
+    const backendWriter = new MemoryAnalyticsWriter()
+    const backendApp = await createServer({
+      config: loadConfig({
+        PUBLIC_API_KEYS: 'primary_key'
+      }),
+      writer: backendWriter
+    })
+
+    const missingKey = await backendApp.inject({
+      method: 'POST',
+      url: '/batch/',
+      payload: {
+        batch: [
+          {
+            event: 'backend_missing_key',
+            distinct_id: 'backend_1'
+          }
+        ]
+      }
+    })
+    const invalidKey = await backendApp.inject({
+      method: 'POST',
+      url: '/batch/',
+      payload: batchPayload('invalid_key', {
+        event: 'backend_invalid_key',
+        distinct_id: 'backend_2'
+      })
+    })
+    const tokenOnly = await backendApp.inject({
+      method: 'POST',
+      url: '/batch/',
+      payload: {
+        token: 'primary_key',
+        batch: [
+          {
+            event: 'backend_token_only',
+            distinct_id: 'backend_3'
+          }
+        ]
+      }
+    })
+
+    expect(missingKey.statusCode).toBe(401)
+    expect(invalidKey.statusCode).toBe(401)
+    expect(tokenOnly.statusCode).toBe(401)
+    expect(backendWriter.events).toHaveLength(0)
+    await backendApp.close()
+  })
+
+  it('disables no-origin backend ingest when no api keys are configured', async () => {
+    const backendApp = await createServer({
+      config: loadConfig({}),
+      writer: new MemoryAnalyticsWriter()
+    })
+
+    const response = await backendApp.inject({
+      method: 'POST',
+      url: '/batch/',
+      payload: batchPayload('unconfigured_key', {
+        event: 'backend_disabled',
+        distinct_id: 'backend_1'
+      })
+    })
+
+    expect(response.statusCode).toBe(401)
+    await backendApp.close()
+  })
+
+  it('does not expose public ingest route aliases', async () => {
+    for (const url of ['/batch', '/capture/', '/capture', '/i/v0/e/', '/i/v0/e', '/e/', '/e']) {
+      const response = await app.inject({
+        method: 'POST',
+        url,
+        headers: {
+          origin: 'http://localhost:3000'
+        },
+        payload: batchPayload('test_key', {
+          event: 'alias_event',
+          distinct_id: 'alias_user'
+        })
+      })
+
+      expect(response.statusCode).toBe(404)
+    }
+  })
+
   it('stores identify aliases before writing the identify event', async () => {
     const response = await app.inject({
       method: 'POST',
-      url: '/i/v0/e/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: '$identify',
         distinct_id: 'user_123',
         properties: {
@@ -78,7 +196,7 @@ describe('ingest service', () => {
             email: 'user@example.com'
           }
         }
-      }
+      })
     })
 
     expect(response.statusCode).toBe(200)
@@ -96,22 +214,20 @@ describe('ingest service', () => {
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
-        batch: [
-          {
-            event: 'signup_started',
-            distinct_id: 'anon_1'
-          },
-          {
-            event: '$identify',
-            distinct_id: 'user_123',
-            properties: {
-              '$anon_distinct_id': 'anon_1'
-            }
+      payload: batchPayload(
+        'test_key',
+        {
+          event: 'signup_started',
+          distinct_id: 'anon_1'
+        },
+        {
+          event: '$identify',
+          distinct_id: 'user_123',
+          properties: {
+            '$anon_distinct_id': 'anon_1'
           }
-        ]
-      }
+        }
+      )
     })
 
     expect(response.statusCode).toBe(200)
@@ -124,30 +240,28 @@ describe('ingest service', () => {
   it('stitches anonymous events from earlier requests when the user is later identified', async () => {
     const anonymousResponse = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: 'signup_started',
         distinct_id: 'anon_1'
-      }
+      })
     })
     const identifyResponse = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: '$identify',
         distinct_id: 'user_123',
         properties: {
           '$anon_distinct_id': 'anon_1'
         }
-      }
+      })
     })
 
     expect(anonymousResponse.statusCode).toBe(200)
@@ -161,12 +275,11 @@ describe('ingest service', () => {
   it('preserves set_once person properties across later updates', async () => {
     const first = await app.inject({
       method: 'POST',
-      url: '/i/v0/e/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: '$identify',
         distinct_id: 'user_123',
         properties: {
@@ -174,16 +287,15 @@ describe('ingest service', () => {
             first_seen_source: 'landing'
           }
         }
-      }
+      })
     })
     const second = await app.inject({
       method: 'POST',
-      url: '/i/v0/e/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: '$set',
         distinct_id: 'user_123',
         properties: {
@@ -194,7 +306,7 @@ describe('ingest service', () => {
             plan: 'pro'
           }
         }
-      }
+      })
     })
 
     expect(first.statusCode).toBe(200)
@@ -208,12 +320,11 @@ describe('ingest service', () => {
   it('keeps person identity global across api keys', async () => {
     const firstKey = await app.inject({
       method: 'POST',
-      url: '/i/v0/e/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: '$identify',
         distinct_id: 'shared_user',
         properties: {
@@ -221,16 +332,15 @@ describe('ingest service', () => {
             project: 'first'
           }
         }
-      }
+      })
     })
     const secondKey = await app.inject({
       method: 'POST',
-      url: '/i/v0/e/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'other_key',
+      payload: batchPayload('other_key', {
         event: '$identify',
         distinct_id: 'shared_user',
         properties: {
@@ -238,7 +348,7 @@ describe('ingest service', () => {
             project: 'second'
           }
         }
-      }
+      })
     })
 
     expect(firstKey.statusCode).toBe(200)
@@ -249,116 +359,31 @@ describe('ingest service', () => {
     expect(writer.persons.get('shared_user')?.properties).toEqual({ project: 'second' })
   })
 
-  it('uses api keys to authenticate no-origin backend requests', async () => {
-    const backendWriter = new MemoryAnalyticsWriter()
-    const backendApp = await createServer({
-      config: loadConfig({
-        PUBLIC_API_KEYS: 'primary_key,secondary_key'
-      }),
-      writer: backendWriter
-    })
-
-    const primary = await backendApp.inject({
-      method: 'POST',
-      url: '/capture/',
-      payload: {
-        api_key: 'primary_key',
-        event: 'backend_primary',
-        distinct_id: 'backend_1'
-      }
-    })
-    const secondary = await backendApp.inject({
-      method: 'POST',
-      url: '/capture/',
-      payload: {
-        api_key: 'secondary_key',
-        event: 'backend_secondary',
-        distinct_id: 'backend_2'
-      }
-    })
-    const missingKey = await backendApp.inject({
-      method: 'POST',
-      url: '/capture/',
-      payload: {
-        event: 'backend_missing_key',
-        distinct_id: 'backend_3'
-      }
-    })
-    const invalidKey = await backendApp.inject({
-      method: 'POST',
-      url: '/capture/',
-      payload: {
-        api_key: 'invalid_key',
-        event: 'backend_invalid_key',
-        distinct_id: 'backend_4'
-      }
-    })
-    const tokenOnly = await backendApp.inject({
-      method: 'POST',
-      url: '/capture/',
-      payload: {
-        token: 'primary_key',
-        event: 'backend_token_only',
-        distinct_id: 'backend_5'
-      }
-    })
-
-    expect(primary.statusCode).toBe(200)
-    expect(secondary.statusCode).toBe(200)
-    expect(missingKey.statusCode).toBe(401)
-    expect(invalidKey.statusCode).toBe(401)
-    expect(tokenOnly.statusCode).toBe(401)
-    expect(backendWriter.events.map((event) => event.event)).toEqual(['backend_primary', 'backend_secondary'])
-    await backendApp.close()
-  })
-
-  it('disables no-origin backend ingest when no api keys are configured', async () => {
-    const backendApp = await createServer({
-      config: loadConfig({}),
-      writer: new MemoryAnalyticsWriter()
-    })
-
-    const response = await backendApp.inject({
-      method: 'POST',
-      url: '/capture/',
-      payload: {
-        api_key: 'unconfigured_key',
-        event: 'backend_disabled',
-        distinct_id: 'backend_1'
-      }
-    })
-
-    expect(response.statusCode).toBe(401)
-    await backendApp.close()
-  })
-
   it('rejects unknown api keys and disallowed origins', async () => {
     const badKey = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'bad_key',
+      payload: batchPayload('bad_key', {
         event: 'signup',
         distinct_id: 'user_123'
-      }
+      })
     })
 
     expect(badKey.statusCode).toBe(401)
 
     const badOrigin = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://evil.example'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: 'signup',
         distinct_id: 'user_123'
-      }
+      })
     })
 
     expect(badOrigin.statusCode).toBe(403)
@@ -367,88 +392,109 @@ describe('ingest service', () => {
   it('enforces exact origins from ALLOWED_ORIGINS', async () => {
     const wrongScheme = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'https://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: 'wrong_scheme',
         distinct_id: 'user_123'
-      }
+      })
     })
     const wrongPort = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3001'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: 'wrong_port',
         distinct_id: 'user_123'
-      }
+      })
     })
 
     expect(wrongScheme.statusCode).toBe(403)
     expect(wrongPort.statusCode).toBe(403)
   })
 
-  it('returns 400 for malformed JSON and form payloads', async () => {
+  it('rejects malformed JSON and non-JSON payload formats', async () => {
     const invalidJson = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000',
         'content-type': 'application/json'
       },
       payload: '{"api_key":'
     })
-    const invalidText = await app.inject({
+    const textJson = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000',
         'content-type': 'text/plain'
       },
-      payload: '{"api_key":'
+      payload: JSON.stringify(batchPayload('test_key', {
+        event: 'text_event',
+        distinct_id: 'user_123'
+      }))
     })
-    const invalidBase64 = await app.inject({
+    const formEncoded = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000',
         'content-type': 'application/x-www-form-urlencoded'
       },
-      payload: new URLSearchParams({ data: 'not-base64!!!' }).toString()
+      payload: new URLSearchParams({ data: Buffer.from(JSON.stringify(batchPayload('test_key', {
+        event: 'form_event',
+        distinct_id: 'user_123'
+      }))).toString('base64') }).toString()
     })
-    const invalidBase64Json = await app.inject({
+    const singleEvent = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
-        origin: 'http://localhost:3000',
-        'content-type': 'application/x-www-form-urlencoded'
+        origin: 'http://localhost:3000'
       },
-      payload: new URLSearchParams({ data: Buffer.from('{"api_key":').toString('base64') }).toString()
+      payload: {
+        api_key: 'test_key',
+        event: 'single_event',
+        distinct_id: 'user_123'
+      }
+    })
+    const rawArray = await app.inject({
+      method: 'POST',
+      url: '/batch/',
+      headers: {
+        origin: 'http://localhost:3000'
+      },
+      payload: [
+        {
+          api_key: 'test_key',
+          event: 'array_event',
+          distinct_id: 'user_123'
+        }
+      ]
     })
 
     expect(invalidJson.statusCode).toBe(400)
-    expect(invalidText.statusCode).toBe(400)
-    expect(invalidBase64.statusCode).toBe(400)
-    expect(invalidBase64Json.statusCode).toBe(400)
+    expect(textJson.statusCode).toBe(415)
+    expect(formEncoded.statusCode).toBe(415)
+    expect(singleEvent.statusCode).toBe(400)
+    expect(rawArray.statusCode).toBe(400)
     expect(writer.events).toHaveLength(0)
   })
 
-  it('accepts gzip-compressed JSON payloads', async () => {
-    const payload = JSON.stringify({
-      api_key: 'test_key',
+  it('accepts gzip-compressed JSON batch payloads', async () => {
+    const payload = JSON.stringify(batchPayload('test_key', {
       event: 'compressed_event',
       distinct_id: 'user_123'
-    })
+    }))
 
     const response = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000',
         'content-type': 'application/json',
@@ -461,16 +507,15 @@ describe('ingest service', () => {
     expect(writer.events[0].event).toBe('compressed_event')
   })
 
-  it('accepts deflate, Brotli, and gzip-js compressed payloads', async () => {
-    const payload = JSON.stringify({
-      api_key: 'test_key',
+  it('rejects deflate, Brotli, and gzip-js compressed payloads', async () => {
+    const payload = JSON.stringify(batchPayload('test_key', {
       event: 'compressed_event',
       distinct_id: 'user_123'
-    })
+    }))
 
     const deflateResponse = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000',
         'content-type': 'application/json',
@@ -480,7 +525,7 @@ describe('ingest service', () => {
     })
     const brResponse = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000',
         'content-type': 'application/json',
@@ -490,7 +535,7 @@ describe('ingest service', () => {
     })
     const gzipJsResponse = await app.inject({
       method: 'POST',
-      url: '/capture/?compression=gzip-js',
+      url: '/batch/?compression=gzip-js',
       headers: {
         origin: 'http://localhost:3000',
         'content-type': 'application/json'
@@ -498,62 +543,24 @@ describe('ingest service', () => {
       payload: gzipSync(payload)
     })
 
-    expect(deflateResponse.statusCode).toBe(200)
-    expect(brResponse.statusCode).toBe(200)
-    expect(gzipJsResponse.statusCode).toBe(200)
-    expect(writer.events.filter((event) => event.event === 'compressed_event')).toHaveLength(3)
-  })
-
-  it('accepts form-encoded data and raw event arrays', async () => {
-    const formPayload = Buffer.from(JSON.stringify({
-      api_key: 'test_key',
-      event: 'form_encoded_event',
-      distinct_id: 'user_123'
-    })).toString('base64')
-
-    const formResponse = await app.inject({
-      method: 'POST',
-      url: '/capture/',
-      headers: {
-        origin: 'http://localhost:3000',
-        'content-type': 'application/x-www-form-urlencoded'
-      },
-      payload: new URLSearchParams({ data: formPayload }).toString()
-    })
-    const arrayResponse = await app.inject({
-      method: 'POST',
-      url: '/batch/',
-      headers: {
-        origin: 'http://localhost:3000'
-      },
-      payload: [
-        {
-          api_key: 'test_key',
-          event: 'array_event',
-          distinct_id: 'user_456'
-        }
-      ]
-    })
-
-    expect(formResponse.statusCode).toBe(200)
-    expect(arrayResponse.statusCode).toBe(200)
-    expect(writer.events.map((event) => event.event)).toContain('form_encoded_event')
-    expect(writer.events.map((event) => event.event)).toContain('array_event')
+    expect(deflateResponse.statusCode).toBe(415)
+    expect(brResponse.statusCode).toBe(415)
+    expect(gzipJsResponse.statusCode).toBe(415)
+    expect(writer.events).toHaveLength(0)
   })
 
   it('rejects invalid timestamps and mixed api keys', async () => {
     const invalidTimestamp = await app.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
+      payload: batchPayload('test_key', {
         event: 'invalid_timestamp',
         distinct_id: 'user_123',
         timestamp: 'not-a-date'
-      }
+      })
     })
     const mixedKeys = await app.inject({
       method: 'POST',
@@ -590,18 +597,17 @@ describe('ingest service', () => {
       }),
       writer: new MemoryAnalyticsWriter()
     })
-    const payload = JSON.stringify({
-      api_key: 'test_key',
+    const payload = JSON.stringify(batchPayload('test_key', {
       event: 'large_compressed_event',
       distinct_id: 'user_123',
       properties: {
         repeated: 'x'.repeat(500)
       }
-    })
+    }))
 
     const response = await limitedApp.inject({
       method: 'POST',
-      url: '/capture/',
+      url: '/batch/',
       headers: {
         origin: 'http://localhost:3000',
         'content-type': 'application/json',
@@ -621,18 +627,16 @@ describe('ingest service', () => {
       headers: {
         origin: 'http://localhost:3000'
       },
-      payload: {
-        api_key: 'test_key',
-        batch: [
-          {
-            event: 'valid',
-            distinct_id: 'user_123'
-          },
-          {
-            event: 'invalid'
-          }
-        ]
-      }
+      payload: batchPayload(
+        'test_key',
+        {
+          event: 'valid',
+          distinct_id: 'user_123'
+        },
+        {
+          event: 'invalid'
+        }
+      )
     })
 
     expect(response.statusCode).toBe(200)
@@ -643,3 +647,10 @@ describe('ingest service', () => {
     })
   })
 })
+
+function batchPayload(apiKey: string, ...events: Array<Record<string, unknown>>): Record<string, unknown> {
+  return {
+    api_key: apiKey,
+    batch: events
+  }
+}

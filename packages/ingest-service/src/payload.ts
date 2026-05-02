@@ -13,8 +13,6 @@ const eventSchema = z.object({
   timestamp: z.string().optional()
 }).passthrough()
 
-const singlePayloadSchema = eventSchema
-
 const batchPayloadSchema = z.object({
   api_key: z.string().optional(),
   batch: z.array(eventSchema).min(1),
@@ -41,33 +39,19 @@ export class PayloadDecodeError extends Error {
 }
 
 export function parsePayload(body: unknown): ParsedPayload {
-  const decodedBody = decodeBody(body)
-
-  if (Array.isArray(decodedBody)) {
-    const events = z.array(eventSchema).parse(decodedBody)
-    return {
-      apiKey: requestApiKey(events.map((event) => event.api_key)),
-      events
-    }
+  if (!isRecord(body) || !Array.isArray(body.batch)) {
+    throw new PayloadDecodeError('Payload must be a JSON object with a non-empty batch array')
   }
 
-  if (isRecord(decodedBody) && Array.isArray(decodedBody.batch)) {
-    const parsed = batchPayloadSchema.parse(decodedBody)
-    return {
-      apiKey: requestApiKey([
-        parsed.api_key,
-        ...parsed.batch.map((event) => event.api_key)
-      ]),
-      events: parsed.batch.map((event) => ({
-        ...event
-      }))
-    }
-  }
-
-  const parsed = singlePayloadSchema.parse(decodedBody)
+  const parsed = batchPayloadSchema.parse(body)
   return {
-    apiKey: requestApiKey([parsed.api_key]),
-    events: [parsed]
+    apiKey: requestApiKey([
+      parsed.api_key,
+      ...parsed.batch.map((event) => event.api_key)
+    ]),
+    events: parsed.batch.map((event) => ({
+      ...event
+    }))
   }
 }
 
@@ -184,48 +168,6 @@ export async function applyIdentitySideEffects(writer: AnalyticsWriter, event: N
         personId: event.personId
       })
     }
-  }
-}
-
-function decodeBody(body: unknown): unknown {
-  if (typeof body !== 'string') {
-    return body
-  }
-
-  const trimmed = body.trim()
-  if (!trimmed) {
-    return {}
-  }
-
-  const params = new URLSearchParams(trimmed)
-  const encoded = params.get('data')
-  if (encoded) {
-    return parseJson(decodeBase64(encoded))
-  }
-
-  return parseJson(trimmed)
-}
-
-function decodeBase64(value: string): string {
-  const trimmed = value.trim()
-  if (!isBase64(trimmed)) {
-    throw new PayloadDecodeError('Invalid base64 payload')
-  }
-  return Buffer.from(trimmed, 'base64').toString('utf8')
-}
-
-function isBase64(value: string): boolean {
-  return value.length > 0
-    && value.length % 4 !== 1
-    && /^[A-Za-z0-9+/]*={0,2}$/.test(value)
-    && !value.slice(0, -2).includes('=')
-}
-
-function parseJson(value: string): unknown {
-  try {
-    return JSON.parse(value)
-  } catch {
-    throw new PayloadDecodeError()
   }
 }
 

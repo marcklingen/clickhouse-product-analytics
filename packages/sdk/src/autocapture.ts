@@ -9,20 +9,20 @@ export function shouldAutocapture(element: Element, event: Event, config: Autoca
   if (!shouldCaptureElement(element)) {
     return false
   }
-  if (config.url_allowlist && !matchesUrl(config.url_allowlist)) {
+  if (config.urlAllowlist && !matchesUrl(config.urlAllowlist)) {
     return false
   }
-  if (config.url_ignorelist && matchesUrl(config.url_ignorelist)) {
+  if (config.urlIgnorelist && matchesUrl(config.urlIgnorelist)) {
     return false
   }
-  if (config.dom_event_allowlist && !config.dom_event_allowlist.includes(event.type as 'click')) {
+  if (config.domEventAllowlist && !config.domEventAllowlist.includes(event.type as 'click')) {
     return false
   }
   const tree = elementAndParents(element)
-  if (config.element_allowlist && !tree.some((item) => config.element_allowlist!.includes(item.tagName.toLowerCase()))) {
+  if (config.elementAllowlist && !tree.some((item) => config.elementAllowlist!.includes(item.tagName.toLowerCase()))) {
     return false
   }
-  if (config.css_selector_allowlist?.length && !tree.some((item) => config.css_selector_allowlist!.some((selector) => item.matches(selector)))) {
+  if (config.cssSelectorAllowlist?.length && !tree.some((item) => config.cssSelectorAllowlist!.some((selector) => item.matches(selector)))) {
     return false
   }
 

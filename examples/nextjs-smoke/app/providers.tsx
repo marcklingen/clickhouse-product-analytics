@@ -9,16 +9,14 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <AnalyticsProvider
       options={{
-        api_host: apiHost,
-        capture_pageview: 'history_change',
+        apiHost,
+        capturePageview: 'history_change',
         autocapture: {
           captureText: true,
-          element_allowlist: ['button', 'a']
+          elementAllowlist: ['button', 'a']
         },
-        request_queue_config: {
-          flush_interval_ms: 1000
-        },
-        property_denylist: ['secret']
+        flushIntervalMs: 1000,
+        propertyDenylist: ['secret']
       }}
     >
       {children}

@@ -117,7 +117,7 @@ function createNativeServer(writer) {
         sendJson(response, 200, { ok: true })
         return
       }
-      if (request.method !== 'POST' || !['/batch/', '/batch', '/capture/', '/capture', '/i/v0/e/', '/i/v0/e', '/e/', '/e'].includes(request.url ?? '')) {
+      if (request.method !== 'POST' || request.url !== '/batch/') {
         sendJson(response, 404, { status: 'error', error: 'Not found' })
         return
       }

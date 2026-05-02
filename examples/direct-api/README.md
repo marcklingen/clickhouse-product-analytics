@@ -1,6 +1,6 @@
 # Direct API Example
 
-This example sends one backend-style event to the ingest service.
+This example sends one backend-style event to the ingest service as a one-item `/batch/` payload.
 
 ## Run
 

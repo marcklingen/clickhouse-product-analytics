@@ -5,18 +5,15 @@ description: Public ingest endpoints, payloads, responses, and error semantics.
 
 # HTTP API Reference
 
-The ingest service exposes a small public event API. It accepts browser SDK batches, backend service events, and compatibility-style capture calls. There is no project or tenant ID in this service; each deployment writes to one ClickHouse database. Browser requests are validated by `Origin`, while backend or no-origin requests use `api_key` credentials from `PUBLIC_API_KEYS`.
+The ingest service exposes one public event API. There is no project or tenant ID in this service; each deployment writes to one ClickHouse database. Browser requests are validated by `Origin`, while backend or no-origin requests use `api_key` credentials from `PUBLIC_API_KEYS`.
 
 ## Endpoints
 
-All event ingestion endpoints accept `POST` with JSON bodies:
+Event ingestion accepts `POST` with JSON bodies at one canonical path:
 
 | Endpoint | Purpose |
 | --- | --- |
-| `/batch/` and `/batch` | Batch events from the browser SDK or backend services. |
-| `/capture/` and `/capture` | Single event capture endpoint. |
-| `/i/v0/e/` and `/i/v0/e` | Compatibility-style single event endpoint. |
-| `/e/` and `/e` | Short single event endpoint. |
+| `/batch/` | Batch events from the browser SDK or backend services. Send a single event as a one-item batch. |
 | `/health` | `GET` readiness and liveness check. |
 
 ## Authentication
@@ -28,72 +25,55 @@ Backend requests commonly omit `Origin`. Those requests require a valid `api_key
 ```json
 {
   "api_key": "local_dev_key",
-  "event": "backend_job_completed",
-  "distinct_id": "user_123"
+  "batch": [
+    {
+      "event": "backend_job_completed",
+      "distinct_id": "user_123"
+    }
+  ]
 }
 ```
 
 Requests from disallowed origins return `403`. No-origin requests with missing or unknown keys return `401`.
 
-## Single Event Payload
-
-```json
-{
-  "api_key": "local_dev_key",
-  "event": "backend_job_completed",
-  "distinct_id": "user_123",
-  "timestamp": "2026-05-02T12:00:00.000Z",
-  "properties": {
-    "job_id": "job_456",
-    "duration_ms": 481
-  }
-}
-```
-
-Fields:
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `api_key` | Browser: no. No-origin backend: yes. | Ingest credential accepted by the service. It does not scope identity or create tenants. |
-| `event` | Yes | Stable event name. Empty names are dropped. |
-| `distinct_id` | Yes | User, anonymous, device, or backend actor ID. |
-| `timestamp` | No | ISO timestamp. Defaults to ingest time. |
-| `properties` | No | JSON object. URL/session/person fields are promoted when present. |
-
-## Batch Payload
+## Payload
 
 ```json
 {
   "api_key": "local_dev_key",
   "batch": [
     {
-      "event": "$pageview",
-      "distinct_id": "anon_123",
+      "event": "backend_job_completed",
+      "distinct_id": "user_123",
+      "timestamp": "2026-05-02T12:00:00.000Z",
       "properties": {
-        "$current_url": "https://example.com/",
-        "$session_id": "session_123"
+        "job_id": "job_456",
+        "duration_ms": 481
       }
     }
   ]
 }
 ```
 
-If a batch includes keys in more than one place, all provided keys must match. Mixed keys return `400`. Batches larger than `MAX_EVENTS_PER_BATCH` return `413`.
+Top-level fields:
 
-The service also accepts an array of event objects as the request body. Browser-origin arrays can omit keys. No-origin backend arrays need a valid key on at least one event, and all provided keys must match.
+| Field | Required | Notes |
+| --- | --- | --- |
+| `api_key` | Browser: no. No-origin backend: yes. | Ingest credential accepted by the service. It does not scope identity or create tenants. |
+| `batch` | Yes | Non-empty array of event objects. |
 
-## Form-Encoded Payloads
+Event fields:
 
-For clients that cannot send JSON directly, send `application/x-www-form-urlencoded` with a `data` field containing a base64-encoded JSON payload:
+| Field | Required | Notes |
+| --- | --- | --- |
+| `event` | Yes | Stable event name. Empty names are dropped. |
+| `distinct_id` | Yes | User, anonymous, device, or backend actor ID. |
+| `timestamp` | No | ISO timestamp. Defaults to ingest time. |
+| `properties` | No | JSON object. URL/session/person fields are promoted when present, and arbitrary property keys are stored in ClickHouse. |
 
-```bash
-payload='{"api_key":"local_dev_key","event":"backend_job_completed","distinct_id":"user_123"}'
-curl -X POST http://127.0.0.1:8080/capture/ \
-  -H 'content-type: application/x-www-form-urlencoded' \
-  --data-urlencode "data=$(printf '%s' "$payload" | base64)"
-```
+`event` and `distinct_id` are required for successful ingestion of an individual event. Events missing either field are dropped and counted in the response without failing the whole request. Top-level and event-level fields outside this contract are accepted but ignored unless they are inside `properties`.
 
-The decoded JSON can be a single-event payload, a batch payload, or an array of event objects.
+If a batch includes keys in more than one place, all provided `api_key` values must match. Mixed keys return `400`. Batches larger than `MAX_EVENTS_PER_BATCH` return `413`.
 
 ## Identity Payloads
 
@@ -102,17 +82,21 @@ The decoded JSON can be a single-event payload, a batch payload, or an array of 
 ```json
 {
   "api_key": "local_dev_key",
-  "event": "$identify",
-  "distinct_id": "user_123",
-  "properties": {
-    "$anon_distinct_id": "anon_123",
-    "$set": {
-      "email": "user@example.com"
-    },
-    "$set_once": {
-      "first_seen_source": "landing_page"
+  "batch": [
+    {
+      "event": "$identify",
+      "distinct_id": "user_123",
+      "properties": {
+        "$anon_distinct_id": "anon_123",
+        "$set": {
+          "email": "user@example.com"
+        },
+        "$set_once": {
+          "first_seen_source": "landing_page"
+        }
+      }
     }
-  }
+  ]
 }
 ```
 
@@ -120,7 +104,7 @@ The decoded JSON can be a single-event payload, a batch payload, or an array of 
 
 ## Compression
 
-The service accepts compressed request bodies with `content-encoding: gzip`, `content-encoding: deflate`, or `content-encoding: br`. It also accepts the query parameter `compression=gzip-js` for clients that cannot set request headers.
+The service accepts gzip-compressed JSON request bodies with `content-encoding: gzip`.
 
 Compressed payloads are still limited by `MAX_BATCH_BYTES` after inflation. Oversized requests return `413`.
 
@@ -150,4 +134,5 @@ Common errors:
 | `401` | Missing key on no-origin backend requests, unknown provided key, or invalid provided browser key. |
 | `403` | Origin is not allowed. |
 | `413` | Request body or event count exceeds configured limits. |
+| `415` | Unsupported content type, unsupported content encoding, or unsupported compression query parameter. |
 | `500` | Unexpected server or ClickHouse write error. |

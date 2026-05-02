@@ -1,4 +1,4 @@
-import { createBrotliDecompress, createGunzip, createInflate } from 'node:zlib'
+import { createGunzip } from 'node:zlib'
 import cors from '@fastify/cors'
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify'
 import { ZodError } from 'zod'
@@ -30,23 +30,16 @@ export async function createServer({ config, writer }: CreateServerOptions): Pro
     allowedHeaders: ['content-type', 'content-encoding', 'x-requested-with']
   })
 
-  app.addContentTypeParser(['text/plain', 'application/x-www-form-urlencoded'], { parseAs: 'string' }, (_request, body, done) => {
-    done(null, body)
-  })
-
   app.addHook('preParsing', async (request, _reply, payload) => {
     const encoding = String(request.headers['content-encoding'] ?? 'identity').toLowerCase()
-    const compression = typeof request.query === 'object' && request.query && 'compression' in request.query
-      ? String((request.query as Record<string, unknown>).compression)
-      : ''
-    if (encoding === 'gzip' || compression === 'gzip-js') {
+    if (typeof request.query === 'object' && request.query && 'compression' in request.query) {
+      throw unsupportedMediaError('The compression query parameter is not supported. Use Content-Encoding: gzip.')
+    }
+    if (encoding === 'gzip') {
       return withEncodedLength(payload.pipe(createGunzip()), request.headers['content-length'])
     }
-    if (encoding === 'deflate') {
-      return withEncodedLength(payload.pipe(createInflate()), request.headers['content-length'])
-    }
-    if (encoding === 'br') {
-      return withEncodedLength(payload.pipe(createBrotliDecompress()), request.headers['content-length'])
+    if (encoding !== 'identity') {
+      throw unsupportedMediaError(`Unsupported content-encoding: ${encoding}`)
     }
     return payload
   })
@@ -56,6 +49,14 @@ export async function createServer({ config, writer }: CreateServerOptions): Pro
   }))
 
   const ingest = async (request: FastifyRequest, reply: FastifyReply) => {
+    const contentType = String(request.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase()
+    if (contentType !== 'application/json') {
+      return reply.code(415).send({
+        status: 'error',
+        error: 'Unsupported content type. Use application/json.'
+      })
+    }
+
     const parsed = parsePayload(request.body)
     const authorization = authorizeRequest(config, request.headers.origin, parsed.apiKey)
     if (!authorization.ok) {
@@ -84,14 +85,7 @@ export async function createServer({ config, writer }: CreateServerOptions): Pro
     })
   }
 
-  app.post('/e/', ingest)
-  app.post('/e', ingest)
   app.post('/batch/', ingest)
-  app.post('/batch', ingest)
-  app.post('/i/v0/e/', ingest)
-  app.post('/i/v0/e', ingest)
-  app.post('/capture/', ingest)
-  app.post('/capture', ingest)
 
   app.setErrorHandler((error, _request, reply) => {
     const message = error instanceof Error ? error.message : String(error)
@@ -114,6 +108,12 @@ export async function createServer({ config, writer }: CreateServerOptions): Pro
       return reply.code(400).send({
         status: 'error',
         error: error instanceof PayloadDecodeError ? error.message : message
+      })
+    }
+    if (statusCode === 415) {
+      return reply.code(415).send({
+        status: 'error',
+        error: message
       })
     }
     if (message.includes('Origin is not allowed')) {
@@ -185,4 +185,10 @@ function isAllowedOrigin(config: ServiceConfig, origin: string): boolean {
 function withEncodedLength<T extends NodeJS.ReadableStream>(stream: T, contentLength: string | undefined): T {
   ;(stream as T & { receivedEncodedLength?: number }).receivedEncodedLength = Number(contentLength ?? 0)
   return stream
+}
+
+function unsupportedMediaError(message: string): Error & { statusCode: 415 } {
+  const error = new Error(message) as Error & { statusCode: 415 }
+  error.statusCode = 415
+  return error
 }

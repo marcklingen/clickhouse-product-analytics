@@ -64,13 +64,13 @@ Key pages:
 import analytics from '@clickhouse-product-analytics/sdk'
 
 analytics.init({
-  api_host: 'http://127.0.0.1:8080',
-  capture_pageview: 'history_change',
+  apiHost: 'http://127.0.0.1:8080',
+  capturePageview: 'history_change',
   autocapture: {
     captureText: true,
-    element_allowlist: ['button', 'a']
+    elementAllowlist: ['button', 'a']
   },
-  property_denylist: ['secret']
+  propertyDenylist: ['secret']
 })
 
 analytics.capture('signup_started', { plan: 'pro' })
@@ -80,14 +80,14 @@ await analytics.flush()
 
 Useful SDK options:
 
-- `api_host`: ingest service URL.
-- `capture_pageview`: `true`, `false`, or `"history_change"` for browser apps with client-side routing.
-- `capture_pageleave`: `true`, `false`, or `"if_capture_pageview"`.
+- `apiHost`: ingest service URL.
+- `capturePageview`: `true`, `false`, or `"history_change"` for browser apps with client-side routing.
+- `capturePageleave`: `true`, `false`, or `"if_capture_pageview"`.
 - `autocapture`: disabled by default; pass an object to capture safe click/change/submit events with allowlists.
 - `persistence`: `localStorage+cookie`, `localStorage`, or `memory`.
-- `request_batching`, `flushAt`, `request_queue_config.flush_interval_ms`: batching controls.
-- `before_send`: mutate or drop events before they enter the queue.
-- `property_denylist`: remove properties before sending.
+- `requestBatching`, `flushAt`, `flushIntervalMs`: batching controls.
+- `beforeSend`: mutate or drop events before they enter the queue.
+- `propertyDenylist`: remove properties before sending.
 
 ## React
 
@@ -102,8 +102,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AnalyticsProvider
       options={{
-        api_host: 'http://127.0.0.1:8080',
-        capture_pageview: 'history_change',
+        apiHost: 'http://127.0.0.1:8080',
+        capturePageview: 'history_change',
         persistence: 'localStorage+cookie'
       }}
     >
@@ -129,19 +129,23 @@ For the full React API, including viewport tracking caveats, see [Sending events
 
 ## Direct API
 
-Single event:
+Single-event ingestion uses the same batch envelope with one event:
 
 ```bash
-curl -X POST http://127.0.0.1:8080/i/v0/e/ \
+curl -X POST http://127.0.0.1:8080/batch/ \
   -H 'content-type: application/json' \
   -d '{
     "api_key": "local_dev_key",
-    "event": "backend_job_completed",
-    "distinct_id": "user_123",
-    "properties": {
-      "job_id": "job_456",
-      "duration_ms": 481
-    }
+    "batch": [
+      {
+        "event": "backend_job_completed",
+        "distinct_id": "user_123",
+        "properties": {
+          "job_id": "job_456",
+          "duration_ms": 481
+        }
+      }
+    ]
   }'
 ```
 

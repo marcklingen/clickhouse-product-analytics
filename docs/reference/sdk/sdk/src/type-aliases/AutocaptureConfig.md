@@ -24,9 +24,9 @@ Include safe text snippets for allowed elements.
 
 ***
 
-### css\_selector\_allowlist?
+### cssSelectorAllowlist?
 
-> `optional` **css\_selector\_allowlist?**: `string`[]
+> `optional` **cssSelectorAllowlist?**: `string`[]
 
 Defined in: [sdk/src/types.ts:58](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L58)
 
@@ -34,9 +34,9 @@ CSS selectors allowed for autocapture.
 
 ***
 
-### dom\_event\_allowlist?
+### domEventAllowlist?
 
-> `optional` **dom\_event\_allowlist?**: (`"click"` \| `"change"` \| `"submit"`)[]
+> `optional` **domEventAllowlist?**: (`"click"` \| `"change"` \| `"submit"`)[]
 
 Defined in: [sdk/src/types.ts:64](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L64)
 
@@ -44,9 +44,9 @@ DOM event names to listen for. Defaults to click/change/submit.
 
 ***
 
-### element\_allowlist?
+### elementAllowlist?
 
-> `optional` **element\_allowlist?**: `string`[]
+> `optional` **elementAllowlist?**: `string`[]
 
 Defined in: [sdk/src/types.ts:56](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L56)
 
@@ -54,9 +54,9 @@ Element tag names allowed for autocapture, for example `button` or `a`.
 
 ***
 
-### url\_allowlist?
+### urlAllowlist?
 
-> `optional` **url\_allowlist?**: (`string` \| `RegExp`)[]
+> `optional` **urlAllowlist?**: (`string` \| `RegExp`)[]
 
 Defined in: [sdk/src/types.ts:60](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L60)
 
@@ -64,9 +64,9 @@ URL patterns where autocapture is allowed.
 
 ***
 
-### url\_ignorelist?
+### urlIgnorelist?
 
-> `optional` **url\_ignorelist?**: (`string` \| `RegExp`)[]
+> `optional` **urlIgnorelist?**: (`string` \| `RegExp`)[]
 
 Defined in: [sdk/src/types.ts:62](https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/types.ts#L62)
 

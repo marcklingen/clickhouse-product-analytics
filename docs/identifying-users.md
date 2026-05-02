@@ -44,22 +44,26 @@ This emits a `$identify` event. If the browser was previously anonymous, the eve
 You can identify users through the direct API by sending `$identify`:
 
 ```bash
-curl -X POST http://127.0.0.1:8080/i/v0/e/ \
+curl -X POST http://127.0.0.1:8080/batch/ \
   -H 'content-type: application/json' \
   -d '{
     "api_key": "local_dev_key",
-    "event": "$identify",
-    "distinct_id": "user_123",
-    "properties": {
-      "$anon_distinct_id": "anonymous_device_abc",
-      "$set": {
-        "email": "user@example.com",
-        "plan": "pro"
-      },
-      "$set_once": {
-        "first_seen_source": "pricing_page"
+    "batch": [
+      {
+        "event": "$identify",
+        "distinct_id": "user_123",
+        "properties": {
+          "$anon_distinct_id": "anonymous_device_abc",
+          "$set": {
+            "email": "user@example.com",
+            "plan": "pro"
+          },
+          "$set_once": {
+            "first_seen_source": "pricing_page"
+          }
+        }
       }
-    }
+    ]
   }'
 ```
 
@@ -111,15 +115,19 @@ The SDK emits `$create_alias` with `alias`. The ingest service writes both IDs i
 Direct API form:
 
 ```bash
-curl -X POST http://127.0.0.1:8080/i/v0/e/ \
+curl -X POST http://127.0.0.1:8080/batch/ \
   -H 'content-type: application/json' \
   -d '{
     "api_key": "local_dev_key",
-    "event": "$create_alias",
-    "distinct_id": "frontend_user_123",
-    "properties": {
-      "alias": "backend_user_123"
-    }
+    "batch": [
+      {
+        "event": "$create_alias",
+        "distinct_id": "frontend_user_123",
+        "properties": {
+          "alias": "backend_user_123"
+        }
+      }
+    ]
   }'
 ```
 

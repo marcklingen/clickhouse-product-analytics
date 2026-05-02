@@ -98,7 +98,7 @@ CLICKHOUSE_DATABASE=product_analytics \
 npm run migrate
 ```
 
-The browser SDK and React package do not connect to ClickHouse Cloud directly. They should continue to send events to the ingest service `api_host`; the ingest service is the only component that needs ClickHouse Cloud credentials.
+The browser SDK and React package do not connect to ClickHouse Cloud directly. They should continue to send events to the ingest service `apiHost`; the ingest service is the only component that needs ClickHouse Cloud credentials.
 
 ## Environment Variables
 

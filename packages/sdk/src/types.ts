@@ -53,66 +53,35 @@ export type AutocaptureConfig = {
   /** Include safe text snippets for allowed elements. */
   captureText?: boolean
   /** Element tag names allowed for autocapture, for example `button` or `a`. */
-  element_allowlist?: string[]
+  elementAllowlist?: string[]
   /** CSS selectors allowed for autocapture. */
-  css_selector_allowlist?: string[]
+  cssSelectorAllowlist?: string[]
   /** URL patterns where autocapture is allowed. */
-  url_allowlist?: Array<string | RegExp>
+  urlAllowlist?: Array<string | RegExp>
   /** URL patterns where autocapture is blocked. */
-  url_ignorelist?: Array<string | RegExp>
+  urlIgnorelist?: Array<string | RegExp>
   /** DOM event names to listen for. Defaults to click/change/submit. */
-  dom_event_allowlist?: Array<'click' | 'change' | 'submit'>
+  domEventAllowlist?: Array<'click' | 'change' | 'submit'>
 }
 
-/** Queue timing options nested under `request_queue_config` for compatibility with common analytics SDK config shapes. */
-export type RequestQueueConfig = {
-  flush_interval_ms?: number
-}
-
-/** Browser SDK initialization options using snake_case aliases for compatibility. */
-export type AnalyticsClientConfig = {
+/** Browser SDK initialization options. */
+export type InitOptions = {
   /** Ingest service base URL, for example `https://analytics.example.com`. */
-  api_host?: string
+  apiHost: string
+  /** Optional client-supplied API key. Required for no-origin backend calls; optional for allowed-origin browser calls. */
+  apiKey?: string
   /** Enable or configure privacy-aware autocapture. */
   autocapture?: boolean | AutocaptureConfig
   /** Capture an initial pageview, no pageviews, or pageviews on history changes. */
-  capture_pageview?: boolean | 'history_change'
+  capturePageview?: boolean | 'history_change'
   /** Capture pageleave events always, never, or only when pageview capture is enabled. */
-  capture_pageleave?: boolean | 'if_capture_pageview'
+  capturePageleave?: boolean | 'if_capture_pageview'
   /** Browser persistence backend for IDs, session state, and registered properties. */
   persistence?: 'localStorage' | 'memory' | 'localStorage+cookie'
   /** Keep all state in memory for the lifetime of the client instance. */
-  disable_persistence?: boolean
+  disablePersistence?: boolean
   /** Enable batched delivery. */
-  request_batching?: boolean
-  /** Queue timing settings. */
-  request_queue_config?: RequestQueueConfig
-  /** Mutate or drop events before they enter the queue. */
-  before_send?: BeforeSendHook | BeforeSendHook[]
-  /** Property names removed from every event before sending. */
-  property_denylist?: string[]
-  /** Disable gzip compression for fetch requests. SendBeacon unload flushes are always uncompressed. */
-  disable_compression?: boolean
-  /** Callback invoked after initialization completes. */
-  loaded?: (client: unknown) => void
-  /** Reserved for verbose diagnostics in future releases. */
-  debug?: boolean
-  /** Compatibility placeholder for callers that pass analytics SDK defaults. */
-  defaults?: string
-}
-
-/** Complete initialization options, including camelCase aliases and advanced controls. */
-export type InitOptions = AnalyticsClientConfig & {
-  /** CamelCase alias of `api_host`. */
-  apiHost?: string
-  /** Optional client-supplied API key. Required for no-origin backend calls; optional for allowed-origin browser calls. */
-  apiKey?: string
-  /** Path appended to `apiHost` for batch ingestion. Defaults to `/batch/`. */
-  batchEndpoint?: string
-  /** CamelCase alias of `capture_pageview`. */
-  capturePageview?: boolean | 'history_change'
-  /** CamelCase alias of `capture_pageleave`. */
-  capturePageleave?: boolean | 'if_capture_pageview'
+  requestBatching?: boolean
   /** Number of queued events that triggers an immediate flush. */
   flushAt?: number
   /** Flush interval in milliseconds. */
@@ -123,6 +92,10 @@ export type InitOptions = AnalyticsClientConfig & {
   maxQueueSize?: number
   /** Inactivity window after which the next event starts a new session. */
   sessionTimeoutMs?: number
+  /** Mutate or drop events before they enter the queue. */
+  beforeSend?: BeforeSendHook | BeforeSendHook[]
+  /** Property names removed from every event before sending. */
+  propertyDenylist?: string[]
   /** Custom delivery implementation. */
   transport?: Transport
 }

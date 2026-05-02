@@ -31,8 +31,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AnalyticsProvider
       options={{
-        api_host: process.env.NEXT_PUBLIC_CPA_HOST!,
-        capture_pageview: 'history_change',
+        apiHost: process.env.NEXT_PUBLIC_CPA_HOST!,
+        capturePageview: 'history_change',
         persistence: 'localStorage+cookie'
       }}
     >
@@ -58,9 +58,9 @@ export function SignupButton() {
 import analytics from '@clickhouse-product-analytics/sdk'
 
 analytics.init({
-  api_host: 'https://analytics.example.com',
-  capture_pageview: 'history_change',
-  property_denylist: ['token', 'secret', 'password']
+  apiHost: 'https://analytics.example.com',
+  capturePageview: 'history_change',
+  propertyDenylist: ['token', 'secret', 'password']
 })
 
 analytics.capture('invite_sent', { role: 'admin' })
@@ -72,18 +72,22 @@ Allowed browser origins can omit the API key. Use `apiKey` or `analytics.init('c
 ## Backend Event Pattern
 
 ```ts
-await fetch('https://analytics.example.com/i/v0/e/', {
+await fetch('https://analytics.example.com/batch/', {
   method: 'POST',
   headers: { 'content-type': 'application/json' },
   body: JSON.stringify({
     api_key: process.env.ANALYTICS_API_KEY,
-    event: 'backend_job_completed',
-    distinct_id: userId,
-    properties: {
-      job_id: jobId,
-      duration_ms: durationMs,
-      status: 'success'
-    }
+    batch: [
+      {
+        event: 'backend_job_completed',
+        distinct_id: userId,
+        properties: {
+          job_id: jobId,
+          duration_ms: durationMs,
+          status: 'success'
+        }
+      }
+    ]
   })
 })
 ```

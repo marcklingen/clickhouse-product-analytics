@@ -28,7 +28,7 @@ describe('React bindings', () => {
     }
 
     const html = renderToString(
-      <AnalyticsProvider options={{ api_host: 'http://127.0.0.1:8080' }}>
+      <AnalyticsProvider options={{ apiHost: 'http://127.0.0.1:8080' }}>
         <Probe />
       </AnalyticsProvider>
     )
@@ -62,8 +62,8 @@ describe('React bindings', () => {
       <StrictMode>
         <AnalyticsProvider
           options={{
-            api_host: 'http://127.0.0.1:8080',
-            capture_pageview: false,
+            apiHost: 'http://127.0.0.1:8080',
+            capturePageview: false,
             persistence: 'memory'
           }}
         >
@@ -90,8 +90,8 @@ describe('React bindings', () => {
         <AnalyticsProvider
           apiKey="first_key"
           options={{
-            api_host: 'http://127.0.0.1:8080',
-            capture_pageview: false,
+            apiHost: 'http://127.0.0.1:8080',
+            capturePageview: false,
             persistence: 'memory'
           }}
         />
@@ -103,8 +103,8 @@ describe('React bindings', () => {
         <AnalyticsProvider
           apiKey="second_key"
           options={{
-            api_host: 'http://127.0.0.1:8080',
-            capture_pageview: false,
+            apiHost: 'http://127.0.0.1:8080',
+            capturePageview: false,
             persistence: 'memory'
           }}
         />

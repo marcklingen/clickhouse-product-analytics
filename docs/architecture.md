@@ -32,7 +32,7 @@ The SDK runs in the browser and owns client-side capture behavior:
 - opt-in/out capture state
 - `identify`, `alias`, `reset`, `$set`, and `$set_once`
 
-The SDK sends batched payloads to `/batch/` by default.
+The SDK always sends batched payloads to `/batch/`.
 
 ### React Package
 
@@ -44,16 +44,7 @@ The React package wraps the SDK for client-rendered React and Next.js applicatio
 
 ### HTTP Ingest Service
 
-The ingest service is a stateless Fastify service. It accepts SDK and direct API traffic, enforces source validation, normalizes event shape, applies identity side effects, and writes to ClickHouse.
-
-Accepted ingest paths:
-
-- `/batch/`
-- `/i/v0/e/`
-- `/capture/`
-- `/e/`
-
-Trailing-slash variants without `/` are also accepted.
+The ingest service is a stateless Fastify service. It accepts SDK and direct API traffic at `POST /batch/`, enforces source validation, normalizes event shape, applies identity side effects, and writes to ClickHouse.
 
 ### ClickHouse
 
@@ -61,9 +52,9 @@ ClickHouse is the only required database. The service writes append-only events 
 
 ## Event Flow
 
-1. A browser or backend sends an event with an event name, distinct ID, optional timestamp, optional API key, and properties.
+1. A browser or backend sends a JSON batch payload with one or more events. A one-event batch is the single-event ingestion path.
 2. The service validates the request source: browser requests must match the origin allowlist, while no-origin backend requests need a configured API key.
-3. The payload is decoded. Plain JSON, form-encoded `data`, gzip, deflate, and Brotli request bodies are supported.
+3. The payload is decoded. Plain JSON request bodies and `Content-Encoding: gzip` request bodies are supported.
 4. Invalid events inside a batch are dropped when the event name or distinct ID is missing. The response remains successful and includes a `dropped` count.
 5. Each accepted event is normalized with promoted fields such as `event`, `distinct_id`, `person_id`, `session_id`, `window_id`, `current_url`, `host`, timestamp, IP, and user agent.
 6. The event distinct ID is recorded in `person_distinct_ids`; identity events also update `persons` and link anonymous or alias IDs.

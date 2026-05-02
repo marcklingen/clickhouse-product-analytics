@@ -45,7 +45,7 @@ describe('ClickHouseProductAnalytics', () => {
   })
 
   it('can send browser events without an api key', async () => {
-    const calls: TransportPayload[] = []
+    const calls: Array<{ url: string; payload: TransportPayload }> = []
     const client = new ClickHouseProductAnalytics()
 
     client.init({
@@ -54,16 +54,26 @@ describe('ClickHouseProductAnalytics', () => {
       flushAt: 10,
       flushIntervalMs: 0,
       persistence: 'memory',
-      transport: async (_url, payload) => {
-        calls.push(payload)
+      transport: async (url, payload) => {
+        calls.push({ url, payload })
       }
     })
 
     client.capture('anonymous_browser_event')
     await client.flush()
 
-    expect(calls[0].api_key).toBeUndefined()
-    expect(calls[0].batch[0].event).toBe('anonymous_browser_event')
+    expect(calls[0].url).toBe('http://localhost:8080/batch/')
+    expect(calls[0].payload.api_key).toBeUndefined()
+    expect(calls[0].payload.batch[0].event).toBe('anonymous_browser_event')
+  })
+
+  it('ignores removed snake_case config aliases at runtime', () => {
+    const client = new ClickHouseProductAnalytics()
+
+    expect(() => client.init({
+      api_host: 'http://localhost:8080',
+      capture_pageview: false
+    } as never)).toThrow('apiHost is required')
   })
 
   it('connects anonymous and known users with identify', async () => {
@@ -206,18 +216,18 @@ describe('ClickHouseProductAnalytics', () => {
     client.shutdown()
   })
 
-  it('runs before_send and property denylist hooks', async () => {
+  it('runs beforeSend and propertyDenylist hooks', async () => {
     const calls: TransportPayload[] = []
     const client = new ClickHouseProductAnalytics()
 
     client.init('test_key', {
-      api_host: 'http://localhost:8080',
-      capture_pageview: false,
+      apiHost: 'http://localhost:8080',
+      capturePageview: false,
       flushAt: 1,
       flushIntervalMs: 0,
       persistence: 'memory',
-      property_denylist: ['secret'],
-      before_send: (event) => ({
+      propertyDenylist: ['secret'],
+      beforeSend: (event) => ({
         ...event,
         properties: {
           ...event.properties,
@@ -239,18 +249,18 @@ describe('ClickHouseProductAnalytics', () => {
     expect(calls[0].batch[0].properties.added).toBe(true)
   })
 
-  it('applies the property denylist after before_send hooks', async () => {
+  it('applies the property denylist after beforeSend hooks', async () => {
     const calls: TransportPayload[] = []
     const client = new ClickHouseProductAnalytics()
 
     client.init('test_key', {
-      api_host: 'http://localhost:8080',
-      capture_pageview: false,
+      apiHost: 'http://localhost:8080',
+      capturePageview: false,
       flushAt: 1,
       flushIntervalMs: 0,
       persistence: 'memory',
-      property_denylist: ['secret'],
-      before_send: (event) => ({
+      propertyDenylist: ['secret'],
+      beforeSend: (event) => ({
         ...event,
         properties: {
           ...event.properties,
@@ -533,8 +543,7 @@ describe('ClickHouseProductAnalytics', () => {
       capturePageview: false,
       flushAt: 10,
       flushIntervalMs: 0,
-      persistence: 'memory',
-      disable_compression: true
+      persistence: 'memory'
     })
 
     client.capture('unauthorized_event')
@@ -556,8 +565,7 @@ describe('ClickHouseProductAnalytics', () => {
       capturePageview: false,
       flushAt: 10,
       flushIntervalMs: 0,
-      persistence: 'memory',
-      disable_compression: true
+      persistence: 'memory'
     })
 
     client.capture('first_event')
