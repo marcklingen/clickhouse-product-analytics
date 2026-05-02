@@ -105,7 +105,7 @@ Successful output looks like:
 
 ## Docs Verification
 
-GitHub Pages builds the docs through `.github/workflows/pages.yml` using `actions/jekyll-build-pages`. Locally, the repo verifies the presence and wiring of docs files during E2E. The actual rendered Pages build is validated by GitHub Actions.
+GitHub Pages builds the docs through `.github/workflows/pages.yml` using `actions/jekyll-build-pages`. The workflow deploys the production docs for `main` and publishes same-repository PR previews under `/pr-preview/pr-<number>/` when both the PR and its latest push changed docs-related files. Locally, the repo verifies the presence and wiring of docs files during E2E. The actual rendered Pages build is validated by GitHub Actions.
 
 ## Deployment Artifact Checks
 

@@ -185,3 +185,5 @@ In the repository settings, configure:
 - **Pages > Build and deployment > Source**: GitHub Actions.
 
 Pushes to `main` that change `docs/**` or the Pages workflow rebuild and deploy the docs site.
+
+Same-repository pull requests get a docs preview when the PR changes docs and the latest push also touched docs-related files. The workflow publishes previews under `/pr-preview/pr-<number>/`, upserts one bot comment with the preview URL, and removes the preview when the PR is closed, merged, converted back to draft, or no longer changes docs.

@@ -753,6 +753,7 @@ async function assertDocsDeploymentWiring() {
   assert(pagesWorkflow.includes('actions/jekyll-build-pages@v1'), 'Expected Pages workflow to build Markdown docs with Jekyll')
   assert(pagesWorkflow.includes('source: ./docs'), 'Expected Pages workflow to publish docs/ as the source')
   assert(pagesWorkflow.includes('actions/deploy-pages@v4'), 'Expected Pages workflow to deploy to GitHub Pages')
+  assert(pagesWorkflow.includes('compareCommitsWithBasehead') && pagesWorkflow.includes('pr-preview/pr-${{ github.event.pull_request.number }}') && pagesWorkflow.includes('clickhouse-product-analytics-docs-preview'), 'Expected Pages workflow to deploy and comment on PR docs previews')
   assert(ciWorkflow.includes('npm run verify:e2e') && ciWorkflow.includes('helm lint') && ciWorkflow.includes('helm template') && ciWorkflow.includes('git diff --exit-code docs/reference/sdk'), 'Expected CI workflow to run E2E, Helm, and generated docs checks')
   assert(containerWorkflow.includes('workflow_run') && containerWorkflow.includes('CI') && containerWorkflow.includes("workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'") && containerWorkflow.includes('Verify current main commit') && !containerWorkflow.includes('workflow_dispatch'), 'Expected container workflow to publish only after CI succeeds on the current main push')
   assert(containerWorkflow.includes('ghcr.io/${{ github.repository }}/ingest-service') && containerWorkflow.includes('docker/build-push-action@v6'), 'Expected container workflow to publish the ingest image to GHCR')
