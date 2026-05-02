@@ -5,6 +5,12 @@ import { APIPage } from '@/components/api-page'
 import { getMDXComponents } from '@/mdx-components'
 import { source } from '@/lib/source'
 
+const githubEditLink = {
+  owner: 'marcklingen',
+  repo: 'clickhouse-product-analytics',
+  sha: 'main'
+}
+
 type PageProps = {
   params: Promise<{
     slug?: string[]
@@ -39,9 +45,16 @@ export default async function Page({ params }: PageProps) {
     notFound()
   }
 
+  const editOnGithub = page.absolutePath
+    ? {
+        ...githubEditLink,
+        path: `content/docs/${page.path}`
+      }
+    : undefined
+
   if (page.data.type === 'openapi') {
     return (
-      <DocsPage full toc={page.data.toc}>
+      <DocsPage full toc={page.data.toc} editOnGithub={editOnGithub}>
         <DocsBody>
           <APIPage {...page.data.getAPIPageProps()} />
         </DocsBody>
@@ -52,7 +65,7 @@ export default async function Page({ params }: PageProps) {
   const MDX = page.data.body
 
   return (
-    <DocsPage toc={page.data.toc}>
+    <DocsPage toc={page.data.toc} editOnGithub={editOnGithub}>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>

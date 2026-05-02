@@ -12,6 +12,11 @@ export default function Layout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
         <RootProvider
+          i18n={{
+            translations: {
+              editOnGithub: 'Edit this page'
+            }
+          }}
           search={{
             options: {
               api: `${docsBasePath}/api/search`,
