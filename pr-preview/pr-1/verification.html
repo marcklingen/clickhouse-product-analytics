@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Build, unit, and end-to-end verification.","headline":"Verification","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/verification.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=5783902f0729517d35d7d6011863226bda95f5c5">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -103,21 +103,21 @@
   <li><code class="language-plaintext highlighter-rouge">docs/index.md</code>, <code class="language-plaintext highlighter-rouge">docs/_config.yml</code>, and Pages workflow wiring,</li>
   <li>Next.js smoke app build,</li>
   <li>browser SDK custom capture,</li>
-  <li><code class="language-plaintext highlighter-rouge">capture_pageview: "history_change"</code>,</li>
-  <li><code class="language-plaintext highlighter-rouge">capture_pageview: true</code>,</li>
-  <li><code class="language-plaintext highlighter-rouge">capture_pageview: false</code>,</li>
-  <li><code class="language-plaintext highlighter-rouge">capture_pageleave: true</code>,</li>
-  <li><code class="language-plaintext highlighter-rouge">capture_pageleave: "if_capture_pageview"</code>,</li>
+  <li><code class="language-plaintext highlighter-rouge">capturePageview: "history_change"</code>,</li>
+  <li><code class="language-plaintext highlighter-rouge">capturePageview: true</code>,</li>
+  <li><code class="language-plaintext highlighter-rouge">capturePageview: false</code>,</li>
+  <li><code class="language-plaintext highlighter-rouge">capturePageleave: true</code>,</li>
+  <li><code class="language-plaintext highlighter-rouge">capturePageleave: "if_capture_pageview"</code>,</li>
   <li>opt-out and opt-in behavior,</li>
-  <li><code class="language-plaintext highlighter-rouge">before_send</code> mutation and dropping,</li>
+  <li><code class="language-plaintext highlighter-rouge">beforeSend</code> mutation and dropping,</li>
   <li>property denylist behavior,</li>
   <li>autocapture for button clicks,</li>
   <li>React <code class="language-plaintext highlighter-rouge">AnalyticsProvider</code>,</li>
   <li>React <code class="language-plaintext highlighter-rouge">useAnalytics</code>,</li>
   <li>React <code class="language-plaintext highlighter-rouge">AnalyticsCaptureOnViewed</code>,</li>
   <li>React <code class="language-plaintext highlighter-rouge">trackAllChildren</code>,</li>
-  <li>direct single-event API,</li>
-  <li>direct batch API,</li>
+  <li>direct one-event batch API,</li>
+  <li>direct multi-event batch API,</li>
   <li>SDK fetch compression and direct gzip bodies,</li>
   <li><code class="language-plaintext highlighter-rouge">$identify</code>, <code class="language-plaintext highlighter-rouge">$set</code>, and <code class="language-plaintext highlighter-rouge">$set_once</code>,</li>
   <li>separate-request anonymous-to-known identity stitching,</li>

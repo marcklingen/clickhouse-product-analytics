@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Browser SDK, React, direct API, batch API, and event naming examples.","headline":"Sending Events","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/sending-events.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=5783902f0729517d35d7d6011863226bda95f5c5">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -77,13 +77,13 @@
 <div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nx">analytics</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@clickhouse-product-analytics/sdk</span><span class="dl">'</span>
 
 <span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">({</span>
-  <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://127.0.0.1:8080</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">capture_pageview</span><span class="p">:</span> <span class="dl">'</span><span class="s1">history_change</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">apiHost</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://127.0.0.1:8080</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">capturePageview</span><span class="p">:</span> <span class="dl">'</span><span class="s1">history_change</span><span class="dl">'</span><span class="p">,</span>
   <span class="na">autocapture</span><span class="p">:</span> <span class="p">{</span>
     <span class="na">captureText</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="na">element_allowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">button</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">a</span><span class="dl">'</span><span class="p">]</span>
+    <span class="na">elementAllowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">button</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">a</span><span class="dl">'</span><span class="p">]</span>
   <span class="p">},</span>
-  <span class="na">property_denylist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">secret</span><span class="dl">'</span><span class="p">]</span>
+  <span class="na">propertyDenylist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">secret</span><span class="dl">'</span><span class="p">]</span>
 <span class="p">})</span>
 
 <span class="nx">analytics</span><span class="p">.</span><span class="nx">capture</span><span class="p">(</span><span class="dl">'</span><span class="s1">signup_started</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
@@ -105,15 +105,15 @@
   </thead>
   <tbody>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">api_host</code></td>
+      <td><code class="language-plaintext highlighter-rouge">apiHost</code></td>
       <td>Ingest service URL.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">capture_pageview</code></td>
+      <td><code class="language-plaintext highlighter-rouge">capturePageview</code></td>
       <td><code class="language-plaintext highlighter-rouge">true</code>, <code class="language-plaintext highlighter-rouge">false</code>, or <code class="language-plaintext highlighter-rouge">"history_change"</code> for browser apps with client-side routing.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">capture_pageleave</code></td>
+      <td><code class="language-plaintext highlighter-rouge">capturePageleave</code></td>
       <td><code class="language-plaintext highlighter-rouge">true</code>, <code class="language-plaintext highlighter-rouge">false</code>, or <code class="language-plaintext highlighter-rouge">"if_capture_pageview"</code>.</td>
     </tr>
     <tr>
@@ -125,7 +125,7 @@
       <td><code class="language-plaintext highlighter-rouge">localStorage+cookie</code>, <code class="language-plaintext highlighter-rouge">localStorage</code>, or <code class="language-plaintext highlighter-rouge">memory</code>.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">request_batching</code></td>
+      <td><code class="language-plaintext highlighter-rouge">requestBatching</code></td>
       <td>Enables batched SDK sends.</td>
     </tr>
     <tr>
@@ -133,31 +133,27 @@
       <td>Queue size that triggers a flush.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">request_queue_config.flush_interval_ms</code></td>
+      <td><code class="language-plaintext highlighter-rouge">flushIntervalMs</code></td>
       <td>Timed flush interval.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">before_send</code></td>
+      <td><code class="language-plaintext highlighter-rouge">beforeSend</code></td>
       <td>Mutate or drop events before they enter the queue.</td>
     </tr>
     <tr>
-      <td><code class="language-plaintext highlighter-rouge">property_denylist</code></td>
+      <td><code class="language-plaintext highlighter-rouge">propertyDenylist</code></td>
       <td>Remove sensitive properties before sending.</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">disable_compression</code></td>
-      <td>Disable fetch request gzip compression. The SDK uses browser <code class="language-plaintext highlighter-rouge">CompressionStream</code> when available and falls back to plain JSON otherwise. SendBeacon unload flushes are always uncompressed.</td>
     </tr>
   </tbody>
 </table>
 
 <h2 id="pageviews">Pageviews</h2>
 
-<p>For single-page applications, use <code class="language-plaintext highlighter-rouge">capture_pageview: "history_change"</code> so route changes emit <code class="language-plaintext highlighter-rouge">$pageview</code>:</p>
+<p>For single-page applications, use <code class="language-plaintext highlighter-rouge">capturePageview: "history_change"</code> so route changes emit <code class="language-plaintext highlighter-rouge">$pageview</code>:</p>
 
 <div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">({</span>
-  <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">capture_pageview</span><span class="p">:</span> <span class="dl">'</span><span class="s1">history_change</span><span class="dl">'</span>
+  <span class="na">apiHost</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">capturePageview</span><span class="p">:</span> <span class="dl">'</span><span class="s1">history_change</span><span class="dl">'</span>
 <span class="p">})</span>
 </code></pre></div></div>
 
@@ -175,11 +171,11 @@
 <p>Autocapture is opt-in. Keep it narrow and explicit:</p>
 
 <div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">({</span>
-  <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">apiHost</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
   <span class="na">autocapture</span><span class="p">:</span> <span class="p">{</span>
     <span class="na">captureText</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="na">element_allowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">button</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">a</span><span class="dl">'</span><span class="p">],</span>
-    <span class="na">dom_event_allowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">click</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">submit</span><span class="dl">'</span><span class="p">]</span>
+    <span class="na">elementAllowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">button</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">a</span><span class="dl">'</span><span class="p">],</span>
+    <span class="na">domEventAllowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">click</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">submit</span><span class="dl">'</span><span class="p">]</span>
   <span class="p">}</span>
 <span class="p">})</span>
 </code></pre></div></div>
@@ -188,11 +184,11 @@
 
 <h2 id="event-hooks-and-privacy">Event Hooks and Privacy</h2>
 
-<p>Use <code class="language-plaintext highlighter-rouge">before_send</code> to enforce a local event contract:</p>
+<p>Use <code class="language-plaintext highlighter-rouge">beforeSend</code> to enforce a local event contract:</p>
 
 <div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">({</span>
-  <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">before_send</span><span class="p">:</span> <span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="na">apiHost</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">beforeSend</span><span class="p">:</span> <span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">event</span> <span class="o">===</span> <span class="dl">'</span><span class="s1">debug_event</span><span class="dl">'</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">return</span> <span class="kc">undefined</span>
     <span class="p">}</span>
@@ -200,7 +196,7 @@
     <span class="nx">event</span><span class="p">.</span><span class="nx">properties</span><span class="p">.</span><span class="nx">app_version</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">1.2.3</span><span class="dl">'</span>
     <span class="k">return</span> <span class="nx">event</span>
   <span class="p">},</span>
-  <span class="na">property_denylist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">token</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">secret</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">password</span><span class="dl">'</span><span class="p">]</span>
+  <span class="na">propertyDenylist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">token</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">secret</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">password</span><span class="dl">'</span><span class="p">]</span>
 <span class="p">})</span>
 </code></pre></div></div>
 
@@ -279,31 +275,33 @@
 
 <p><code class="language-plaintext highlighter-rouge">AnalyticsCaptureOnViewed</code> wraps children in a <code class="language-plaintext highlighter-rouge">div</code>. When <code class="language-plaintext highlighter-rouge">trackAllChildren</code> is enabled, each child is wrapped separately and receives a <code class="language-plaintext highlighter-rouge">child_index</code> property. Avoid that mode in table/list/form structures where extra wrappers would be invalid.</p>
 
-<h2 id="direct-single-event-api">Direct Single Event API</h2>
+<h2 id="direct-api">Direct API</h2>
 
 <p>For exact endpoint, payload, response, and error details, see the <a href="/clickhouse-product-analytics/pr-preview/pr-1/reference/http-api.html">HTTP API reference</a>.</p>
 
-<p>Backend services can send events directly:</p>
+<p>Backend services send JSON batch payloads to <code class="language-plaintext highlighter-rouge">POST /batch/</code>. A single event is sent as a one-item batch:</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/i/v0/e/ <span class="se">\</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/batch/ <span class="se">\</span>
   <span class="nt">-H</span> <span class="s1">'content-type: application/json'</span> <span class="se">\</span>
   <span class="nt">-d</span> <span class="s1">'{
     "api_key": "local_dev_key",
-    "event": "backend_job_completed",
-    "distinct_id": "user_123",
-    "properties": {
-      "job_id": "job_456",
-      "duration_ms": 481,
-      "status": "success"
-    }
+    "batch": [
+      {
+        "event": "backend_job_completed",
+        "distinct_id": "user_123",
+        "properties": {
+          "job_id": "job_456",
+          "duration_ms": 481,
+          "status": "success"
+        }
+      }
+    ]
   }'</span>
 </code></pre></div></div>
 
-<p>The same payload shape is accepted at <code class="language-plaintext highlighter-rouge">/capture/</code> and <code class="language-plaintext highlighter-rouge">/e/</code>.</p>
-
 <h2 id="batch-api">Batch API</h2>
 
-<p>Use <code class="language-plaintext highlighter-rouge">/batch/</code> for multiple events:</p>
+<p>Use the same envelope for multiple events:</p>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/batch/ <span class="se">\</span>
   <span class="nt">-H</span> <span class="s1">'content-type: application/json'</span> <span class="se">\</span>
@@ -331,23 +329,15 @@
   }'</span>
 </code></pre></div></div>
 
-<p>The service also accepts an array of event objects as the request body. Browser-origin arrays can omit keys. No-origin backend arrays need a valid <code class="language-plaintext highlighter-rouge">api_key</code> on at least one event, and any provided keys in the same request must match.</p>
-
 <h2 id="compressed-requests">Compressed Requests</h2>
 
-<p>The ingest service accepts compressed request bodies:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">Content-Encoding: gzip</code></li>
-  <li><code class="language-plaintext highlighter-rouge">Content-Encoding: deflate</code></li>
-  <li><code class="language-plaintext highlighter-rouge">Content-Encoding: br</code></li>
-</ul>
+<p>The ingest service accepts gzip-compressed JSON request bodies with <code class="language-plaintext highlighter-rouge">Content-Encoding: gzip</code>.</p>
 
 <p>Example:</p>
 
 <div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">gzipSync</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">node:zlib</span><span class="dl">'</span>
 
-<span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">http://127.0.0.1:8080/capture/</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+<span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">http://127.0.0.1:8080/batch/</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
   <span class="na">method</span><span class="p">:</span> <span class="dl">'</span><span class="s1">POST</span><span class="dl">'</span><span class="p">,</span>
   <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
     <span class="dl">'</span><span class="s1">content-type</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">application/json</span><span class="dl">'</span><span class="p">,</span>
@@ -355,9 +345,13 @@
   <span class="p">},</span>
   <span class="na">body</span><span class="p">:</span> <span class="nx">gzipSync</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span>
     <span class="na">api_key</span><span class="p">:</span> <span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">event</span><span class="p">:</span> <span class="dl">'</span><span class="s1">backend_job_completed</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">distinct_id</span><span class="p">:</span> <span class="dl">'</span><span class="s1">user_123</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">properties</span><span class="p">:</span> <span class="p">{</span> <span class="na">job_id</span><span class="p">:</span> <span class="dl">'</span><span class="s1">job_456</span><span class="dl">'</span> <span class="p">}</span>
+    <span class="na">batch</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="na">event</span><span class="p">:</span> <span class="dl">'</span><span class="s1">backend_job_completed</span><span class="dl">'</span><span class="p">,</span>
+        <span class="na">distinct_id</span><span class="p">:</span> <span class="dl">'</span><span class="s1">user_123</span><span class="dl">'</span><span class="p">,</span>
+        <span class="na">properties</span><span class="p">:</span> <span class="p">{</span> <span class="na">job_id</span><span class="p">:</span> <span class="dl">'</span><span class="s1">job_456</span><span class="dl">'</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
   <span class="p">}))</span>
 <span class="p">})</span>
 </code></pre></div></div>

@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"System boundaries, event flow, and identity flow.","headline":"Architecture","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/architecture.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=5783902f0729517d35d7d6011863226bda95f5c5">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -71,7 +71,7 @@ Backend services     -&gt;  Direct API   -&gt;  HTTP ingest service  -&gt;  Clic
   <li><code class="language-plaintext highlighter-rouge">identify</code>, <code class="language-plaintext highlighter-rouge">alias</code>, <code class="language-plaintext highlighter-rouge">reset</code>, <code class="language-plaintext highlighter-rouge">$set</code>, and <code class="language-plaintext highlighter-rouge">$set_once</code></li>
 </ul>
 
-<p>The SDK sends batched payloads to <code class="language-plaintext highlighter-rouge">/batch/</code> by default.</p>
+<p>The SDK always sends batched payloads to <code class="language-plaintext highlighter-rouge">/batch/</code>.</p>
 
 <h3 id="react-package">React Package</h3>
 
@@ -85,18 +85,7 @@ Backend services     -&gt;  Direct API   -&gt;  HTTP ingest service  -&gt;  Clic
 
 <h3 id="http-ingest-service">HTTP Ingest Service</h3>
 
-<p>The ingest service is a stateless Fastify service. It accepts SDK and direct API traffic, enforces source validation, normalizes event shape, applies identity side effects, and writes to ClickHouse.</p>
-
-<p>Accepted ingest paths:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">/batch/</code></li>
-  <li><code class="language-plaintext highlighter-rouge">/i/v0/e/</code></li>
-  <li><code class="language-plaintext highlighter-rouge">/capture/</code></li>
-  <li><code class="language-plaintext highlighter-rouge">/e/</code></li>
-</ul>
-
-<p>Trailing-slash variants without <code class="language-plaintext highlighter-rouge">/</code> are also accepted.</p>
+<p>The ingest service is a stateless Fastify service. It accepts SDK and direct API traffic at <code class="language-plaintext highlighter-rouge">POST /batch/</code>, enforces source validation, normalizes event shape, applies identity side effects, and writes to ClickHouse.</p>
 
 <h3 id="clickhouse">ClickHouse</h3>
 
@@ -105,9 +94,9 @@ Backend services     -&gt;  Direct API   -&gt;  HTTP ingest service  -&gt;  Clic
 <h2 id="event-flow">Event Flow</h2>
 
 <ol>
-  <li>A browser or backend sends an event with an event name, distinct ID, optional timestamp, optional API key, and properties.</li>
+  <li>A browser or backend sends a JSON batch payload with one or more events. A one-event batch is the single-event ingestion path.</li>
   <li>The service validates the request source: browser requests must match the origin allowlist, while no-origin backend requests need a configured API key.</li>
-  <li>The payload is decoded. Plain JSON, form-encoded <code class="language-plaintext highlighter-rouge">data</code>, gzip, deflate, and Brotli request bodies are supported.</li>
+  <li>The payload is decoded. Plain JSON request bodies and <code class="language-plaintext highlighter-rouge">Content-Encoding: gzip</code> request bodies are supported.</li>
   <li>Invalid events inside a batch are dropped when the event name or distinct ID is missing. The response remains successful and includes a <code class="language-plaintext highlighter-rouge">dropped</code> count.</li>
   <li>Each accepted event is normalized with promoted fields such as <code class="language-plaintext highlighter-rouge">event</code>, <code class="language-plaintext highlighter-rouge">distinct_id</code>, <code class="language-plaintext highlighter-rouge">person_id</code>, <code class="language-plaintext highlighter-rouge">session_id</code>, <code class="language-plaintext highlighter-rouge">window_id</code>, <code class="language-plaintext highlighter-rouge">current_url</code>, <code class="language-plaintext highlighter-rouge">host</code>, timestamp, IP, and user agent.</li>
   <li>The event distinct ID is recorded in <code class="language-plaintext highlighter-rouge">person_distinct_ids</code>; identity events also update <code class="language-plaintext highlighter-rouge">persons</code> and link anonymous or alias IDs.</li>

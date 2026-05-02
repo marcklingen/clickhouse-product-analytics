@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Anonymous IDs, identify, person properties, aliases, and reset.","headline":"Identifying Users","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/identifying-users.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=5783902f0729517d35d7d6011863226bda95f5c5">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -82,22 +82,26 @@
 
 <p>You can identify users through the direct API by sending <code class="language-plaintext highlighter-rouge">$identify</code>:</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/i/v0/e/ <span class="se">\</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/batch/ <span class="se">\</span>
   <span class="nt">-H</span> <span class="s1">'content-type: application/json'</span> <span class="se">\</span>
   <span class="nt">-d</span> <span class="s1">'{
     "api_key": "local_dev_key",
-    "event": "$identify",
-    "distinct_id": "user_123",
-    "properties": {
-      "$anon_distinct_id": "anonymous_device_abc",
-      "$set": {
-        "email": "user@example.com",
-        "plan": "pro"
-      },
-      "$set_once": {
-        "first_seen_source": "pricing_page"
+    "batch": [
+      {
+        "event": "$identify",
+        "distinct_id": "user_123",
+        "properties": {
+          "$anon_distinct_id": "anonymous_device_abc",
+          "$set": {
+            "email": "user@example.com",
+            "plan": "pro"
+          },
+          "$set_once": {
+            "first_seen_source": "pricing_page"
+          }
+        }
       }
-    }
+    ]
   }'</span>
 </code></pre></div></div>
 
@@ -144,15 +148,19 @@
 
 <p>Direct API form:</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/i/v0/e/ <span class="se">\</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/batch/ <span class="se">\</span>
   <span class="nt">-H</span> <span class="s1">'content-type: application/json'</span> <span class="se">\</span>
   <span class="nt">-d</span> <span class="s1">'{
     "api_key": "local_dev_key",
-    "event": "$create_alias",
-    "distinct_id": "frontend_user_123",
-    "properties": {
-      "alias": "backend_user_123"
-    }
+    "batch": [
+      {
+        "event": "$create_alias",
+        "distinct_id": "frontend_user_123",
+        "properties": {
+          "alias": "backend_user_123"
+        }
+      }
+    ]
   }'</span>
 </code></pre></div></div>
 

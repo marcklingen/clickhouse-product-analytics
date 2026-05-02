@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"First-party product analytics ingress for ClickHouse.","headline":"ClickHouse Product Analytics","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/reference/sdk/sdk/src/type-aliases/InitOptions.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=5783902f0729517d35d7d6011863226bda95f5c5">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -50,22 +50,26 @@
 <h1 id="type-alias-initoptions">Type Alias: InitOptions</h1>
 
 <blockquote>
-  <p><strong>InitOptions</strong> = <code class="language-plaintext highlighter-rouge">AnalyticsClientConfig</code> &amp; <code class="language-plaintext highlighter-rouge">object</code></p>
+  <p><strong>InitOptions</strong> = <code class="language-plaintext highlighter-rouge">object</code></p>
 </blockquote>
 
-<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L105">sdk/src/types.ts:105</a></p>
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L68">sdk/src/types.ts:68</a></p>
 
-<p>Complete initialization options, including camelCase aliases and advanced controls.</p>
+<p>Browser SDK initialization options.</p>
 
-<h2 id="type-declaration">Type Declaration</h2>
+<h2 id="properties">Properties</h2>
 
-<h3 id="apihost">apiHost?</h3>
+<h3 id="apihost">apiHost</h3>
 
 <blockquote>
-  <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>apiHost?</strong>: <code class="language-plaintext highlighter-rouge">string</code></p>
+  <p><strong>apiHost</strong>: <code class="language-plaintext highlighter-rouge">string</code></p>
 </blockquote>
 
-<p>CamelCase alias of <code class="language-plaintext highlighter-rouge">api_host</code>.</p>
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L70">sdk/src/types.ts:70</a></p>
+
+<p>Ingest service base URL, for example <code class="language-plaintext highlighter-rouge">https://analytics.example.com</code>.</p>
+
+<hr />
 
 <h3 id="apikey">apiKey?</h3>
 
@@ -73,15 +77,35 @@
   <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>apiKey?</strong>: <code class="language-plaintext highlighter-rouge">string</code></p>
 </blockquote>
 
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L72">sdk/src/types.ts:72</a></p>
+
 <p>Optional client-supplied API key. Required for no-origin backend calls; optional for allowed-origin browser calls.</p>
 
-<h3 id="batchendpoint">batchEndpoint?</h3>
+<hr />
+
+<h3 id="autocapture">autocapture?</h3>
 
 <blockquote>
-  <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>batchEndpoint?</strong>: <code class="language-plaintext highlighter-rouge">string</code></p>
+  <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>autocapture?</strong>: <code class="language-plaintext highlighter-rouge">boolean</code> | <a href="/clickhouse-product-analytics/pr-preview/pr-1/reference/sdk/sdk/src/type-aliases/AutocaptureConfig.html"><code class="language-plaintext highlighter-rouge">AutocaptureConfig</code></a></p>
 </blockquote>
 
-<p>Path appended to <code class="language-plaintext highlighter-rouge">apiHost</code> for batch ingestion. Defaults to <code class="language-plaintext highlighter-rouge">/batch/</code>.</p>
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L74">sdk/src/types.ts:74</a></p>
+
+<p>Enable or configure privacy-aware autocapture.</p>
+
+<hr />
+
+<h3 id="beforesend">beforeSend?</h3>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>beforeSend?</strong>: <a href="/clickhouse-product-analytics/pr-preview/pr-1/reference/sdk/sdk/src/type-aliases/BeforeSendHook.html"><code class="language-plaintext highlighter-rouge">BeforeSendHook</code></a> | <a href="/clickhouse-product-analytics/pr-preview/pr-1/reference/sdk/sdk/src/type-aliases/BeforeSendHook.html"><code class="language-plaintext highlighter-rouge">BeforeSendHook</code></a>[]</p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L96">sdk/src/types.ts:96</a></p>
+
+<p>Mutate or drop events before they enter the queue.</p>
+
+<hr />
 
 <h3 id="capturepageleave">capturePageleave?</h3>
 
@@ -89,7 +113,11 @@
   <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>capturePageleave?</strong>: <code class="language-plaintext highlighter-rouge">boolean</code> | <code class="language-plaintext highlighter-rouge">"if_capture_pageview"</code></p>
 </blockquote>
 
-<p>CamelCase alias of <code class="language-plaintext highlighter-rouge">capture_pageleave</code>.</p>
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L78">sdk/src/types.ts:78</a></p>
+
+<p>Capture pageleave events always, never, or only when pageview capture is enabled.</p>
+
+<hr />
 
 <h3 id="capturepageview">capturePageview?</h3>
 
@@ -97,7 +125,23 @@
   <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>capturePageview?</strong>: <code class="language-plaintext highlighter-rouge">boolean</code> | <code class="language-plaintext highlighter-rouge">"history_change"</code></p>
 </blockquote>
 
-<p>CamelCase alias of <code class="language-plaintext highlighter-rouge">capture_pageview</code>.</p>
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L76">sdk/src/types.ts:76</a></p>
+
+<p>Capture an initial pageview, no pageviews, or pageviews on history changes.</p>
+
+<hr />
+
+<h3 id="disablepersistence">disablePersistence?</h3>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>disablePersistence?</strong>: <code class="language-plaintext highlighter-rouge">boolean</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L82">sdk/src/types.ts:82</a></p>
+
+<p>Keep all state in memory for the lifetime of the client instance.</p>
+
+<hr />
 
 <h3 id="flushat">flushAt?</h3>
 
@@ -105,7 +149,11 @@
   <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>flushAt?</strong>: <code class="language-plaintext highlighter-rouge">number</code></p>
 </blockquote>
 
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L86">sdk/src/types.ts:86</a></p>
+
 <p>Number of queued events that triggers an immediate flush.</p>
+
+<hr />
 
 <h3 id="flushintervalms">flushIntervalMs?</h3>
 
@@ -113,7 +161,11 @@
   <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>flushIntervalMs?</strong>: <code class="language-plaintext highlighter-rouge">number</code></p>
 </blockquote>
 
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L88">sdk/src/types.ts:88</a></p>
+
 <p>Flush interval in milliseconds.</p>
+
+<hr />
 
 <h3 id="maxqueuesize">maxQueueSize?</h3>
 
@@ -121,7 +173,47 @@
   <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>maxQueueSize?</strong>: <code class="language-plaintext highlighter-rouge">number</code></p>
 </blockquote>
 
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L92">sdk/src/types.ts:92</a></p>
+
 <p>Maximum queued event count before oldest events are dropped.</p>
+
+<hr />
+
+<h3 id="persistence">persistence?</h3>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>persistence?</strong>: <code class="language-plaintext highlighter-rouge">"localStorage"</code> | <code class="language-plaintext highlighter-rouge">"memory"</code> | <code class="language-plaintext highlighter-rouge">"localStorage+cookie"</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L80">sdk/src/types.ts:80</a></p>
+
+<p>Browser persistence backend for IDs, session state, and registered properties.</p>
+
+<hr />
+
+<h3 id="propertydenylist">propertyDenylist?</h3>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>propertyDenylist?</strong>: <code class="language-plaintext highlighter-rouge">string</code>[]</p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L98">sdk/src/types.ts:98</a></p>
+
+<p>Property names removed from every event before sending.</p>
+
+<hr />
+
+<h3 id="requestbatching">requestBatching?</h3>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>requestBatching?</strong>: <code class="language-plaintext highlighter-rouge">boolean</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L84">sdk/src/types.ts:84</a></p>
+
+<p>Enable batched delivery.</p>
+
+<hr />
 
 <h3 id="requesttimeoutms">requestTimeoutMs?</h3>
 
@@ -129,7 +221,11 @@
   <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>requestTimeoutMs?</strong>: <code class="language-plaintext highlighter-rouge">number</code></p>
 </blockquote>
 
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L90">sdk/src/types.ts:90</a></p>
+
 <p>Request timeout in milliseconds.</p>
+
+<hr />
 
 <h3 id="sessiontimeoutms">sessionTimeoutMs?</h3>
 
@@ -137,13 +233,19 @@
   <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>sessionTimeoutMs?</strong>: <code class="language-plaintext highlighter-rouge">number</code></p>
 </blockquote>
 
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L94">sdk/src/types.ts:94</a></p>
+
 <p>Inactivity window after which the next event starts a new session.</p>
+
+<hr />
 
 <h3 id="transport">transport?</h3>
 
 <blockquote>
   <p><code class="language-plaintext highlighter-rouge">optional</code> <strong>transport?</strong>: <a href="/clickhouse-product-analytics/pr-preview/pr-1/reference/sdk/sdk/src/type-aliases/Transport.html"><code class="language-plaintext highlighter-rouge">Transport</code></a></p>
 </blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/pr-preview/pr-1/blob/main/packages/sdk/src/types.ts#L100">sdk/src/types.ts:100</a></p>
 
 <p>Custom delivery implementation.</p>
 

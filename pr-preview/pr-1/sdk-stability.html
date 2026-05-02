@@ -22,7 +22,7 @@
 {"@context":"https://schema.org","@type":"WebPage","description":"Production reliability notes from comparing the SDK with mature browser analytics SDK patterns.","headline":"SDK Stability Review","url":"https://marcklingen.github.io/clickhouse-product-analytics/pr-preview/pr-1/sdk-stability.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=b9af96771847542ea4dfd46618df2ad8675c92db">
+    <link rel="stylesheet" href="/clickhouse-product-analytics/pr-preview/pr-1/assets/css/style.css?v=5783902f0729517d35d7d6011863226bda95f5c5">
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -57,7 +57,7 @@
 <h2 id="improvements-applied">Improvements Applied</h2>
 
 <ul>
-  <li>Fetch requests now honor SDK compression settings with browser <code class="language-plaintext highlighter-rouge">CompressionStream</code> when available, and fall back to plain JSON if compression is unavailable or fails.</li>
+  <li>Fetch requests use gzip with browser <code class="language-plaintext highlighter-rouge">CompressionStream</code> when available, and fall back to plain JSON if compression is unavailable or fails.</li>
   <li>SendBeacon unload flushes remain uncompressed because browsers do not let callers attach arbitrary <code class="language-plaintext highlighter-rouge">content-encoding</code> headers to beacon bodies.</li>
   <li>The E2E test now exercises SDK compression in addition to direct API gzip requests.</li>
   <li>Event properties are sanitized before enqueueing so circular objects and <code class="language-plaintext highlighter-rouge">bigint</code> values do not crash capture or flush.</li>
@@ -104,7 +104,7 @@
     </tr>
     <tr>
       <td>Custom transport behavior</td>
-      <td>Custom transports receive payload and compression intent, but own all request semantics.</td>
+      <td>Custom transports receive the canonical batch payload and own all request semantics.</td>
       <td>Document custom transport tests in downstream apps that override delivery.</td>
     </tr>
   </tbody>
