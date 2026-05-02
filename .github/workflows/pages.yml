@@ -191,7 +191,7 @@ jobs:
       pages: write
       id-token: write
     environment:
-      name: github-pages
+      name: github-pages-preview
       url: ${{ steps.deployment.outputs.page_url }}
     env:
       PREVIEW_PATH: pr-preview/pr-${{ github.event.pull_request.number }}
@@ -319,7 +319,7 @@ jobs:
       pages: write
       id-token: write
     environment:
-      name: github-pages
+      name: github-pages-preview
       url: ${{ steps.deployment.outputs.page_url }}
     env:
       PREVIEW_PATH: pr-preview/pr-${{ github.event.pull_request.number }}
