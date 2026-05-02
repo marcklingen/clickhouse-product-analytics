@@ -217,6 +217,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          sudo chown -R "$USER":"$USER" _site
+
           site_base="/${GITHUB_REPOSITORY#*/}/"
           preview_base="${site_base}${PREVIEW_PATH}/"
 
