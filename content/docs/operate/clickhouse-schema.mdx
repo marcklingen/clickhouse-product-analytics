@@ -9,6 +9,31 @@ The ClickHouse database is the analytics source of truth. The default database n
 
 There is no project ID and no tenant column. `api_key` is stored on events when supplied as an ingest credential, but it is not a tenant or identity boundary. Do not write queries that assume `project_id`, `team_id`, or multi-tenancy.
 
+## Schema Map
+
+```mermaid
+flowchart LR
+  Ingest["Ingest service<br/>normalizes accepted events"]
+  Events[("events<br/>append-only event facts")]
+  Persons[("persons FINAL<br/>latest person profiles")]
+  DistinctIds[("person_distinct_ids FINAL<br/>distinct ID map")]
+  Sessions[["sessions view<br/>session rollups"]]
+  Queries["SQL / BI / notebooks<br/>agentic analytics"]
+
+  Ingest -->|"insert events"| Events
+  Ingest -->|"upsert profiles"| Persons
+  Ingest -->|"link IDs"| DistinctIds
+  Events -->|"group by api_key + session_id"| Sessions
+  Events -->|"person_id"| Persons
+  DistinctIds -->|"person_id"| Persons
+  Events --> Queries
+  Sessions --> Queries
+  Persons --> Queries
+  DistinctIds --> Queries
+```
+
+The arrows show write paths, view derivations, and common query joins. They are not ClickHouse foreign-key constraints.
+
 ## Agent Query Guidelines
 
 When an agent queries this database:
