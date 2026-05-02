@@ -9,9 +9,30 @@ ClickHouse Product Analytics is deliberately small. The browser SDK and direct A
 
 ## System Boundary
 
-```text
-Web app / React app  ->  Browser SDK  ->  HTTP ingest service  ->  ClickHouse
-Backend services     ->  Direct API   ->  HTTP ingest service  ->  ClickHouse
+```mermaid
+flowchart LR
+  subgraph Producers["Event producers"]
+    Web["Web app / React app"]
+    Backend["Backend services"]
+  end
+
+  subgraph ClientPackages["Client packages"]
+    ReactPkg["React package<br/>provider, hook, viewport tracking"]
+    SDK["Browser SDK<br/>capture, identity, batching"]
+  end
+
+  Ingest["HTTP ingest service<br/>POST /batch/<br/>origin and API-key checks"]
+  ClickHouse[("ClickHouse<br/>events, persons, identity links, sessions")]
+  Consumers["SQL, BI tools, notebooks,<br/>agentic analytics"]
+
+  Web --> ReactPkg
+  Web --> SDK
+  ReactPkg --> SDK
+  Backend -->|"JSON batch API"| Ingest
+  SDK -->|"JSON batch API<br/>optional gzip"| Ingest
+  Ingest -->|"normalized events"| ClickHouse
+  Ingest -->|"identity side effects"| ClickHouse
+  ClickHouse --> Consumers
 ```
 
 The ingest service has no settings UI and no runtime project model. Configuration comes from environment variables. Browser traffic is gated by allowed origins. `PUBLIC_API_KEYS` is optional to configure; when configured, keys are required for backend or no-origin requests and optional for allowed-origin browser requests. API keys are not tenant or identity boundaries.
