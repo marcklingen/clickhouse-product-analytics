@@ -1,22 +1,48 @@
 # Repository Instructions
 
-- Use subagents aggressively to offload tasks and research.
-- When changing the public ingest HTTP API, update the committed OpenAPI spec and the Fumadocs API reference in the same change. The committed spec is `openapi/clickhouse-product-analytics.openapi.yaml`; the rendered reference is wired through the Fumadocs docs app under `apps/docs` and `content/docs/reference`. This includes route aliases, request payloads, response payloads, authentication, accepted encodings, compression behavior, CORS/origin behavior, and documented error semantics.
-- The OpenAPI/API reference must mirror the implemented API behavior exactly, including permissive request parsing, dropped-event semantics, route aliases, optional fields that are required only for successful ingestion, passthrough properties, accepted content types, compression options, and concrete error status behavior. Do not make the spec stricter or cleaner than the service actually is unless the service implementation changes in the same patch.
+## Work Style
 
-## Core Design Decisions
+- Use subagents for parallel repo scans, docs checks, and test-failure diagnosis.
+- Keep behavior, tests, examples, OpenAPI, and docs in the same change when touching a public surface.
 
-- The public ingest API has one canonical event endpoint: `POST /batch/`. Do not reintroduce public ingest aliases such as `/batch`, `/capture/`, `/capture`, `/i/v0/e/`, `/i/v0/e`, `/e/`, or `/e`.
-- The ingest request body is JSON only: an object with a non-empty `batch` array. Single-event ingestion is a one-item batch. Do not reintroduce standalone single-event bodies or raw array bodies.
-- Event `event` and `distinct_id` are required for successful ingestion of that event, but missing values drop the individual event and increment `dropped`; they do not fail the whole batch. Do not document them as hard request-level validation unless the implementation changes.
-- Payload parsing is intentionally permissive around unknown top-level and event-level fields. Unknown fields are accepted but ignored unless they are inside `properties`; document this behavior instead of making the API reference stricter.
-- If `api_key` appears in more than one place, all provided values must match. Mixed batch-level and event-level keys return `400`.
-- HTTP wire payload fields stay snake_case because they are JSON/warehouse-facing. Keep `api_key` and `distinct_id` on the wire payload.
-- SDK public configuration is TypeScript-facing and must stay camelCase. Keep options such as `apiHost`, `apiKey`, `capturePageview`, `capturePageleave`, `disablePersistence`, `requestBatching`, `flushIntervalMs`, `beforeSend`, and `propertyDenylist`.
-- Do not reintroduce snake_case SDK config aliases or compatibility placeholders, including `api_host`, `capture_pageview`, `capture_pageleave`, `request_queue_config`, `disable_compression`, `loaded`, `debug`, or `defaults`.
-- Do not expose `batchEndpoint` as SDK configuration. The SDK always posts to `/batch/`.
-- Request compression is gzip only via `Content-Encoding: gzip`. Do not reintroduce `text/plain`, `application/x-www-form-urlencoded`, base64 `data`, `Content-Encoding: deflate`, `Content-Encoding: br`, or `compression=gzip-js`.
-- Preserve the current API-key semantics: browser requests from allowed origins can omit `api_key`; backend/no-Origin requests require a configured `api_key`; `PUBLIC_API_KEYS` may contain comma-separated keys for rotation; API keys are not tenant, project, or person-resolution boundaries.
-- Preserve the explicitly supported tracking features: autocapture, `AnalyticsCaptureOnViewed`, identity helpers, persistence modes, `beforeSend`, and `propertyDenylist`.
-- When changing exported SDK/React types or public examples, regenerate `content/docs/reference/sdk-generated` with `npm run docs:reference` and update docs, examples, benchmarks, and E2E assertions in the same change.
-- Treat older compatibility notes in `plans/fumadocs-migration-prd.md` as superseded by `plans/simplification.md` and current source when they mention removed aliases, form/base64 payloads, `text/plain`, `deflate`, `br`, `compression=gzip-js`, or `token`.
+## Project Map
+
+- `packages/sdk`: browser SDK. Public TypeScript config stays camelCase.
+- `packages/react`: React provider, hook, and viewed-tracking component.
+- `packages/ingest-service`: Fastify ingest API, auth/origin checks, payload parsing, ClickHouse writes, and migrations.
+- `openapi/clickhouse-product-analytics.openapi.yaml`: committed public API spec.
+- `content/docs` and `apps/docs`: Fumadocs content, generated API reference, and docs app wiring.
+- `examples`: direct API capture and Next.js smoke app.
+- `skills/product-analytics-tracking`: repo-local tracking integration skill.
+
+## Commands
+
+- Install: `npm install` with Node `>=22`.
+- Full local check: `npm run verify`.
+- Focused checks: `npm run test`, `npm run typecheck`, or `npm run build:packages`.
+- Docs checks: `npm run docs:build`, `npm run docs:typecheck`, and `npm run docs:validate`.
+- Regenerate SDK/React reference docs: `npm run docs:reference`.
+- E2E flow: `docker compose up -d --build` then `npm run verify:e2e`.
+
+## Public API Contract
+
+- The only public ingest endpoint is `POST /batch/`; do not add public aliases.
+- Ingest bodies are JSON objects with a non-empty `batch` array. Single-event ingestion is a one-item batch.
+- Wire payload fields are snake_case. Keep `api_key` and `distinct_id` on HTTP payloads.
+- Missing per-event `event` or `distinct_id` drops that event and increments `dropped`; it does not fail the whole batch.
+- Unknown top-level and event-level fields are accepted but ignored unless they are inside `properties`.
+- Multiple provided `api_key` values must match. Compression is gzip only via `Content-Encoding: gzip`.
+- Browser requests from allowed origins may omit `api_key`; backend/no-Origin requests require a configured key.
+
+## SDK Contract
+
+- SDK public configuration is camelCase: `apiHost`, `apiKey`, `capturePageview`, `capturePageleave`, `disablePersistence`, `requestBatching`, `flushIntervalMs`, `beforeSend`, and `propertyDenylist`.
+- Do not add snake_case SDK aliases or compatibility placeholders such as `api_host`, `capture_pageview`, `capture_pageleave`, `request_queue_config`, `disable_compression`, `loaded`, `debug`, or `defaults`.
+- Do not expose `batchEndpoint`; the SDK always posts to `/batch/`.
+- Preserve the supported tracking features: autocapture, `AnalyticsCaptureOnViewed`, identity helpers, persistence modes, `beforeSend`, and `propertyDenylist`.
+
+## Docs Sync Rules
+
+- Public ingest API changes must update `openapi/clickhouse-product-analytics.openapi.yaml` and the Fumadocs API reference under `content/docs/reference` in the same patch.
+- OpenAPI and API docs must mirror implemented behavior exactly, including permissive parsing, dropped-event semantics, route availability, request/response payloads, auth, encodings, compression, CORS/origin behavior, and concrete error status behavior.
+- Exported SDK/React type or public example changes must regenerate `content/docs/reference/sdk-generated` with `npm run docs:reference` and update docs, examples, benchmarks, and E2E assertions as needed.
