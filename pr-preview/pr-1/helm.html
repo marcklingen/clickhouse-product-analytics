@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Helm Deployment | ClickHouse Product Analytics</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Helm Deployment" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Install the ingest service on Kubernetes with autoscaling." />
+<meta property="og:description" content="Install the ingest service on Kubernetes with autoscaling." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/helm.html" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/helm.html" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Helm Deployment" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Install the ingest service on Kubernetes with autoscaling.","headline":"Helm Deployment","url":"https://marcklingen.github.io/clickhouse-product-analytics/helm.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://marcklingen.github.io/clickhouse-product-analytics/">ClickHouse Product Analytics</a></h1>
+      
+
+      <h1 id="helm-deployment">Helm Deployment</h1>
+
+<p>The Helm chart in <code class="language-plaintext highlighter-rouge">deploy/helm/clickhouse-product-analytics</code> deploys the ingest service to Kubernetes. It does not deploy ClickHouse. Point it at ClickHouse Cloud or an existing in-cluster ClickHouse service.</p>
+
+<h2 id="render-locally">Render Locally</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm template cpa ./deploy/helm/clickhouse-product-analytics <span class="se">\</span>
+  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span>local_dev_key <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.url<span class="o">=</span>http://clickhouse:8123 <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.user<span class="o">=</span>analytics <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.password<span class="o">=</span>local_dev_password
+</code></pre></div></div>
+
+<h2 id="install">Install</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm upgrade <span class="nt">--install</span> cpa ./deploy/helm/clickhouse-product-analytics <span class="se">\</span>
+  <span class="nt">--namespace</span> analytics <span class="se">\</span>
+  <span class="nt">--create-namespace</span> <span class="se">\</span>
+  <span class="nt">--set</span> image.repository<span class="o">=</span>ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service <span class="se">\</span>
+  <span class="nt">--set</span> image.tag<span class="o">=</span>sha-&lt;commit&gt; <span class="se">\</span>
+  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span><span class="s2">"&lt;publishable-key&gt;"</span> <span class="se">\</span>
+  <span class="nt">--set</span> ingest.allowedOrigins<span class="o">=</span><span class="s2">"https://app.example.com"</span> <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.url<span class="o">=</span><span class="s2">"https://&lt;clickhouse-cloud-host&gt;:8443"</span> <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.database<span class="o">=</span><span class="s2">"product_analytics"</span> <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.user<span class="o">=</span><span class="s2">"&lt;user&gt;"</span> <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.password<span class="o">=</span><span class="s2">"&lt;password&gt;"</span>
+</code></pre></div></div>
+
+<p>Use an existing Kubernetes secret for ClickHouse credentials when possible:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm upgrade <span class="nt">--install</span> cpa ./deploy/helm/clickhouse-product-analytics <span class="se">\</span>
+  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span><span class="s2">"&lt;publishable-key&gt;"</span> <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.url<span class="o">=</span><span class="s2">"https://&lt;clickhouse-cloud-host&gt;:8443"</span> <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.existingSecret<span class="o">=</span>clickhouse-credentials
+</code></pre></div></div>
+
+<p>The existing secret must contain keys named <code class="language-plaintext highlighter-rouge">username</code> and <code class="language-plaintext highlighter-rouge">password</code> unless you override <code class="language-plaintext highlighter-rouge">clickhouse.existingSecretUserKey</code> and <code class="language-plaintext highlighter-rouge">clickhouse.existingSecretPasswordKey</code>.</p>
+
+<p>Use <code class="language-plaintext highlighter-rouge">image.tag=latest</code> only for quick trials. Production rollouts should use the <code class="language-plaintext highlighter-rouge">sha-&lt;commit&gt;</code> tag published by the container workflow or a digest-pinned image:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm upgrade <span class="nt">--install</span> cpa ./deploy/helm/clickhouse-product-analytics <span class="se">\</span>
+  <span class="nt">--set</span> image.repository<span class="o">=</span>ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service <span class="se">\</span>
+  <span class="nt">--set</span> image.digest<span class="o">=</span>sha256:&lt;digest&gt; <span class="se">\</span>
+  <span class="nt">--set</span> ingest.publicApiKeys<span class="o">=</span><span class="s2">"&lt;publishable-key&gt;"</span> <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.url<span class="o">=</span><span class="s2">"https://&lt;clickhouse-cloud-host&gt;:8443"</span> <span class="se">\</span>
+  <span class="nt">--set</span> clickhouse.existingSecret<span class="o">=</span>clickhouse-credentials
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">clickhouse.url</code> is required. Rendering fails early when it is missing so an invalid deployment is not applied.</p>
+
+<h2 id="autoscaling-defaults">Autoscaling Defaults</h2>
+
+<p>Autoscaling is enabled by default:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Value</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">autoscaling.minReplicas</code></td>
+      <td><code class="language-plaintext highlighter-rouge">2</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">autoscaling.maxReplicas</code></td>
+      <td><code class="language-plaintext highlighter-rouge">10</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">autoscaling.targetCPUUtilizationPercentage</code></td>
+      <td><code class="language-plaintext highlighter-rouge">70</code></td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">autoscaling.targetMemoryUtilizationPercentage</code></td>
+      <td><code class="language-plaintext highlighter-rouge">80</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The chart also sets resource requests and limits so the HPA has stable utilization signals. Tune these values after observing real traffic and ClickHouse insert latency.</p>
+
+<h2 id="migrations">Migrations</h2>
+
+<p>Run migrations from a checkout before deploying a new schema:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">CLICKHOUSE_URL</span><span class="o">=</span><span class="s2">"https://&lt;clickhouse-cloud-host&gt;:8443"</span> <span class="se">\</span>
+<span class="nv">CLICKHOUSE_USER</span><span class="o">=</span><span class="s2">"&lt;user&gt;"</span> <span class="se">\</span>
+<span class="nv">CLICKHOUSE_PASSWORD</span><span class="o">=</span><span class="s2">"&lt;password&gt;"</span> <span class="se">\</span>
+<span class="nv">CLICKHOUSE_DATABASE</span><span class="o">=</span><span class="s2">"product_analytics"</span> <span class="se">\</span>
+npm run migrate
+</code></pre></div></div>
+
+<p>For a Kubernetes-only network path, run a one-off pod or job with the same image and environment variables, then execute the compiled migration entrypoint from the image:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">CLICKHOUSE_URL</span><span class="o">=</span><span class="s2">"https://&lt;clickhouse-cloud-host&gt;:8443"</span> <span class="se">\</span>
+<span class="nv">CLICKHOUSE_USER</span><span class="o">=</span><span class="s2">"&lt;user&gt;"</span> <span class="se">\</span>
+<span class="nv">CLICKHOUSE_PASSWORD</span><span class="o">=</span><span class="s2">"&lt;password&gt;"</span> <span class="se">\</span>
+<span class="nv">CLICKHOUSE_DATABASE</span><span class="o">=</span><span class="s2">"product_analytics"</span> <span class="se">\</span>
+node dist/migrate.js
+</code></pre></div></div>
+
+<p>Production charts default <code class="language-plaintext highlighter-rouge">MIGRATE_ON_START</code> to <code class="language-plaintext highlighter-rouge">false</code> so every replica does not attempt schema migration on startup.</p>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

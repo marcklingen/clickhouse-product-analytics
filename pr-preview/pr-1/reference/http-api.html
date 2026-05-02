@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTTP API Reference | ClickHouse Product Analytics</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="HTTP API Reference" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Public ingest endpoints, payloads, responses, and error semantics." />
+<meta property="og:description" content="Public ingest endpoints, payloads, responses, and error semantics." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/reference/http-api.html" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/reference/http-api.html" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTTP API Reference" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Public ingest endpoints, payloads, responses, and error semantics.","headline":"HTTP API Reference","url":"https://marcklingen.github.io/clickhouse-product-analytics/reference/http-api.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://marcklingen.github.io/clickhouse-product-analytics/">ClickHouse Product Analytics</a></h1>
+      
+
+      <h1 id="http-api-reference">HTTP API Reference</h1>
+
+<p>The ingest service exposes a small public event API. It accepts browser SDK batches, backend service events, and compatibility-style capture calls. There is no project or tenant ID in this service; each deployment writes to one ClickHouse database and validates requests with <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code>.</p>
+
+<h2 id="endpoints">Endpoints</h2>
+
+<p>All event ingestion endpoints accept <code class="language-plaintext highlighter-rouge">POST</code> with JSON bodies:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">/batch/</code> and <code class="language-plaintext highlighter-rouge">/batch</code></td>
+      <td>Batch events from the browser SDK or backend services.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">/capture/</code> and <code class="language-plaintext highlighter-rouge">/capture</code></td>
+      <td>Single event capture endpoint.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">/i/v0/e/</code> and <code class="language-plaintext highlighter-rouge">/i/v0/e</code></td>
+      <td>Compatibility-style single event endpoint.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">/e/</code> and <code class="language-plaintext highlighter-rouge">/e</code></td>
+      <td>Short single event endpoint.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">/health</code></td>
+      <td><code class="language-plaintext highlighter-rouge">GET</code> readiness and liveness check.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="authentication">Authentication</h2>
+
+<p>Send <code class="language-plaintext highlighter-rouge">api_key</code> or <code class="language-plaintext highlighter-rouge">token</code> in the request body. The value must be listed in the service’s <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code> environment variable.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"api_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"local_dev_key"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"event"</span><span class="p">:</span><span class="w"> </span><span class="s2">"backend_job_completed"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"distinct_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_123"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Requests with unknown keys return <code class="language-plaintext highlighter-rouge">401</code>.</p>
+
+<h2 id="single-event-payload">Single Event Payload</h2>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"api_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"local_dev_key"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"event"</span><span class="p">:</span><span class="w"> </span><span class="s2">"backend_job_completed"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"distinct_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_123"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"timestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-05-02T12:00:00.000Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"job_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"job_456"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"duration_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">481</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Fields:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Required</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">api_key</code> or <code class="language-plaintext highlighter-rouge">token</code></td>
+      <td>Yes</td>
+      <td>Publishable key accepted by the service.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">event</code></td>
+      <td>Yes</td>
+      <td>Stable event name. Empty names are dropped.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">distinct_id</code></td>
+      <td>Yes</td>
+      <td>User, anonymous, device, or backend actor ID.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">timestamp</code></td>
+      <td>No</td>
+      <td>ISO timestamp. Defaults to ingest time.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">properties</code></td>
+      <td>No</td>
+      <td>JSON object. URL/session/person fields are promoted when present.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="batch-payload">Batch Payload</h2>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"api_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"local_dev_key"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"batch"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"event"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$pageview"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"distinct_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"anon_123"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"$current_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com/"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"$session_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"session_123"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>All events in a batch must resolve to the same API key. Mixed keys return <code class="language-plaintext highlighter-rouge">400</code>. Batches larger than <code class="language-plaintext highlighter-rouge">MAX_EVENTS_PER_BATCH</code> return <code class="language-plaintext highlighter-rouge">413</code>.</p>
+
+<p>The service also accepts an array of event objects as the request body when each event carries <code class="language-plaintext highlighter-rouge">api_key</code> or <code class="language-plaintext highlighter-rouge">token</code>.</p>
+
+<h2 id="form-encoded-payloads">Form-Encoded Payloads</h2>
+
+<p>For clients that cannot send JSON directly, send <code class="language-plaintext highlighter-rouge">application/x-www-form-urlencoded</code> with a <code class="language-plaintext highlighter-rouge">data</code> field containing a base64-encoded JSON payload:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">payload</span><span class="o">=</span><span class="s1">'{"api_key":"local_dev_key","event":"backend_job_completed","distinct_id":"user_123"}'</span>
+curl <span class="nt">-X</span> POST http://127.0.0.1:8080/capture/ <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s1">'content-type: application/x-www-form-urlencoded'</span> <span class="se">\</span>
+  <span class="nt">--data-urlencode</span> <span class="s2">"data=</span><span class="si">$(</span><span class="nb">printf</span> <span class="s1">'%s'</span> <span class="s2">"</span><span class="nv">$payload</span><span class="s2">"</span> | <span class="nb">base64</span><span class="si">)</span><span class="s2">"</span>
+</code></pre></div></div>
+
+<p>The decoded JSON can be a single-event payload, a batch payload, or an array of event objects.</p>
+
+<h2 id="identity-payloads">Identity Payloads</h2>
+
+<p><code class="language-plaintext highlighter-rouge">$identify</code> links an anonymous ID to a known user and updates the <code class="language-plaintext highlighter-rouge">persons</code> table:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"api_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"local_dev_key"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"event"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$identify"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"distinct_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_123"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"$anon_distinct_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"anon_123"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"$set"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user@example.com"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"$set_once"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"first_seen_source"</span><span class="p">:</span><span class="w"> </span><span class="s2">"landing_page"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">$set</code> updates person properties without creating an identify event. <code class="language-plaintext highlighter-rouge">$create_alias</code> links another distinct ID with the current person.</p>
+
+<h2 id="compression">Compression</h2>
+
+<p>The service accepts compressed request bodies with <code class="language-plaintext highlighter-rouge">content-encoding: gzip</code>, <code class="language-plaintext highlighter-rouge">content-encoding: deflate</code>, or <code class="language-plaintext highlighter-rouge">content-encoding: br</code>. It also accepts the query parameter <code class="language-plaintext highlighter-rouge">compression=gzip-js</code> for clients that cannot set request headers.</p>
+
+<p>Compressed payloads are still limited by <code class="language-plaintext highlighter-rouge">MAX_BATCH_BYTES</code> after inflation. Oversized requests return <code class="language-plaintext highlighter-rouge">413</code>.</p>
+
+<h2 id="cors-and-origins">CORS and Origins</h2>
+
+<p>Browser requests must use an <code class="language-plaintext highlighter-rouge">Origin</code> listed in <code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code>. Backend requests usually omit <code class="language-plaintext highlighter-rouge">Origin</code>; they are accepted when <code class="language-plaintext highlighter-rouge">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN=true</code>.</p>
+
+<h2 id="responses">Responses</h2>
+
+<p>Successful ingestion returns:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ok"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"ingested"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"dropped"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">dropped</code> counts events missing required event or distinct ID fields. Dropped events do not fail the whole batch.</p>
+
+<p>Common errors:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">400</code></td>
+      <td>Invalid payload, invalid timestamp, missing API key, or mixed batch keys.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">401</code></td>
+      <td>Unknown API key.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">403</code></td>
+      <td>Origin is not allowed.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">413</code></td>
+      <td>Request body or event count exceeds configured limits.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">500</code></td>
+      <td>Unexpected server or ClickHouse write error.</td>
+    </tr>
+  </tbody>
+</table>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

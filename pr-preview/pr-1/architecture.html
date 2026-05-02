@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Architecture | ClickHouse Product Analytics</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Architecture" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="System boundaries, event flow, and identity flow." />
+<meta property="og:description" content="System boundaries, event flow, and identity flow." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/architecture.html" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/architecture.html" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Architecture" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"System boundaries, event flow, and identity flow.","headline":"Architecture","url":"https://marcklingen.github.io/clickhouse-product-analytics/architecture.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://marcklingen.github.io/clickhouse-product-analytics/">ClickHouse Product Analytics</a></h1>
+      
+
+      <h1 id="architecture">Architecture</h1>
+
+<p>ClickHouse Product Analytics is deliberately small. The browser SDK and direct API collect events, the ingest service validates and normalizes them, and ClickHouse stores the resulting analytics tables. Everything else, including visualization and analysis, happens outside this repository.</p>
+
+<h2 id="system-boundary">System Boundary</h2>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Web app / React app  -&gt;  Browser SDK  -&gt;  HTTP ingest service  -&gt;  ClickHouse
+Backend services     -&gt;  Direct API   -&gt;  HTTP ingest service  -&gt;  ClickHouse
+</code></pre></div></div>
+
+<p>The ingest service has no settings UI and no runtime project model. Configuration comes from environment variables. API keys are publishable credentials for one analytics dataset, not tenant or project boundaries.</p>
+
+<h2 id="components">Components</h2>
+
+<h3 id="browser-sdk">Browser SDK</h3>
+
+<p>The SDK runs in the browser and owns client-side capture behavior:</p>
+
+<ul>
+  <li>anonymous device and distinct IDs</li>
+  <li>local session/window IDs</li>
+  <li>custom events</li>
+  <li>initial and SPA-route pageviews</li>
+  <li>pageleave/unload flushing</li>
+  <li>optional autocapture for safe click/change/submit events</li>
+  <li>batching, retries, and queue limits</li>
+  <li>opt-in/out capture state</li>
+  <li><code class="language-plaintext highlighter-rouge">identify</code>, <code class="language-plaintext highlighter-rouge">alias</code>, <code class="language-plaintext highlighter-rouge">reset</code>, <code class="language-plaintext highlighter-rouge">$set</code>, and <code class="language-plaintext highlighter-rouge">$set_once</code></li>
+</ul>
+
+<p>The SDK sends batched payloads to <code class="language-plaintext highlighter-rouge">/batch/</code> by default.</p>
+
+<h3 id="react-package">React Package</h3>
+
+<p>The React package wraps the SDK for client-rendered React and Next.js applications:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">AnalyticsProvider</code> initializes the SDK in a browser effect.</li>
+  <li><code class="language-plaintext highlighter-rouge">useAnalytics()</code> returns the initialized client when ready and <code class="language-plaintext highlighter-rouge">undefined</code> before initialization.</li>
+  <li><code class="language-plaintext highlighter-rouge">AnalyticsCaptureOnViewed</code> captures visibility events through <code class="language-plaintext highlighter-rouge">IntersectionObserver</code> when available, and falls back to immediate capture when it is not.</li>
+</ul>
+
+<h3 id="http-ingest-service">HTTP Ingest Service</h3>
+
+<p>The ingest service is a stateless Fastify service. It accepts SDK and direct API traffic, enforces source validation, normalizes event shape, applies identity side effects, and writes to ClickHouse.</p>
+
+<p>Accepted ingest paths:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">/batch/</code></li>
+  <li><code class="language-plaintext highlighter-rouge">/i/v0/e/</code></li>
+  <li><code class="language-plaintext highlighter-rouge">/capture/</code></li>
+  <li><code class="language-plaintext highlighter-rouge">/e/</code></li>
+</ul>
+
+<p>Trailing-slash variants without <code class="language-plaintext highlighter-rouge">/</code> are also accepted.</p>
+
+<h3 id="clickhouse">ClickHouse</h3>
+
+<p>ClickHouse is the only required database. The service writes append-only events and versioned identity/person rows. Query consumers should treat ClickHouse as the source of truth for product analytics.</p>
+
+<h2 id="event-flow">Event Flow</h2>
+
+<ol>
+  <li>A browser or backend sends an event with an API key, event name, distinct ID, optional timestamp, and properties.</li>
+  <li>The service validates the API key and request source.</li>
+  <li>The payload is decoded. Plain JSON, form-encoded <code class="language-plaintext highlighter-rouge">data</code>, gzip, deflate, and Brotli request bodies are supported.</li>
+  <li>Invalid events inside a batch are dropped when the event name or distinct ID is missing. The response remains successful and includes a <code class="language-plaintext highlighter-rouge">dropped</code> count.</li>
+  <li>Each accepted event is normalized with promoted fields such as <code class="language-plaintext highlighter-rouge">event</code>, <code class="language-plaintext highlighter-rouge">distinct_id</code>, <code class="language-plaintext highlighter-rouge">person_id</code>, <code class="language-plaintext highlighter-rouge">session_id</code>, <code class="language-plaintext highlighter-rouge">window_id</code>, <code class="language-plaintext highlighter-rouge">current_url</code>, <code class="language-plaintext highlighter-rouge">host</code>, timestamp, IP, and user agent.</li>
+  <li>The event distinct ID is recorded in <code class="language-plaintext highlighter-rouge">person_distinct_ids</code>; identity events also update <code class="language-plaintext highlighter-rouge">persons</code> and link anonymous or alias IDs.</li>
+  <li>Events are inserted into the <code class="language-plaintext highlighter-rouge">events</code> table.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">sessions</code> view aggregates session-level facts from <code class="language-plaintext highlighter-rouge">events</code>.</li>
+</ol>
+
+<h2 id="identity-flow">Identity Flow</h2>
+
+<p>Before login, the browser SDK uses an anonymous distinct ID stored through the configured persistence layer. On login or signup, call <code class="language-plaintext highlighter-rouge">identify(userId, properties, setOnceProperties)</code>. The SDK emits a <code class="language-plaintext highlighter-rouge">$identify</code> event with the new distinct ID and the previous anonymous ID in <code class="language-plaintext highlighter-rouge">$anon_distinct_id</code>.</p>
+
+<p>The ingest service writes identity links so both IDs point at the same <code class="language-plaintext highlighter-rouge">person_id</code>. Future events for either ID resolve to that person. Person profile updates are stored in <code class="language-plaintext highlighter-rouge">persons</code>; <code class="language-plaintext highlighter-rouge">$set</code> overwrites properties and <code class="language-plaintext highlighter-rouge">$set_once</code> only fills missing properties.</p>
+
+<h2 id="failure-model">Failure Model</h2>
+
+<p>The browser SDK queues events and retries transient send failures. During unload/pagehide it uses <code class="language-plaintext highlighter-rouge">sendBeacon</code> when requested and falls back to <code class="language-plaintext highlighter-rouge">fetch</code> when the browser rejects the beacon.</p>
+
+<p>The ingest service has no local runtime state. Horizontal event capture is safe as long as every instance points at the same ClickHouse database and uses the same environment configuration. There is no separate queue, cache, or metadata database in this repository.</p>
+
+<p>Identity writes use ClickHouse versioned rows. For strict <code class="language-plaintext highlighter-rouge">$set_once</code> behavior under heavy concurrent identify traffic, use a single identity-writing replica or consistent request routing until that workload has been verified for your deployment.</p>
+
+<h2 id="analysis-model">Analysis Model</h2>
+
+<p>Consumers should query ClickHouse directly:</p>
+
+<ul>
+  <li>use <code class="language-plaintext highlighter-rouge">events</code> for raw event analysis,</li>
+  <li>use <code class="language-plaintext highlighter-rouge">sessions</code> for pageview/session questions,</li>
+  <li>use <code class="language-plaintext highlighter-rouge">persons FINAL</code> for latest person properties,</li>
+  <li>use <code class="language-plaintext highlighter-rouge">person_distinct_ids FINAL</code> for identity lookup.</li>
+</ul>
+
+<p>For agentic analytics, prefer narrow SQL queries over exporting tables. See <a href="/clickhouse-product-analytics/clickhouse-schema.html">ClickHouse schema</a> for column-level details and query patterns.</p>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

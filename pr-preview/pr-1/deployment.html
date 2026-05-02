@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Deployment | ClickHouse Product Analytics</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Deployment" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Local and production deployment model." />
+<meta property="og:description" content="Local and production deployment model." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/deployment.html" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/deployment.html" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Deployment" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Local and production deployment model.","headline":"Deployment","url":"https://marcklingen.github.io/clickhouse-product-analytics/deployment.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://marcklingen.github.io/clickhouse-product-analytics/">ClickHouse Product Analytics</a></h1>
+      
+
+      <h1 id="deployment">Deployment</h1>
+
+<p>The runtime stack is intentionally simple: one stateless ingest service and one ClickHouse database. The browser SDK and React package are built into your application bundle; backend services call the ingest API directly.</p>
+
+<p>For platform-specific deployment examples, see <a href="/clickhouse-product-analytics/railway.html">Railway deployment</a> and <a href="/clickhouse-product-analytics/helm.html">Helm deployment</a>.</p>
+
+<h2 id="local-development">Local Development</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cp</span> .env.example .env
+npm <span class="nb">install
+</span>npm run build:packages
+docker compose up <span class="nt">-d</span> <span class="nt">--build</span>
+</code></pre></div></div>
+
+<p>The Compose stack starts:</p>
+
+<ul>
+  <li>ClickHouse on <code class="language-plaintext highlighter-rouge">http://127.0.0.1:8123</code></li>
+  <li>ingest service on <code class="language-plaintext highlighter-rouge">http://127.0.0.1:8080</code></li>
+</ul>
+
+<p><code class="language-plaintext highlighter-rouge">docker-compose.yml</code> pins ClickHouse to <code class="language-plaintext highlighter-rouge">clickhouse/clickhouse-server:26.3.9.8-alpine</code>, the current 26.3 stable release on the Alpine image track when this project was last verified. Keep this as a concrete version tag instead of <code class="language-plaintext highlighter-rouge">latest</code> so local development and E2E runs do not drift silently. Older LTS branches can receive newer patch dates, but this repo intentionally tracks the latest stable feature branch for local verification. If you need registry-level reproducibility, pin the image by digest in your deployment manifests.</p>
+
+<p>Run the end-to-end verifier after the stack is healthy:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm run verify:e2e
+</code></pre></div></div>
+
+<p>Stop the local stack when finished:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker compose down
+</code></pre></div></div>
+
+<h2 id="production-shape">Production Shape</h2>
+
+<p>Run the ingest service as a container close to ClickHouse. Put it behind a TLS-terminating reverse proxy or load balancer. Browser applications talk to the public HTTPS ingest URL. Backend services can use the same public URL or a private network URL.</p>
+
+<p>Recommended production model:</p>
+
+<ul>
+  <li>one or more ingest service containers,</li>
+  <li>shared ClickHouse database on a supported stable or LTS ClickHouse release,</li>
+  <li>stable <code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code>,</li>
+  <li>explicit <code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code>,</li>
+  <li><code class="language-plaintext highlighter-rouge">LOG_LEVEL=warn</code> or stricter for high-volume traffic,</li>
+  <li>migrations run manually before deploy,</li>
+  <li><code class="language-plaintext highlighter-rouge">MIGRATE_ON_START=false</code> or omitted in production.</li>
+</ul>
+
+<p>The ingest service does not require Redis, Postgres, Kafka, object storage, or a background worker.</p>
+
+<h2 id="container-image">Container Image</h2>
+
+<p><code class="language-plaintext highlighter-rouge">.github/workflows/container.yml</code> builds <code class="language-plaintext highlighter-rouge">packages/ingest-service/Dockerfile</code> and publishes the image after CI succeeds for pushes to <code class="language-plaintext highlighter-rouge">main</code>. The image build uses a pinned Node base-image digest and lockfile-strict <code class="language-plaintext highlighter-rouge">npm ci</code> installs:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service:sha-&lt;commit&gt;
+ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service:latest
+</code></pre></div></div>
+
+<p>Use the <code class="language-plaintext highlighter-rouge">sha-&lt;commit&gt;</code> tag for production rollouts, or the image digest reported by GHCR after the publish job completes. The mutable <code class="language-plaintext highlighter-rouge">latest</code> tag is useful for quick trials but should not be the rollout target for a stable environment. For the strictest rollout, deploy <code class="language-plaintext highlighter-rouge">ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service@sha256:&lt;digest&gt;</code>.</p>
+
+<p>The container publishing workflow runs after the <code class="language-plaintext highlighter-rouge">CI</code> workflow succeeds on <code class="language-plaintext highlighter-rouge">main</code>, so the image is gated by package verification, Docker Compose validation, Helm render/lint checks, and Docker-backed E2E tests.</p>
+
+<h2 id="clickhouse-cloud">ClickHouse Cloud</h2>
+
+<p>ClickHouse Cloud works with the same ingest service configuration. The service uses the official <code class="language-plaintext highlighter-rouge">@clickhouse/client</code> package and passes <code class="language-plaintext highlighter-rouge">CLICKHOUSE_URL</code>, <code class="language-plaintext highlighter-rouge">CLICKHOUSE_USER</code>, <code class="language-plaintext highlighter-rouge">CLICKHOUSE_PASSWORD</code>, and <code class="language-plaintext highlighter-rouge">CLICKHOUSE_DATABASE</code> directly to the client. No code change is required for a Cloud service as long as the URL is the HTTPS endpoint for the ClickHouse HTTP interface.</p>
+
+<p>Use the connection details from the ClickHouse Cloud service connection menu. For the Node.js or HTTPS connection form, the URL usually has this shape:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">CLICKHOUSE_URL</span><span class="o">=</span>https://&lt;service-host&gt;:8443
+<span class="nv">CLICKHOUSE_USER</span><span class="o">=</span>default
+<span class="nv">CLICKHOUSE_PASSWORD</span><span class="o">=</span>&lt;clickhouse-cloud-password&gt;
+<span class="nv">CLICKHOUSE_DATABASE</span><span class="o">=</span>product_analytics
+</code></pre></div></div>
+
+<p>Then configure the ingest service the same way you would for a self-hosted production deployment:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">PUBLIC_API_KEYS</span><span class="o">=</span>&lt;publishable-ingest-key&gt;
+<span class="nv">ALLOWED_ORIGINS</span><span class="o">=</span>https://app.example.com
+<span class="nv">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN</span><span class="o">=</span><span class="nb">true
+</span><span class="nv">MIGRATE_ON_START</span><span class="o">=</span><span class="nb">false</span>
+</code></pre></div></div>
+
+<p>Run migrations from a trusted environment that can reach the ClickHouse Cloud service:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm run build <span class="nt">--workspace</span> @clickhouse-product-analytics/ingest-service
+<span class="nv">CLICKHOUSE_URL</span><span class="o">=</span>https://&lt;service-host&gt;:8443 <span class="se">\</span>
+<span class="nv">CLICKHOUSE_USER</span><span class="o">=</span>default <span class="se">\</span>
+<span class="nv">CLICKHOUSE_PASSWORD</span><span class="o">=</span>&lt;clickhouse-cloud-password&gt; <span class="se">\</span>
+<span class="nv">CLICKHOUSE_DATABASE</span><span class="o">=</span>product_analytics <span class="se">\</span>
+npm run migrate
+</code></pre></div></div>
+
+<p>The browser SDK and React package do not connect to ClickHouse Cloud directly. They should continue to send events to the ingest service <code class="language-plaintext highlighter-rouge">api_host</code>; the ingest service is the only component that needs ClickHouse Cloud credentials.</p>
+
+<h2 id="environment-variables">Environment Variables</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Required</th>
+      <th>Default</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">PORT</code></td>
+      <td>no</td>
+      <td><code class="language-plaintext highlighter-rouge">8080</code></td>
+      <td>HTTP listen port.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code></td>
+      <td>yes</td>
+      <td>none</td>
+      <td>Comma-separated publishable API keys accepted by the service. These are dataset credentials, not tenant IDs.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code></td>
+      <td>recommended</td>
+      <td>empty</td>
+      <td>Comma-separated browser origins accepted by CORS and source validation.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ALLOWED_HOSTS</code></td>
+      <td>no</td>
+      <td>empty</td>
+      <td>Optional explicit host allowlist. Use only when host-level matching across schemes is intentional.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN</code></td>
+      <td>no</td>
+      <td><code class="language-plaintext highlighter-rouge">true</code></td>
+      <td>Allows backend requests without an <code class="language-plaintext highlighter-rouge">Origin</code> header.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">MAX_BATCH_BYTES</code></td>
+      <td>no</td>
+      <td><code class="language-plaintext highlighter-rouge">20971520</code></td>
+      <td>Maximum request body size after decompression.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">MAX_EVENTS_PER_BATCH</code></td>
+      <td>no</td>
+      <td><code class="language-plaintext highlighter-rouge">10000</code></td>
+      <td>Maximum number of events in a batch request.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CLICKHOUSE_URL</code></td>
+      <td>no</td>
+      <td><code class="language-plaintext highlighter-rouge">http://localhost:8123</code></td>
+      <td>ClickHouse HTTP endpoint. Use <code class="language-plaintext highlighter-rouge">https://&lt;service-host&gt;:8443</code> for ClickHouse Cloud.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CLICKHOUSE_USER</code></td>
+      <td>no</td>
+      <td><code class="language-plaintext highlighter-rouge">default</code></td>
+      <td>ClickHouse username.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CLICKHOUSE_PASSWORD</code></td>
+      <td>no</td>
+      <td>empty</td>
+      <td>ClickHouse password.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CLICKHOUSE_DATABASE</code></td>
+      <td>no</td>
+      <td><code class="language-plaintext highlighter-rouge">product_analytics</code></td>
+      <td>Database used for migrations and queries.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">MIGRATE_ON_START</code></td>
+      <td>no</td>
+      <td>false</td>
+      <td>Apply migrations when the ingest service starts. Use for local development, not production.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="migrations">Migrations</h2>
+
+<p>The migration runner applies SQL files from <code class="language-plaintext highlighter-rouge">packages/ingest-service/migrations</code> and records applied filenames in <code class="language-plaintext highlighter-rouge">schema_migrations</code>. The first migration creates:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">events</code></li>
+  <li><code class="language-plaintext highlighter-rouge">persons</code></li>
+  <li><code class="language-plaintext highlighter-rouge">person_distinct_ids</code></li>
+  <li><code class="language-plaintext highlighter-rouge">sessions</code></li>
+</ul>
+
+<p>Run migrations manually in production:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">CLICKHOUSE_URL</span><span class="o">=</span>https://&lt;service-host&gt;:8443 <span class="se">\</span>
+<span class="nv">CLICKHOUSE_USER</span><span class="o">=</span>&lt;user&gt; <span class="se">\</span>
+<span class="nv">CLICKHOUSE_PASSWORD</span><span class="o">=</span>&lt;password&gt; <span class="se">\</span>
+<span class="nv">CLICKHOUSE_DATABASE</span><span class="o">=</span>product_analytics <span class="se">\</span>
+npm run migrate
+</code></pre></div></div>
+
+<p>Inside the published container image, run the compiled migration entrypoint from the ingest service workdir:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">CLICKHOUSE_URL</span><span class="o">=</span>https://&lt;service-host&gt;:8443 <span class="se">\</span>
+<span class="nv">CLICKHOUSE_USER</span><span class="o">=</span>&lt;user&gt; <span class="se">\</span>
+<span class="nv">CLICKHOUSE_PASSWORD</span><span class="o">=</span>&lt;password&gt; <span class="se">\</span>
+<span class="nv">CLICKHOUSE_DATABASE</span><span class="o">=</span>product_analytics <span class="se">\</span>
+node dist/migrate.js
+</code></pre></div></div>
+
+<p>The runner substitutes `` with <code class="language-plaintext highlighter-rouge">CLICKHOUSE_DATABASE</code>. The database name must be a valid ClickHouse identifier.</p>
+
+<h2 id="cors-and-source-validation">CORS and Source Validation</h2>
+
+<p>Browser traffic must come from an allowed origin. Configure <code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code> with the exact scheme, host, and port used by your app, for example:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">ALLOWED_ORIGINS</span><span class="o">=</span>https://app.example.com,https://www.example.com
+</code></pre></div></div>
+
+<p>Backend requests often omit <code class="language-plaintext highlighter-rouge">Origin</code>. Keep <code class="language-plaintext highlighter-rouge">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN=true</code> when server-side services need to send events directly.</p>
+
+<h2 id="scaling">Scaling</h2>
+
+<p>The ingest service has no local runtime state and can be scaled horizontally for event capture. All instances must share:</p>
+
+<ul>
+  <li>the same ClickHouse database,</li>
+  <li>the same accepted API keys,</li>
+  <li>the same origin policy,</li>
+  <li>the same request limits.</li>
+</ul>
+
+<p>ClickHouse write capacity is the primary scaling boundary. Keep batch sizes moderate and prefer SDK batching over one request per event for high-volume browser apps.</p>
+
+<p>Identity side effects (<code class="language-plaintext highlighter-rouge">$identify</code>, <code class="language-plaintext highlighter-rouge">$set</code>, <code class="language-plaintext highlighter-rouge">$set_once</code>, and <code class="language-plaintext highlighter-rouge">$create_alias</code>) are stored in ClickHouse versioned rows. That model works well for normal SDK traffic, but strict first-write-wins <code class="language-plaintext highlighter-rouge">$set_once</code> semantics can race if many replicas process identity updates for the same distinct ID at exactly the same time. For identity-heavy production workloads, either keep identity traffic on one ingest replica or route identity requests consistently until the deployment has been load-tested with your concurrency profile.</p>
+
+<h2 id="clickhouse-version-upgrades">ClickHouse Version Upgrades</h2>
+
+<p>For local development, update the Compose image only after checking the current stable ClickHouse server tag and running the full verifier. For production, upgrade ClickHouse separately from the ingest service, run migrations against a staging database first, and verify the starter queries in <code class="language-plaintext highlighter-rouge">clickhouse-schema.md</code> before promoting the version.</p>
+
+<h2 id="github-pages-docs">GitHub Pages Docs</h2>
+
+<p>The docs are plain Markdown in <code class="language-plaintext highlighter-rouge">docs/</code>. GitHub Pages builds them with Jekyll using <code class="language-plaintext highlighter-rouge">docs/_config.yml</code> and <code class="language-plaintext highlighter-rouge">.github/workflows/pages.yml</code>.</p>
+
+<p>In the repository settings, configure:</p>
+
+<ul>
+  <li><strong>Pages &gt; Build and deployment &gt; Source</strong>: GitHub Actions.</li>
+</ul>
+
+<p>Pushes to <code class="language-plaintext highlighter-rouge">main</code> that change <code class="language-plaintext highlighter-rouge">docs/**</code> or the Pages workflow rebuild and deploy the docs site.</p>
+
+<p>Same-repository pull requests get a docs preview when the PR changes docs and the latest push also touched docs-related files. The workflow publishes previews under <code class="language-plaintext highlighter-rouge">/pr-preview/pr-&lt;number&gt;/</code>, upserts one bot comment with the preview URL, and removes the preview when the PR is closed, merged, converted back to draft, or no longer changes docs.</p>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

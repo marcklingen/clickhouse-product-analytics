@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Identifying Users | ClickHouse Product Analytics</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Identifying Users" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Anonymous IDs, identify, person properties, aliases, and reset." />
+<meta property="og:description" content="Anonymous IDs, identify, person properties, aliases, and reset." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/identifying-users.html" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/identifying-users.html" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Identifying Users" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Anonymous IDs, identify, person properties, aliases, and reset.","headline":"Identifying Users","url":"https://marcklingen.github.io/clickhouse-product-analytics/identifying-users.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://marcklingen.github.io/clickhouse-product-analytics/">ClickHouse Product Analytics</a></h1>
+      
+
+      <h1 id="identifying-users">Identifying Users</h1>
+
+<p>Product analytics needs to connect anonymous pre-login behavior with known users after signup or login. The browser SDK starts with an anonymous distinct ID. When you know who the user is, call <code class="language-plaintext highlighter-rouge">identify</code> with a stable user ID.</p>
+
+<p>For exact SDK signatures, see the <a href="/clickhouse-product-analytics/reference/sdk/sdk/src/">generated SDK reference</a>. For backend identity payloads, see the <a href="/clickhouse-product-analytics/reference/http-api.html">HTTP API reference</a>.</p>
+
+<h2 id="distinct-ids-and-person-ids">Distinct IDs and Person IDs</h2>
+
+<p>Every event has a <code class="language-plaintext highlighter-rouge">distinct_id</code>. In the browser, the SDK creates one automatically and stores it using the configured persistence layer. Backend events must provide a <code class="language-plaintext highlighter-rouge">distinct_id</code> directly.</p>
+
+<p>The ingest service resolves each <code class="language-plaintext highlighter-rouge">distinct_id</code> to a <code class="language-plaintext highlighter-rouge">person_id</code>:</p>
+
+<ul>
+  <li>If the distinct ID already exists in <code class="language-plaintext highlighter-rouge">person_distinct_ids</code>, the existing <code class="language-plaintext highlighter-rouge">person_id</code> is used.</li>
+  <li>If it does not exist, a deterministic <code class="language-plaintext highlighter-rouge">person_id</code> is derived from the distinct ID.</li>
+  <li>Every accepted event writes or refreshes the event distinct ID in <code class="language-plaintext highlighter-rouge">person_distinct_ids</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">$identify</code> and <code class="language-plaintext highlighter-rouge">$create_alias</code> also link additional anonymous or alias IDs to the same <code class="language-plaintext highlighter-rouge">person_id</code>.</li>
+</ul>
+
+<p>Use stable database IDs, account IDs, or UUIDs as identified user IDs. Avoid temporary IDs, emails that can change, or values such as <code class="language-plaintext highlighter-rouge">anonymous</code>, <code class="language-plaintext highlighter-rouge">guest</code>, <code class="language-plaintext highlighter-rouge">unknown</code>, <code class="language-plaintext highlighter-rouge">true</code>, <code class="language-plaintext highlighter-rouge">false</code>, or <code class="language-plaintext highlighter-rouge">null</code>.</p>
+
+<h2 id="browser-identify">Browser Identify</h2>
+
+<p>Call <code class="language-plaintext highlighter-rouge">identify</code> after login or signup:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">identify</span><span class="p">(</span><span class="dl">'</span><span class="s1">user_123</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">email</span><span class="p">:</span> <span class="dl">'</span><span class="s1">user@example.com</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">plan</span><span class="p">:</span> <span class="dl">'</span><span class="s1">pro</span><span class="dl">'</span>
+<span class="p">},</span> <span class="p">{</span>
+  <span class="na">first_seen_source</span><span class="p">:</span> <span class="dl">'</span><span class="s1">pricing_page</span><span class="dl">'</span>
+<span class="p">})</span>
+
+<span class="k">await</span> <span class="nx">analytics</span><span class="p">.</span><span class="nx">flush</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>This emits a <code class="language-plaintext highlighter-rouge">$identify</code> event. If the browser was previously anonymous, the event includes <code class="language-plaintext highlighter-rouge">$anon_distinct_id</code> so the ingest service can link the old anonymous ID and the new known ID to the same person.</p>
+
+<h2 id="backend-identify">Backend Identify</h2>
+
+<p>You can identify users through the direct API by sending <code class="language-plaintext highlighter-rouge">$identify</code>:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/i/v0/e/ <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s1">'content-type: application/json'</span> <span class="se">\</span>
+  <span class="nt">-d</span> <span class="s1">'{
+    "api_key": "local_dev_key",
+    "event": "$identify",
+    "distinct_id": "user_123",
+    "properties": {
+      "$anon_distinct_id": "anonymous_device_abc",
+      "$set": {
+        "email": "user@example.com",
+        "plan": "pro"
+      },
+      "$set_once": {
+        "first_seen_source": "pricing_page"
+      }
+    }
+  }'</span>
+</code></pre></div></div>
+
+<p>Backend services do not have automatic anonymous browser state. Use backend identify when a server process learns that two IDs should refer to the same person or when you need to update person properties from server-side facts.</p>
+
+<h2 id="person-properties">Person Properties</h2>
+
+<p><code class="language-plaintext highlighter-rouge">$set</code> overwrites existing properties:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">setPersonProperties</span><span class="p">({</span>
+  <span class="na">plan</span><span class="p">:</span> <span class="dl">'</span><span class="s1">enterprise</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">last_login_at</span><span class="p">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">().</span><span class="nx">toISOString</span><span class="p">()</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">$set_once</code> only writes a property if it does not already exist:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">setPersonProperties</span><span class="p">({},</span> <span class="p">{</span>
+  <span class="na">first_seen_source</span><span class="p">:</span> <span class="dl">'</span><span class="s1">invite</span><span class="dl">'</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>The ingest service stores merged person properties in <code class="language-plaintext highlighter-rouge">persons.properties</code> as a JSON string. Query the latest version with <code class="language-plaintext highlighter-rouge">FINAL</code>:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">distinct_id</span><span class="p">,</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">email</span><span class="p">,</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'plan'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">plan</span><span class="p">,</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'first_seen_source'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">first_seen_source</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">persons</span> <span class="k">FINAL</span>
+<span class="k">WHERE</span> <span class="n">distinct_id</span> <span class="o">=</span> <span class="s1">'user_123'</span>
+  <span class="k">AND</span> <span class="n">is_deleted</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h2 id="alias">Alias</h2>
+
+<p>Use <code class="language-plaintext highlighter-rouge">alias</code> when you need to connect another ID to the same person:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">alias</span><span class="p">(</span><span class="dl">'</span><span class="s1">backend_user_123</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">frontend_user_123</span><span class="dl">'</span><span class="p">)</span>
+<span class="k">await</span> <span class="nx">analytics</span><span class="p">.</span><span class="nx">flush</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>The SDK emits <code class="language-plaintext highlighter-rouge">$create_alias</code> with <code class="language-plaintext highlighter-rouge">alias</code>. The ingest service writes both IDs into <code class="language-plaintext highlighter-rouge">person_distinct_ids</code> with the same <code class="language-plaintext highlighter-rouge">person_id</code>.</p>
+
+<p>Direct API form:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/i/v0/e/ <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s1">'content-type: application/json'</span> <span class="se">\</span>
+  <span class="nt">-d</span> <span class="s1">'{
+    "api_key": "local_dev_key",
+    "event": "$create_alias",
+    "distinct_id": "frontend_user_123",
+    "properties": {
+      "alias": "backend_user_123"
+    }
+  }'</span>
+</code></pre></div></div>
+
+<h2 id="reset-on-logout">Reset on Logout</h2>
+
+<p>Call <code class="language-plaintext highlighter-rouge">reset()</code> when a user logs out. This creates a new anonymous distinct ID for future browser events on the same device:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">reset</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Pass <code class="language-plaintext highlighter-rouge">true</code> to also reset the device ID:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">reset</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="query-identity-links">Query Identity Links</h2>
+
+<p>Find all known distinct IDs for a person:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">person_id</span><span class="p">,</span>
+    <span class="n">groupArray</span><span class="p">(</span><span class="n">distinct_id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">distinct_ids</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">person_distinct_ids</span> <span class="k">FINAL</span>
+<span class="k">WHERE</span> <span class="n">is_deleted</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">person_id</span>
+<span class="k">HAVING</span> <span class="n">has</span><span class="p">(</span><span class="n">distinct_ids</span><span class="p">,</span> <span class="s1">'user_123'</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Join recent events to latest person properties:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">WITH</span> <span class="n">latest_people</span> <span class="k">AS</span> <span class="p">(</span>
+    <span class="k">SELECT</span>
+        <span class="n">id</span><span class="p">,</span>
+        <span class="n">properties</span>
+    <span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">persons</span> <span class="k">FINAL</span>
+    <span class="k">WHERE</span> <span class="n">is_deleted</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="p">)</span>
+<span class="k">SELECT</span>
+    <span class="n">e</span><span class="p">.</span><span class="nb">timestamp</span><span class="p">,</span>
+    <span class="n">e</span><span class="p">.</span><span class="n">event</span><span class="p">,</span>
+    <span class="n">e</span><span class="p">.</span><span class="n">distinct_id</span><span class="p">,</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">email</span><span class="p">,</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'plan'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">event_plan</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">events</span> <span class="k">AS</span> <span class="n">e</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">latest_people</span> <span class="k">AS</span> <span class="n">p</span> <span class="k">ON</span> <span class="n">p</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">e</span><span class="p">.</span><span class="n">person_id</span>
+<span class="k">WHERE</span> <span class="n">e</span><span class="p">.</span><span class="nb">timestamp</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">INTERVAL</span> <span class="mi">7</span> <span class="k">DAY</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">e</span><span class="p">.</span><span class="nb">timestamp</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">100</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h2 id="practical-rules">Practical Rules</h2>
+
+<ul>
+  <li>Identify as soon as the user is known, usually after login/signup and on app boot when authenticated state is available.</li>
+  <li>Use durable IDs from your application database.</li>
+  <li>Do not call <code class="language-plaintext highlighter-rouge">identify</code> with placeholder values.</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">$set_once</code> for acquisition or first-touch facts.</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">$set</code> for mutable profile facts such as plan, role, or last login.</li>
+  <li>Call <code class="language-plaintext highlighter-rouge">reset()</code> on logout, especially on shared devices.</li>
+</ul>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

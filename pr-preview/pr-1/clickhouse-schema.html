@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ClickHouse Schema | ClickHouse Product Analytics</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="ClickHouse Schema" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Tables, views, and query patterns for humans and agents." />
+<meta property="og:description" content="Tables, views, and query patterns for humans and agents." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/clickhouse-schema.html" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/clickhouse-schema.html" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ClickHouse Schema" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Tables, views, and query patterns for humans and agents.","headline":"ClickHouse Schema","url":"https://marcklingen.github.io/clickhouse-product-analytics/clickhouse-schema.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://marcklingen.github.io/clickhouse-product-analytics/">ClickHouse Product Analytics</a></h1>
+      
+
+      <h1 id="clickhouse-schema">ClickHouse Schema</h1>
+
+<p>The ClickHouse database is the analytics source of truth. The default database name is <code class="language-plaintext highlighter-rouge">product_analytics</code>, but deployments can set <code class="language-plaintext highlighter-rouge">CLICKHOUSE_DATABASE</code>.</p>
+
+<p>There is no project ID and no tenant column. <code class="language-plaintext highlighter-rouge">api_key</code> is stored on events as the accepted publishable credential, but it is not a tenant boundary. Do not write queries that assume <code class="language-plaintext highlighter-rouge">project_id</code>, <code class="language-plaintext highlighter-rouge">team_id</code>, or multi-tenancy.</p>
+
+<h2 id="agent-query-guidelines">Agent Query Guidelines</h2>
+
+<p>When an agent queries this database:</p>
+
+<ol>
+  <li>Prefer time-bounded queries on <code class="language-plaintext highlighter-rouge">events.timestamp</code>.</li>
+  <li>Query <code class="language-plaintext highlighter-rouge">persons FINAL</code> and <code class="language-plaintext highlighter-rouge">person_distinct_ids FINAL</code> when you need the latest identity state.</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">JSONExtractString</code>, <code class="language-plaintext highlighter-rouge">JSONExtractInt</code>, <code class="language-plaintext highlighter-rouge">JSONExtractFloat</code>, <code class="language-plaintext highlighter-rouge">JSONExtractBool</code>, and <code class="language-plaintext highlighter-rouge">JSONHas</code> for JSON properties.</li>
+  <li>Use the <code class="language-plaintext highlighter-rouge">sessions</code> view for session-level questions instead of rebuilding session aggregation each time.</li>
+  <li>Avoid <code class="language-plaintext highlighter-rouge">SELECT *</code> on large tables; select only the needed columns.</li>
+  <li>Do not filter by project, team, tenant, or organization columns; they do not exist in this schema.</li>
+  <li>Treat event names starting with <code class="language-plaintext highlighter-rouge">$</code> as system events, for example <code class="language-plaintext highlighter-rouge">$pageview</code>, <code class="language-plaintext highlighter-rouge">$pageleave</code>, <code class="language-plaintext highlighter-rouge">$autocapture</code>, <code class="language-plaintext highlighter-rouge">$identify</code>, <code class="language-plaintext highlighter-rouge">$set</code>, and <code class="language-plaintext highlighter-rouge">$create_alias</code>.</li>
+</ol>
+
+<h2 id="events"><code class="language-plaintext highlighter-rouge">events</code></h2>
+
+<p>Append-only table for every ingested event.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Column</th>
+      <th>Type</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">uuid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">UUID</code></td>
+      <td>Event ID generated by ingest.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">api_key</code></td>
+      <td><code class="language-plaintext highlighter-rouge">LowCardinality(String)</code></td>
+      <td>Accepted publishable API key.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">event</code></td>
+      <td><code class="language-plaintext highlighter-rouge">LowCardinality(String)</code></td>
+      <td>Event name.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">distinct_id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Event actor ID from SDK or API.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">person_id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">UUID</code></td>
+      <td>Resolved person ID.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">session_id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Session ID from SDK or direct API properties.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">session_id_uuid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Nullable(UUID)</code></td>
+      <td>Materialized UUID cast when possible.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">window_id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Browser window ID from SDK.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">window_id_uuid</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Nullable(UUID)</code></td>
+      <td>Materialized UUID cast when possible.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">elements_chain</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Autocapture element chain.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">timestamp</code></td>
+      <td><code class="language-plaintext highlighter-rouge">DateTime64(6, 'UTC')</code></td>
+      <td>Event time.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">inserted_at</code></td>
+      <td><code class="language-plaintext highlighter-rouge">DateTime64(6, 'UTC')</code></td>
+      <td>ClickHouse insert time.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ip</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Request IP as seen by Fastify.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">user_agent</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Request user agent.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">current_url</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Promoted <code class="language-plaintext highlighter-rouge">$current_url</code> or <code class="language-plaintext highlighter-rouge">current_url</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">host</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Promoted <code class="language-plaintext highlighter-rouge">$host</code> or <code class="language-plaintext highlighter-rouge">host</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">properties</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String CODEC(ZSTD(3))</code></td>
+      <td>Raw event properties JSON.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">is_deleted</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Int8</code></td>
+      <td>Soft-delete marker, default <code class="language-plaintext highlighter-rouge">0</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Engine:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ENGINE</span> <span class="o">=</span> <span class="n">MergeTree</span>
+<span class="k">PARTITION</span> <span class="k">BY</span> <span class="n">toYYYYMM</span><span class="p">(</span><span class="nb">timestamp</span><span class="p">)</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="p">(</span><span class="n">toDate</span><span class="p">(</span><span class="nb">timestamp</span><span class="p">),</span> <span class="n">event</span><span class="p">,</span> <span class="n">cityHash64</span><span class="p">(</span><span class="n">distinct_id</span><span class="p">),</span> <span class="n">cityHash64</span><span class="p">(</span><span class="n">uuid</span><span class="p">))</span>
+<span class="n">SAMPLE</span> <span class="k">BY</span> <span class="n">cityHash64</span><span class="p">(</span><span class="n">distinct_id</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Important indexes:</p>
+
+<ul>
+  <li>bloom filter on <code class="language-plaintext highlighter-rouge">distinct_id</code></li>
+  <li>bloom filter on <code class="language-plaintext highlighter-rouge">session_id</code></li>
+  <li>bloom filter on <code class="language-plaintext highlighter-rouge">window_id</code></li>
+  <li>minmax index on <code class="language-plaintext highlighter-rouge">inserted_at</code></li>
+</ul>
+
+<h2 id="persons"><code class="language-plaintext highlighter-rouge">persons</code></h2>
+
+<p>Versioned person profile table. Query with <code class="language-plaintext highlighter-rouge">FINAL</code> to collapse replacement rows.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Column</th>
+      <th>Type</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">distinct_id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Primary/current distinct ID for the person row.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">UUID</code></td>
+      <td>Person ID. Joins to <code class="language-plaintext highlighter-rouge">events.person_id</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">properties</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String CODEC(ZSTD(3))</code></td>
+      <td>Merged person properties JSON.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">created_at</code></td>
+      <td><code class="language-plaintext highlighter-rouge">DateTime64(6, 'UTC')</code></td>
+      <td>First known person creation time.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">updated_at</code></td>
+      <td><code class="language-plaintext highlighter-rouge">DateTime64(6, 'UTC')</code></td>
+      <td>Latest profile update time.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">last_seen_at</code></td>
+      <td><code class="language-plaintext highlighter-rouge">DateTime64(6, 'UTC')</code></td>
+      <td>Latest identity/profile event time as processed by ingest.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">is_identified</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Int8</code></td>
+      <td><code class="language-plaintext highlighter-rouge">1</code> when created/updated by <code class="language-plaintext highlighter-rouge">$identify</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">is_deleted</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Int8</code></td>
+      <td>Soft-delete marker.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">version</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Int64</code></td>
+      <td>Replacement version.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Engine:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ENGINE</span> <span class="o">=</span> <span class="n">ReplacingMergeTree</span><span class="p">(</span><span class="k">version</span><span class="p">)</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">id</span>
+</code></pre></div></div>
+
+<h2 id="person_distinct_ids"><code class="language-plaintext highlighter-rouge">person_distinct_ids</code></h2>
+
+<p>Versioned identity map from every accepted event distinct ID, anonymous ID, known user ID, and alias ID to a person ID. Query with <code class="language-plaintext highlighter-rouge">FINAL</code>.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Column</th>
+      <th>Type</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">distinct_id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">String</code></td>
+      <td>Anonymous, known, or alias ID.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">person_id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">UUID</code></td>
+      <td>Resolved person ID.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">created_at</code></td>
+      <td><code class="language-plaintext highlighter-rouge">DateTime64(6, 'UTC')</code></td>
+      <td>Link creation time.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">is_deleted</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Int8</code></td>
+      <td>Soft-delete marker.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">version</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Int64</code></td>
+      <td>Replacement version.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Engine:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ENGINE</span> <span class="o">=</span> <span class="n">ReplacingMergeTree</span><span class="p">(</span><span class="k">version</span><span class="p">)</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">distinct_id</span>
+</code></pre></div></div>
+
+<h2 id="sessions"><code class="language-plaintext highlighter-rouge">sessions</code></h2>
+
+<p>View over <code class="language-plaintext highlighter-rouge">events</code> for common session-level questions.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Column</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">api_key</code></td>
+      <td>Publishable API key on the events in the session.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">session_id</code></td>
+      <td>Session ID.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">distinct_id</code></td>
+      <td>Latest distinct ID in the session.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">person_id</code></td>
+      <td>Latest person ID in the session.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">started_at</code></td>
+      <td>First event timestamp.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ended_at</code></td>
+      <td>Last event timestamp.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">duration_seconds</code></td>
+      <td>Difference between first and last timestamp.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">urls</code></td>
+      <td>Unique URLs seen in the session, capped at 2000.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">entry_url</code></td>
+      <td>First URL.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">exit_url</code></td>
+      <td>Last URL.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">host</code></td>
+      <td>Latest host.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">event_count</code></td>
+      <td>All event count.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">pageview_count</code></td>
+      <td>Count of <code class="language-plaintext highlighter-rouge">$pageview</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">autocapture_count</code></td>
+      <td>Count of <code class="language-plaintext highlighter-rouge">$autocapture</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">event_names</code></td>
+      <td>Unique event names, capped at 2000.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The view ignores rows where <code class="language-plaintext highlighter-rouge">session_id = ''</code> and <code class="language-plaintext highlighter-rouge">is_deleted != 0</code>.</p>
+
+<h2 id="property-access">Property Access</h2>
+
+<p>Event and person properties are JSON strings. Examples:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">event</span><span class="p">,</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'plan'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">plan</span><span class="p">,</span>
+    <span class="n">JSONExtractInt</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'duration_ms'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">duration_ms</span><span class="p">,</span>
+    <span class="n">JSONHas</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'experiment'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">has_experiment</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">events</span>
+<span class="k">WHERE</span> <span class="nb">timestamp</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">INTERVAL</span> <span class="mi">1</span> <span class="k">DAY</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>For SDK properties with <code class="language-plaintext highlighter-rouge">$</code> names, quote the literal property key:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'$current_url'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">current_url</span><span class="p">,</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'$el_text'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">element_text</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">events</span>
+<span class="k">WHERE</span> <span class="n">event</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">'$pageview'</span><span class="p">,</span> <span class="s1">'$autocapture'</span><span class="p">)</span>
+<span class="k">LIMIT</span> <span class="mi">100</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h2 id="common-queries">Common Queries</h2>
+
+<p>Daily event and person counts:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">toDate</span><span class="p">(</span><span class="nb">timestamp</span><span class="p">)</span> <span class="k">AS</span> <span class="k">day</span><span class="p">,</span>
+    <span class="k">count</span><span class="p">()</span> <span class="k">AS</span> <span class="n">events</span><span class="p">,</span>
+    <span class="n">uniqExact</span><span class="p">(</span><span class="n">person_id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">people</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">events</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="k">day</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">day</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Top events in the past week:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">event</span><span class="p">,</span>
+    <span class="k">count</span><span class="p">()</span> <span class="k">AS</span> <span class="k">count</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">events</span>
+<span class="k">WHERE</span> <span class="nb">timestamp</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">INTERVAL</span> <span class="mi">7</span> <span class="k">DAY</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">event</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">count</span> <span class="k">DESC</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Recent sessions:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">session_id</span><span class="p">,</span>
+    <span class="n">started_at</span><span class="p">,</span>
+    <span class="n">ended_at</span><span class="p">,</span>
+    <span class="n">duration_seconds</span><span class="p">,</span>
+    <span class="n">pageview_count</span><span class="p">,</span>
+    <span class="n">autocapture_count</span><span class="p">,</span>
+    <span class="n">event_count</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">sessions</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">ended_at</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">50</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Signup funnel from event names:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">person_id</span><span class="p">,</span>
+    <span class="n">minIf</span><span class="p">(</span><span class="nb">timestamp</span><span class="p">,</span> <span class="n">event</span> <span class="o">=</span> <span class="s1">'signup_started'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">signup_started_at</span><span class="p">,</span>
+    <span class="n">minIf</span><span class="p">(</span><span class="nb">timestamp</span><span class="p">,</span> <span class="n">event</span> <span class="o">=</span> <span class="s1">'signup_completed'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">signup_completed_at</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">events</span>
+<span class="k">WHERE</span> <span class="n">event</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">'signup_started'</span><span class="p">,</span> <span class="s1">'signup_completed'</span><span class="p">)</span>
+  <span class="k">AND</span> <span class="nb">timestamp</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">INTERVAL</span> <span class="mi">30</span> <span class="k">DAY</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">person_id</span>
+<span class="k">HAVING</span> <span class="n">signup_started_at</span> <span class="o">&gt;</span> <span class="n">toDateTime64</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">signup_started_at</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">100</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Users by latest plan:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'plan'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">plan</span><span class="p">,</span>
+    <span class="k">count</span><span class="p">()</span> <span class="k">AS</span> <span class="n">people</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">persons</span> <span class="k">FINAL</span>
+<span class="k">WHERE</span> <span class="n">is_deleted</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">plan</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">people</span> <span class="k">DESC</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Events joined to person properties:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">WITH</span> <span class="n">latest_people</span> <span class="k">AS</span> <span class="p">(</span>
+    <span class="k">SELECT</span>
+        <span class="n">id</span><span class="p">,</span>
+        <span class="n">properties</span>
+    <span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">persons</span> <span class="k">FINAL</span>
+    <span class="k">WHERE</span> <span class="n">is_deleted</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="p">)</span>
+<span class="k">SELECT</span>
+    <span class="n">e</span><span class="p">.</span><span class="nb">timestamp</span><span class="p">,</span>
+    <span class="n">e</span><span class="p">.</span><span class="n">event</span><span class="p">,</span>
+    <span class="n">e</span><span class="p">.</span><span class="n">distinct_id</span><span class="p">,</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">email</span><span class="p">,</span>
+    <span class="n">JSONExtractString</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">properties</span><span class="p">,</span> <span class="s1">'plan'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">plan</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">events</span> <span class="k">AS</span> <span class="n">e</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span> <span class="n">latest_people</span> <span class="k">AS</span> <span class="n">p</span> <span class="k">ON</span> <span class="n">p</span><span class="p">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">e</span><span class="p">.</span><span class="n">person_id</span>
+<span class="k">WHERE</span> <span class="n">e</span><span class="p">.</span><span class="nb">timestamp</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">INTERVAL</span> <span class="mi">7</span> <span class="k">DAY</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">e</span><span class="p">.</span><span class="nb">timestamp</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">100</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h2 id="schema-introspection">Schema Introspection</h2>
+
+<p>Use these before writing unfamiliar queries:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">DESCRIBE</span> <span class="k">TABLE</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">events</span><span class="p">;</span>
+<span class="k">DESCRIBE</span> <span class="k">TABLE</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">persons</span><span class="p">;</span>
+<span class="k">DESCRIBE</span> <span class="k">TABLE</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">person_distinct_ids</span><span class="p">;</span>
+<span class="k">DESCRIBE</span> <span class="k">TABLE</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">sessions</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>List recent event names and example properties:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+    <span class="n">event</span><span class="p">,</span>
+    <span class="k">count</span><span class="p">()</span> <span class="k">AS</span> <span class="k">count</span><span class="p">,</span>
+    <span class="k">any</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span> <span class="k">AS</span> <span class="n">example_properties</span>
+<span class="k">FROM</span> <span class="n">product_analytics</span><span class="p">.</span><span class="n">events</span>
+<span class="k">WHERE</span> <span class="nb">timestamp</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">INTERVAL</span> <span class="mi">7</span> <span class="k">DAY</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">event</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">count</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">50</span><span class="p">;</span>
+</code></pre></div></div>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

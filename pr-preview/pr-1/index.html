@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ClickHouse Product Analytics | First-party product analytics ingress for ClickHouse.</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="ClickHouse Product Analytics" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="First-party product analytics ingress for ClickHouse." />
+<meta property="og:description" content="First-party product analytics ingress for ClickHouse." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ClickHouse Product Analytics" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"First-party product analytics ingress for ClickHouse.","headline":"ClickHouse Product Analytics","name":"ClickHouse Product Analytics","url":"https://marcklingen.github.io/clickhouse-product-analytics/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+
+      <h1 id="clickhouse-product-analytics">ClickHouse Product Analytics</h1>
+
+<p>ClickHouse Product Analytics is a first-party product analytics ingress layer for ClickHouse. It captures browser and backend product events, validates and normalizes them through one HTTP service, and writes query-ready events, people, identity links, and sessions into ClickHouse.</p>
+
+<p>The project intentionally owns only the first mile of product analytics: event capture, identity stitching, and warehouse-native storage. It does not include dashboards, funnels, feature flags, session replay, surveys, or a settings UI. Use ClickHouse, SQL, notebooks, BI tools, or agentic analytics on top of the tables.</p>
+
+<h2 id="start">Start</h2>
+
+<ul>
+  <li><a href="/clickhouse-product-analytics/sending-events.html">Sending events</a>: browser SDK, React, backend/direct API, batch API, gzip, and event naming examples.</li>
+  <li><a href="/clickhouse-product-analytics/identifying-users.html">Identifying users</a>: anonymous IDs, <code class="language-plaintext highlighter-rouge">identify</code>, <code class="language-plaintext highlighter-rouge">$set</code>, <code class="language-plaintext highlighter-rouge">$set_once</code>, aliases, reset, and query implications.</li>
+  <li><a href="/clickhouse-product-analytics/clickhouse-schema.html">ClickHouse schema</a>: table/view schemas, JSON property access, and query patterns for humans and agents.</li>
+  <li><a href="/clickhouse-product-analytics/sdk-stability.html">SDK stability review</a>: production reliability notes from comparing against mature browser analytics SDK patterns.</li>
+</ul>
+
+<h2 id="operate">Operate</h2>
+
+<ul>
+  <li><a href="/clickhouse-product-analytics/architecture.html">Architecture</a>: system boundaries, event flow, identity flow, and how the pieces fit together.</li>
+  <li><a href="/clickhouse-product-analytics/deployment.html">Deployment</a>: local Docker Compose, ClickHouse Cloud, production container model, environment variables, and migration workflow.</li>
+  <li><a href="/clickhouse-product-analytics/railway.html">Railway deployment</a>: Railway container setup with ClickHouse or ClickHouse Cloud.</li>
+  <li><a href="/clickhouse-product-analytics/helm.html">Helm deployment</a>: Kubernetes chart, autoscaling defaults, and install examples.</li>
+  <li><a href="/clickhouse-product-analytics/verification.html">Verification</a>: what <code class="language-plaintext highlighter-rouge">npm run verify</code> and <code class="language-plaintext highlighter-rouge">npm run verify:e2e</code> prove.</li>
+</ul>
+
+<h2 id="reference">Reference</h2>
+
+<ul>
+  <li><a href="/clickhouse-product-analytics/reference/">Reference</a>: HTTP API reference and generated SDK/React reference.</li>
+  <li><a href="/clickhouse-product-analytics/publishing.html">Publishing packages</a>: npm package dry-runs, Release It, and explicit publish commands.</li>
+  <li><a href="/clickhouse-product-analytics/agent-skill.html">Coding agent skill</a>: repo-local skill for adding product analytics tracking with a coding agent.</li>
+</ul>
+
+<h2 id="quick-start">Quick Start</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cp</span> .env.example .env
+npm <span class="nb">install
+</span>npm run build:packages
+docker compose up <span class="nt">-d</span> <span class="nt">--build</span>
+npm run verify:e2e
+</code></pre></div></div>
+
+<p>Local endpoints:</p>
+
+<ul>
+  <li>Ingest service: <code class="language-plaintext highlighter-rouge">http://127.0.0.1:8080</code></li>
+  <li>ClickHouse HTTP API: <code class="language-plaintext highlighter-rouge">http://127.0.0.1:8123</code></li>
+  <li>Development API key: <code class="language-plaintext highlighter-rouge">local_dev_key</code></li>
+</ul>
+
+<h2 id="minimal-browser-example">Minimal Browser Example</h2>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nx">analytics</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@clickhouse-product-analytics/sdk</span><span class="dl">'</span>
+
+<span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://127.0.0.1:8080</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">capture_pageview</span><span class="p">:</span> <span class="dl">'</span><span class="s1">history_change</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">autocapture</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">captureText</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="na">element_allowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">button</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">a</span><span class="dl">'</span><span class="p">]</span>
+  <span class="p">},</span>
+  <span class="na">property_denylist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">secret</span><span class="dl">'</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="nx">analytics</span><span class="p">.</span><span class="nx">capture</span><span class="p">(</span><span class="dl">'</span><span class="s1">signup_started</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">plan</span><span class="p">:</span> <span class="dl">'</span><span class="s1">pro</span><span class="dl">'</span> <span class="p">})</span>
+<span class="nx">analytics</span><span class="p">.</span><span class="nx">identify</span><span class="p">(</span><span class="dl">'</span><span class="s1">user_123</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">email</span><span class="p">:</span> <span class="dl">'</span><span class="s1">user@example.com</span><span class="dl">'</span> <span class="p">})</span>
+<span class="k">await</span> <span class="nx">analytics</span><span class="p">.</span><span class="nx">flush</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="minimal-backend-example">Minimal Backend Example</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/i/v0/e/ <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s1">'content-type: application/json'</span> <span class="se">\</span>
+  <span class="nt">-d</span> <span class="s1">'{
+    "api_key": "local_dev_key",
+    "event": "backend_job_completed",
+    "distinct_id": "user_123",
+    "properties": {
+      "job_id": "job_456",
+      "duration_ms": 481
+    }
+  }'</span>
+</code></pre></div></div>
+
+<h2 id="scope">Scope</h2>
+
+<p>This repository contains:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">packages/sdk</code>: browser event capture, sessions, batching, pageview/pageleave, autocapture, persistence, opt-in/out, and identity helpers.</li>
+  <li><code class="language-plaintext highlighter-rouge">packages/react</code>: provider, hook, and viewport tracking component for React and Next.js applications.</li>
+  <li><code class="language-plaintext highlighter-rouge">packages/ingest-service</code>: Fastify ingest API, CORS/origin checks, API-key validation, decompression, normalization, identity side effects, and ClickHouse writes.</li>
+  <li><code class="language-plaintext highlighter-rouge">packages/ingest-service/migrations</code>: ClickHouse schema for <code class="language-plaintext highlighter-rouge">events</code>, <code class="language-plaintext highlighter-rouge">persons</code>, <code class="language-plaintext highlighter-rouge">person_distinct_ids</code>, and <code class="language-plaintext highlighter-rouge">sessions</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">examples</code>: a Next.js browser smoke app and a direct backend capture script.</li>
+  <li><code class="language-plaintext highlighter-rouge">docs</code>: this GitHub Pages documentation site, maintained as Markdown.</li>
+</ul>
+
+<h2 id="attribution">Attribution</h2>
+
+<p>This project is independent. The source repository includes <code class="language-plaintext highlighter-rouge">ATTRIBUTION.md</code> and <code class="language-plaintext highlighter-rouge">THIRD_PARTY_NOTICES.md</code> with the maintained attribution and license notes.</p>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

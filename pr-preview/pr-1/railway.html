@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Railway Deployment | ClickHouse Product Analytics</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Railway Deployment" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Deploy the ingest service on Railway with ClickHouse or ClickHouse Cloud." />
+<meta property="og:description" content="Deploy the ingest service on Railway with ClickHouse or ClickHouse Cloud." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/railway.html" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/railway.html" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Railway Deployment" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Deploy the ingest service on Railway with ClickHouse or ClickHouse Cloud.","headline":"Railway Deployment","url":"https://marcklingen.github.io/clickhouse-product-analytics/railway.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://marcklingen.github.io/clickhouse-product-analytics/">ClickHouse Product Analytics</a></h1>
+      
+
+      <h1 id="railway-deployment">Railway Deployment</h1>
+
+<p>Railway can run the ingest service container and connect it to ClickHouse Cloud or to a ClickHouse instance reachable from Railway. The repo does not need Railway-specific code; the service is configured entirely with environment variables.</p>
+
+<h2 id="recommended-shape">Recommended Shape</h2>
+
+<p>Use one Railway service for the ingest container and an external ClickHouse database. ClickHouse Cloud is the simplest production target because it provides a managed HTTPS endpoint, user, password, and database. A self-managed ClickHouse service also works if Railway can reach its HTTP interface.</p>
+
+<h2 id="container-source">Container Source</h2>
+
+<p>Use the Dockerfile at:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>packages/ingest-service/Dockerfile
+</code></pre></div></div>
+
+<p>After the GitHub Container Registry workflow has run on <code class="language-plaintext highlighter-rouge">main</code>, Railway can also deploy the published image:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service:sha-&lt;commit&gt;
+</code></pre></div></div>
+
+<p>Use <code class="language-plaintext highlighter-rouge">latest</code> only for quick trials. Production deployments should use the <code class="language-plaintext highlighter-rouge">sha-&lt;commit&gt;</code> tag for the commit that passed CI or the digest-pinned GHCR reference <code class="language-plaintext highlighter-rouge">ghcr.io/&lt;owner&gt;/&lt;repo&gt;/ingest-service@sha256:&lt;digest&gt;</code>.</p>
+
+<h2 id="environment-variables">Environment Variables</h2>
+
+<p>Set these variables in Railway:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">PORT</code></td>
+      <td><code class="language-plaintext highlighter-rouge">8080</code> or Railway’s provided port if your deployment injects one.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">LOG_LEVEL</code></td>
+      <td><code class="language-plaintext highlighter-rouge">warn</code> for production. Use <code class="language-plaintext highlighter-rouge">info</code> or <code class="language-plaintext highlighter-rouge">debug</code> only while diagnosing.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">PUBLIC_API_KEYS</code></td>
+      <td>Comma-separated publishable keys accepted by the service.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ALLOWED_ORIGINS</code></td>
+      <td>Comma-separated browser origins, for example <code class="language-plaintext highlighter-rouge">https://app.example.com</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN</code></td>
+      <td><code class="language-plaintext highlighter-rouge">true</code> if backend services send events without an <code class="language-plaintext highlighter-rouge">Origin</code> header.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CLICKHOUSE_URL</code></td>
+      <td>ClickHouse HTTP or HTTPS URL.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CLICKHOUSE_USER</code></td>
+      <td>ClickHouse user.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CLICKHOUSE_PASSWORD</code></td>
+      <td>ClickHouse password.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CLICKHOUSE_DATABASE</code></td>
+      <td>Analytics database, for example <code class="language-plaintext highlighter-rouge">product_analytics</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">MIGRATE_ON_START</code></td>
+      <td><code class="language-plaintext highlighter-rouge">false</code> for production. Run migrations as an explicit deploy step.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For ClickHouse Cloud, use the HTTPS endpoint from the cloud console, the cloud user/password, and keep TLS enabled by using <code class="language-plaintext highlighter-rouge">https://</code>.</p>
+
+<h2 id="migrations">Migrations</h2>
+
+<p>Run migrations from a checkout before switching traffic:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm run build <span class="nt">--workspace</span> @clickhouse-product-analytics/ingest-service
+<span class="nv">CLICKHOUSE_URL</span><span class="o">=</span><span class="s2">"https://&lt;host&gt;:8443"</span> <span class="se">\</span>
+<span class="nv">CLICKHOUSE_USER</span><span class="o">=</span><span class="s2">"&lt;user&gt;"</span> <span class="se">\</span>
+<span class="nv">CLICKHOUSE_PASSWORD</span><span class="o">=</span><span class="s2">"&lt;password&gt;"</span> <span class="se">\</span>
+<span class="nv">CLICKHOUSE_DATABASE</span><span class="o">=</span><span class="s2">"product_analytics"</span> <span class="se">\</span>
+npm run migrate
+</code></pre></div></div>
+
+<p>If Railway is the only environment with network access to ClickHouse, run a one-off Railway command against the deployed container image with the same production variables:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node dist/migrate.js
+</code></pre></div></div>
+
+<p>The production image sets its working directory to the ingest service package, so <code class="language-plaintext highlighter-rouge">dist/migrate.js</code> is available without TypeScript source files or development dependencies.</p>
+
+<h2 id="health-check">Health Check</h2>
+
+<p>Configure Railway to check:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/health
+</code></pre></div></div>
+
+<p>The endpoint returns <code class="language-plaintext highlighter-rouge">200</code> when the HTTP service is alive. It does not run a ClickHouse query on every health check.</p>
+
+<h2 id="template-status">Template Status</h2>
+
+<p>A Railway template would mainly prefill the Dockerfile path and environment variable names. It is not required for the current deployment model, but it would make sense once the package names, GHCR image name, and recommended ClickHouse Cloud setup are stable.</p>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

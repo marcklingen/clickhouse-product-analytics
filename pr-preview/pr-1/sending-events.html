@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Sending Events | ClickHouse Product Analytics</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Sending Events" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Browser SDK, React, direct API, batch API, and event naming examples." />
+<meta property="og:description" content="Browser SDK, React, direct API, batch API, and event naming examples." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/sending-events.html" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/sending-events.html" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Sending Events" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Browser SDK, React, direct API, batch API, and event naming examples.","headline":"Sending Events","url":"https://marcklingen.github.io/clickhouse-product-analytics/sending-events.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://marcklingen.github.io/clickhouse-product-analytics/">ClickHouse Product Analytics</a></h1>
+      
+
+      <h1 id="sending-events">Sending Events</h1>
+
+<p>Events are JSON objects with an event name, a distinct ID, optional timestamp, and properties. Browser apps usually use the SDK or React wrapper. Backend services can send the same event shape directly to the HTTP API.</p>
+
+<h2 id="event-naming">Event Naming</h2>
+
+<p>Use stable, human-readable event names that describe behavior. Good names are specific enough to query and stable enough to become part of your analytics contract:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">signup_started</code></li>
+  <li><code class="language-plaintext highlighter-rouge">signup_completed</code></li>
+  <li><code class="language-plaintext highlighter-rouge">checkout_step_viewed</code></li>
+  <li><code class="language-plaintext highlighter-rouge">backend_job_completed</code></li>
+  <li><code class="language-plaintext highlighter-rouge">invite_sent</code></li>
+  <li><code class="language-plaintext highlighter-rouge">report_exported</code></li>
+</ul>
+
+<p>Use properties for context, not for the primary action:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"event"</span><span class="p">:</span><span class="w"> </span><span class="s2">"backend_job_completed"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"job_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"job_456"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"duration_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">481</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="browser-sdk">Browser SDK</h2>
+
+<p>For exact method and option signatures, see the <a href="/clickhouse-product-analytics/reference/sdk/sdk/src/">generated SDK reference</a>.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nx">analytics</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@clickhouse-product-analytics/sdk</span><span class="dl">'</span>
+
+<span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://127.0.0.1:8080</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">capture_pageview</span><span class="p">:</span> <span class="dl">'</span><span class="s1">history_change</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">autocapture</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">captureText</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="na">element_allowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">button</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">a</span><span class="dl">'</span><span class="p">]</span>
+  <span class="p">},</span>
+  <span class="na">property_denylist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">secret</span><span class="dl">'</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="nx">analytics</span><span class="p">.</span><span class="nx">capture</span><span class="p">(</span><span class="dl">'</span><span class="s1">signup_started</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">plan</span><span class="p">:</span> <span class="dl">'</span><span class="s1">pro</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">source</span><span class="p">:</span> <span class="dl">'</span><span class="s1">pricing_page</span><span class="dl">'</span>
+<span class="p">})</span>
+
+<span class="k">await</span> <span class="nx">analytics</span><span class="p">.</span><span class="nx">flush</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Important options:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">api_host</code></td>
+      <td>Ingest service URL.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">capture_pageview</code></td>
+      <td><code class="language-plaintext highlighter-rouge">true</code>, <code class="language-plaintext highlighter-rouge">false</code>, or <code class="language-plaintext highlighter-rouge">"history_change"</code> for browser apps with client-side routing.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">capture_pageleave</code></td>
+      <td><code class="language-plaintext highlighter-rouge">true</code>, <code class="language-plaintext highlighter-rouge">false</code>, or <code class="language-plaintext highlighter-rouge">"if_capture_pageview"</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">autocapture</code></td>
+      <td>Disabled by default. Pass an object to capture safe click/change/submit events.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">persistence</code></td>
+      <td><code class="language-plaintext highlighter-rouge">localStorage+cookie</code>, <code class="language-plaintext highlighter-rouge">localStorage</code>, or <code class="language-plaintext highlighter-rouge">memory</code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">request_batching</code></td>
+      <td>Enables batched SDK sends.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">flushAt</code></td>
+      <td>Queue size that triggers a flush.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">request_queue_config.flush_interval_ms</code></td>
+      <td>Timed flush interval.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">before_send</code></td>
+      <td>Mutate or drop events before they enter the queue.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">property_denylist</code></td>
+      <td>Remove sensitive properties before sending.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">disable_compression</code></td>
+      <td>Disable fetch request gzip compression. The SDK uses browser <code class="language-plaintext highlighter-rouge">CompressionStream</code> when available and falls back to plain JSON otherwise. SendBeacon unload flushes are always uncompressed.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="pageviews">Pageviews</h2>
+
+<p>For single-page applications, use <code class="language-plaintext highlighter-rouge">capture_pageview: "history_change"</code> so route changes emit <code class="language-plaintext highlighter-rouge">$pageview</code>:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">capture_pageview</span><span class="p">:</span> <span class="dl">'</span><span class="s1">history_change</span><span class="dl">'</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>The SDK promotes URL fields into ClickHouse columns:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">$current_url</code> -&gt; <code class="language-plaintext highlighter-rouge">events.current_url</code></li>
+  <li><code class="language-plaintext highlighter-rouge">$host</code> -&gt; <code class="language-plaintext highlighter-rouge">events.host</code></li>
+  <li><code class="language-plaintext highlighter-rouge">$session_id</code> -&gt; <code class="language-plaintext highlighter-rouge">events.session_id</code></li>
+  <li><code class="language-plaintext highlighter-rouge">$window_id</code> -&gt; <code class="language-plaintext highlighter-rouge">events.window_id</code></li>
+</ul>
+
+<h2 id="autocapture">Autocapture</h2>
+
+<p>Autocapture is opt-in. Keep it narrow and explicit:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">autocapture</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">captureText</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="na">element_allowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">button</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">a</span><span class="dl">'</span><span class="p">],</span>
+    <span class="na">dom_event_allowlist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">click</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">submit</span><span class="dl">'</span><span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>The SDK avoids hidden/password inputs, common payment and secret field names, credit-card-like values, SSN-like values, and elements marked with <code class="language-plaintext highlighter-rouge">cpa-sensitive</code> or <code class="language-plaintext highlighter-rouge">cpa-no-capture</code>.</p>
+
+<h2 id="event-hooks-and-privacy">Event Hooks and Privacy</h2>
+
+<p>Use <code class="language-plaintext highlighter-rouge">before_send</code> to enforce a local event contract:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">init</span><span class="p">(</span><span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">api_host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://analytics.example.com</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">before_send</span><span class="p">:</span> <span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">event</span> <span class="o">===</span> <span class="dl">'</span><span class="s1">debug_event</span><span class="dl">'</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="kc">undefined</span>
+    <span class="p">}</span>
+
+    <span class="nx">event</span><span class="p">.</span><span class="nx">properties</span><span class="p">.</span><span class="nx">app_version</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">1.2.3</span><span class="dl">'</span>
+    <span class="k">return</span> <span class="nx">event</span>
+  <span class="p">},</span>
+  <span class="na">property_denylist</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">token</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">secret</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">password</span><span class="dl">'</span><span class="p">]</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>Use opt-out helpers for consent flows:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">analytics</span><span class="p">.</span><span class="nx">opt_out_capturing</span><span class="p">()</span>
+<span class="nx">analytics</span><span class="p">.</span><span class="nx">has_opted_out_capturing</span><span class="p">()</span>
+<span class="nx">analytics</span><span class="p">.</span><span class="nx">opt_in_capturing</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="react-and-nextjs">React and Next.js</h2>
+
+<p>For exact provider, hook, and viewport component signatures, see the <a href="/clickhouse-product-analytics/reference/sdk/react/src/">generated React reference</a>.</p>
+
+<p>Create a client provider:</p>
+
+<div class="language-tsx highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="dl">'</span><span class="s1">use client</span><span class="dl">'</span>
+
+<span class="k">import</span> <span class="p">{</span> <span class="nx">AnalyticsProvider</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@clickhouse-product-analytics/react</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">function</span> <span class="nx">Providers</span><span class="p">({</span> <span class="nx">children</span> <span class="p">}:</span> <span class="p">{</span> <span class="nl">children</span><span class="p">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">ReactNode</span> <span class="p">})</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="p">&lt;</span><span class="nc">AnalyticsProvider</span>
+      <span class="na">apiKey</span><span class="p">=</span><span class="s">"local_dev_key"</span>
+      <span class="na">options</span><span class="p">=</span>
+    <span class="p">&gt;</span>
+      <span class="si">{</span><span class="nx">children</span><span class="si">}</span>
+    <span class="p">&lt;/</span><span class="nc">AnalyticsProvider</span><span class="p">&gt;</span>
+  <span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Wrap the app from <code class="language-plaintext highlighter-rouge">app/layout.tsx</code>:</p>
+
+<div class="language-tsx highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">Providers</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./providers</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="k">default</span> <span class="kd">function</span> <span class="nx">RootLayout</span><span class="p">({</span> <span class="nx">children</span> <span class="p">}:</span> <span class="p">{</span> <span class="nl">children</span><span class="p">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">ReactNode</span> <span class="p">})</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="p">=</span><span class="s">"en"</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nc">Providers</span><span class="p">&gt;</span><span class="si">{</span><span class="nx">children</span><span class="si">}</span><span class="p">&lt;/</span><span class="nc">Providers</span><span class="p">&gt;</span>
+      <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+  <span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Capture from a component with <code class="language-plaintext highlighter-rouge">useAnalytics()</code>:</p>
+
+<div class="language-tsx highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="dl">'</span><span class="s1">use client</span><span class="dl">'</span>
+
+<span class="k">import</span> <span class="p">{</span> <span class="nx">useAnalytics</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@clickhouse-product-analytics/react</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">function</span> <span class="nx">SignupButton</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">analytics</span> <span class="o">=</span> <span class="nx">useAnalytics</span><span class="p">()</span>
+
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="p">&lt;</span><span class="nt">button</span> <span class="na">onClick</span><span class="p">=</span><span class="si">{</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">analytics</span><span class="p">?.</span><span class="nx">capture</span><span class="p">(</span><span class="dl">'</span><span class="s1">signup_clicked</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">placement</span><span class="p">:</span> <span class="dl">'</span><span class="s1">hero</span><span class="dl">'</span> <span class="p">})</span><span class="si">}</span><span class="p">&gt;</span>
+      Sign up
+    <span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+  <span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Track impressions with <code class="language-plaintext highlighter-rouge">AnalyticsCaptureOnViewed</code>:</p>
+
+<div class="language-tsx highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">AnalyticsCaptureOnViewed</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@clickhouse-product-analytics/react</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">function</span> <span class="nx">ProductCard</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="p">&lt;</span><span class="nc">AnalyticsCaptureOnViewed</span> <span class="na">name</span><span class="p">=</span><span class="s">"product-card"</span> <span class="na">properties</span><span class="p">=&gt;</span>
+      <span class="p">&lt;</span><span class="nt">button</span><span class="p">&gt;</span>View product<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nc">AnalyticsCaptureOnViewed</span><span class="p">&gt;</span>
+  <span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">AnalyticsCaptureOnViewed</code> wraps children in a <code class="language-plaintext highlighter-rouge">div</code>. When <code class="language-plaintext highlighter-rouge">trackAllChildren</code> is enabled, each child is wrapped separately and receives a <code class="language-plaintext highlighter-rouge">child_index</code> property. Avoid that mode in table/list/form structures where extra wrappers would be invalid.</p>
+
+<h2 id="direct-single-event-api">Direct Single Event API</h2>
+
+<p>For exact endpoint, payload, response, and error details, see the <a href="/clickhouse-product-analytics/reference/http-api.html">HTTP API reference</a>.</p>
+
+<p>Backend services can send events directly:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/i/v0/e/ <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s1">'content-type: application/json'</span> <span class="se">\</span>
+  <span class="nt">-d</span> <span class="s1">'{
+    "api_key": "local_dev_key",
+    "event": "backend_job_completed",
+    "distinct_id": "user_123",
+    "properties": {
+      "job_id": "job_456",
+      "duration_ms": 481,
+      "status": "success"
+    }
+  }'</span>
+</code></pre></div></div>
+
+<p>The same payload shape is accepted at <code class="language-plaintext highlighter-rouge">/capture/</code> and <code class="language-plaintext highlighter-rouge">/e/</code>.</p>
+
+<h2 id="batch-api">Batch API</h2>
+
+<p>Use <code class="language-plaintext highlighter-rouge">/batch/</code> for multiple events:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> POST http://127.0.0.1:8080/batch/ <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s1">'content-type: application/json'</span> <span class="se">\</span>
+  <span class="nt">-d</span> <span class="s1">'{
+    "api_key": "local_dev_key",
+    "batch": [
+      {
+        "event": "$pageview",
+        "distinct_id": "anon_123",
+        "properties": {
+          "$current_url": "https://example.com/",
+          "$host": "example.com",
+          "$session_id": "session_123"
+        }
+      },
+      {
+        "event": "checkout_step_viewed",
+        "distinct_id": "anon_123",
+        "properties": {
+          "step": "payment",
+          "$session_id": "session_123"
+        }
+      }
+    ]
+  }'</span>
+</code></pre></div></div>
+
+<p>The service also accepts an array of event objects as the request body. At least one event must carry <code class="language-plaintext highlighter-rouge">api_key</code> or <code class="language-plaintext highlighter-rouge">token</code>; events without a key inherit that value, and any provided keys in the same array must match.</p>
+
+<h2 id="compressed-requests">Compressed Requests</h2>
+
+<p>The ingest service accepts compressed request bodies:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">Content-Encoding: gzip</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Content-Encoding: deflate</code></li>
+  <li><code class="language-plaintext highlighter-rouge">Content-Encoding: br</code></li>
+</ul>
+
+<p>Example:</p>
+
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">gzipSync</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">node:zlib</span><span class="dl">'</span>
+
+<span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="dl">'</span><span class="s1">http://127.0.0.1:8080/capture/</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">method</span><span class="p">:</span> <span class="dl">'</span><span class="s1">POST</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">headers</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">content-type</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">application/json</span><span class="dl">'</span><span class="p">,</span>
+    <span class="dl">'</span><span class="s1">content-encoding</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">gzip</span><span class="dl">'</span>
+  <span class="p">},</span>
+  <span class="na">body</span><span class="p">:</span> <span class="nx">gzipSync</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span>
+    <span class="na">api_key</span><span class="p">:</span> <span class="dl">'</span><span class="s1">local_dev_key</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">event</span><span class="p">:</span> <span class="dl">'</span><span class="s1">backend_job_completed</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">distinct_id</span><span class="p">:</span> <span class="dl">'</span><span class="s1">user_123</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">properties</span><span class="p">:</span> <span class="p">{</span> <span class="na">job_id</span><span class="p">:</span> <span class="dl">'</span><span class="s1">job_456</span><span class="dl">'</span> <span class="p">}</span>
+  <span class="p">}))</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<h2 id="invalid-events">Invalid Events</h2>
+
+<p>The service rejects malformed requests such as missing API keys, invalid timestamps, mixed API keys in one batch, disallowed origins, invalid keys, oversized bodies, and oversized batches.</p>
+
+<p>Inside an otherwise valid batch, events missing an event name or distinct ID are dropped and counted in the response:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ok"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"ingested"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"dropped"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>

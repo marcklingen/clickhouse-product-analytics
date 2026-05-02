@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ClickHouse Product Analytics | First-party product analytics ingress for ClickHouse.</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="ClickHouse Product Analytics" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="First-party product analytics ingress for ClickHouse." />
+<meta property="og:description" content="First-party product analytics ingress for ClickHouse." />
+<link rel="canonical" href="https://marcklingen.github.io/clickhouse-product-analytics/reference/sdk/sdk/src/classes/ClickHouseProductAnalytics.html" />
+<meta property="og:url" content="https://marcklingen.github.io/clickhouse-product-analytics/reference/sdk/sdk/src/classes/ClickHouseProductAnalytics.html" />
+<meta property="og:site_name" content="ClickHouse Product Analytics" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ClickHouse Product Analytics" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"First-party product analytics ingress for ClickHouse.","headline":"ClickHouse Product Analytics","url":"https://marcklingen.github.io/clickhouse-product-analytics/reference/sdk/sdk/src/classes/ClickHouseProductAnalytics.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/clickhouse-product-analytics/assets/css/style.css?v=f8241f12bc3bd39636110488921aac3bba1c704f">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/clickhouse-product-analytics/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://marcklingen.github.io/clickhouse-product-analytics/">ClickHouse Product Analytics</a></h1>
+      
+
+      <p><a href="/clickhouse-product-analytics/reference/sdk/"><strong>SDK and React Reference</strong></a></p>
+
+<hr />
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/">SDK and React Reference</a> / <a href="/clickhouse-product-analytics/reference/sdk/sdk/src/">sdk/src</a> / ClickHouseProductAnalytics</p>
+
+<h1 id="class-clickhouseproductanalytics">Class: ClickHouseProductAnalytics</h1>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L70">sdk/src/index.ts:70</a></p>
+
+<p>Browser analytics client for capturing product events into the ingest service.</p>
+
+<h2 id="constructors">Constructors</h2>
+
+<h3 id="constructor">Constructor</h3>
+
+<blockquote>
+  <p><strong>new ClickHouseProductAnalytics</strong>(): <code class="language-plaintext highlighter-rouge">ClickHouseProductAnalytics</code></p>
+</blockquote>
+
+<h4 id="returns">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">ClickHouseProductAnalytics</code></p>
+
+<h2 id="methods">Methods</h2>
+
+<h3 id="alias">alias()</h3>
+
+<blockquote>
+  <p><strong>alias</strong>(<code class="language-plaintext highlighter-rouge">alias</code>, <code class="language-plaintext highlighter-rouge">original?</code>): <a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/QueuedEvent.html"><code class="language-plaintext highlighter-rouge">QueuedEvent</code></a> | <code class="language-plaintext highlighter-rouge">undefined</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L208">sdk/src/index.ts:208</a></p>
+
+<p>Link another distinct ID to the current or supplied original distinct ID.</p>
+
+<h4 id="parameters">Parameters</h4>
+
+<h5 id="alias-1">alias</h5>
+
+<p><code class="language-plaintext highlighter-rouge">string</code></p>
+
+<h5 id="original">original?</h5>
+
+<p><code class="language-plaintext highlighter-rouge">string</code> = <code class="language-plaintext highlighter-rouge">...</code></p>
+
+<h4 id="returns-1">Returns</h4>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/QueuedEvent.html"><code class="language-plaintext highlighter-rouge">QueuedEvent</code></a> | <code class="language-plaintext highlighter-rouge">undefined</code></p>
+
+<hr />
+
+<h3 id="capture">capture()</h3>
+
+<blockquote>
+  <p><strong>capture</strong>(<code class="language-plaintext highlighter-rouge">eventName</code>, <code class="language-plaintext highlighter-rouge">properties?</code>, <code class="language-plaintext highlighter-rouge">options?</code>): <a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/QueuedEvent.html"><code class="language-plaintext highlighter-rouge">QueuedEvent</code></a> | <code class="language-plaintext highlighter-rouge">undefined</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L115">sdk/src/index.ts:115</a></p>
+
+<p>Capture a named event with optional properties.</p>
+
+<h4 id="parameters-1">Parameters</h4>
+
+<h5 id="eventname">eventName</h5>
+
+<p><code class="language-plaintext highlighter-rouge">string</code></p>
+
+<h5 id="properties">properties?</h5>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/CaptureProperties.html"><code class="language-plaintext highlighter-rouge">CaptureProperties</code></a> | <code class="language-plaintext highlighter-rouge">null</code></p>
+
+<h5 id="options">options?</h5>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/CaptureOptions.html"><code class="language-plaintext highlighter-rouge">CaptureOptions</code></a> = <code class="language-plaintext highlighter-rouge">{}</code></p>
+
+<h4 id="returns-2">Returns</h4>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/QueuedEvent.html"><code class="language-plaintext highlighter-rouge">QueuedEvent</code></a> | <code class="language-plaintext highlighter-rouge">undefined</code></p>
+
+<hr />
+
+<h3 id="flush">flush()</h3>
+
+<blockquote>
+  <p><strong>flush</strong>(<code class="language-plaintext highlighter-rouge">transport?</code>): <code class="language-plaintext highlighter-rouge">Promise</code>&lt;<code class="language-plaintext highlighter-rouge">void</code>&gt;</p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L305">sdk/src/index.ts:305</a></p>
+
+<p>Flush queued events using fetch or, when requested, sendBeacon.</p>
+
+<h4 id="parameters-2">Parameters</h4>
+
+<h5 id="transport">transport?</h5>
+
+<p><code class="language-plaintext highlighter-rouge">"fetch"</code> | <code class="language-plaintext highlighter-rouge">"sendBeacon"</code></p>
+
+<h4 id="returns-3">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">Promise</code>&lt;<code class="language-plaintext highlighter-rouge">void</code>&gt;</p>
+
+<hr />
+
+<h3 id="get_distinct_id">get_distinct_id()</h3>
+
+<blockquote>
+  <p><strong>get_distinct_id</strong>(): <code class="language-plaintext highlighter-rouge">string</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L261">sdk/src/index.ts:261</a></p>
+
+<p>Return the current distinct ID.</p>
+
+<h4 id="returns-4">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">string</code></p>
+
+<hr />
+
+<h3 id="get_property">get_property()</h3>
+
+<blockquote>
+  <p><strong>get_property</strong>(<code class="language-plaintext highlighter-rouge">property</code>): <code class="language-plaintext highlighter-rouge">unknown</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L274">sdk/src/index.ts:274</a></p>
+
+<p>Return a registered property value or the current distinct ID.</p>
+
+<h4 id="parameters-3">Parameters</h4>
+
+<h5 id="property">property</h5>
+
+<p><code class="language-plaintext highlighter-rouge">string</code></p>
+
+<h4 id="returns-5">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">unknown</code></p>
+
+<hr />
+
+<h3 id="get_session_id">get_session_id()</h3>
+
+<blockquote>
+  <p><strong>get_session_id</strong>(): <code class="language-plaintext highlighter-rouge">string</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L267">sdk/src/index.ts:267</a></p>
+
+<p>Return the current session ID, rotating the session first if it has expired.</p>
+
+<h4 id="returns-6">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">string</code></p>
+
+<hr />
+
+<h3 id="has_opted_out_capturing">has_opted_out_capturing()</h3>
+
+<blockquote>
+  <p><strong>has_opted_out_capturing</strong>(): <code class="language-plaintext highlighter-rouge">boolean</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L294">sdk/src/index.ts:294</a></p>
+
+<p>Return whether this client is currently opted out.</p>
+
+<h4 id="returns-7">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">boolean</code></p>
+
+<hr />
+
+<h3 id="identify">identify()</h3>
+
+<blockquote>
+  <p><strong>identify</strong>(<code class="language-plaintext highlighter-rouge">newDistinctId?</code>, <code class="language-plaintext highlighter-rouge">userPropertiesToSet?</code>, <code class="language-plaintext highlighter-rouge">userPropertiesToSetOnce?</code>): <code class="language-plaintext highlighter-rouge">void</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L164">sdk/src/index.ts:164</a></p>
+
+<p>Associate future events with a known user and optionally set person properties.</p>
+
+<h4 id="parameters-4">Parameters</h4>
+
+<h5 id="newdistinctid">newDistinctId?</h5>
+
+<p><code class="language-plaintext highlighter-rouge">string</code></p>
+
+<h5 id="userpropertiestoset">userPropertiesToSet?</h5>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/CaptureProperties.html"><code class="language-plaintext highlighter-rouge">CaptureProperties</code></a> = <code class="language-plaintext highlighter-rouge">{}</code></p>
+
+<h5 id="userpropertiestosetonce">userPropertiesToSetOnce?</h5>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/CaptureProperties.html"><code class="language-plaintext highlighter-rouge">CaptureProperties</code></a> = <code class="language-plaintext highlighter-rouge">{}</code></p>
+
+<h4 id="returns-8">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">void</code></p>
+
+<hr />
+
+<h3 id="init">init()</h3>
+
+<h4 id="call-signature">Call Signature</h4>
+
+<blockquote>
+  <p><strong>init</strong>(<code class="language-plaintext highlighter-rouge">token</code>, <code class="language-plaintext highlighter-rouge">config?</code>): <code class="language-plaintext highlighter-rouge">this</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L79">sdk/src/index.ts:79</a></p>
+
+<p>Initialize the client with a publishable API key and browser SDK options.</p>
+
+<h5 id="parameters-5">Parameters</h5>
+
+<h6 id="token">token</h6>
+
+<p><code class="language-plaintext highlighter-rouge">string</code></p>
+
+<h6 id="config">config?</h6>
+
+<p><code class="language-plaintext highlighter-rouge">Omit</code>&lt;<a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/InitOptions.html"><code class="language-plaintext highlighter-rouge">InitOptions</code></a>, <code class="language-plaintext highlighter-rouge">"apiKey"</code> | <code class="language-plaintext highlighter-rouge">"token"</code>&gt;</p>
+
+<h5 id="returns-9">Returns</h5>
+
+<p><code class="language-plaintext highlighter-rouge">this</code></p>
+
+<h4 id="call-signature-1">Call Signature</h4>
+
+<blockquote>
+  <p><strong>init</strong>(<code class="language-plaintext highlighter-rouge">config</code>): <code class="language-plaintext highlighter-rouge">this</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L81">sdk/src/index.ts:81</a></p>
+
+<p>Initialize the client with a complete options object.</p>
+
+<h5 id="parameters-6">Parameters</h5>
+
+<h6 id="config-1">config</h6>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/InitOptions.html"><code class="language-plaintext highlighter-rouge">InitOptions</code></a></p>
+
+<h5 id="returns-10">Returns</h5>
+
+<p><code class="language-plaintext highlighter-rouge">this</code></p>
+
+<hr />
+
+<h3 id="is_capturing">is_capturing()</h3>
+
+<blockquote>
+  <p><strong>is_capturing</strong>(): <code class="language-plaintext highlighter-rouge">boolean</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L300">sdk/src/index.ts:300</a></p>
+
+<p>Return whether this client will enqueue new events.</p>
+
+<h4 id="returns-11">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">boolean</code></p>
+
+<hr />
+
+<h3 id="opt_in_capturing">opt_in_capturing()</h3>
+
+<blockquote>
+  <p><strong>opt_in_capturing</strong>(): <code class="language-plaintext highlighter-rouge">void</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L287">sdk/src/index.ts:287</a></p>
+
+<p>Resume capturing events after an opt-out.</p>
+
+<h4 id="returns-12">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">void</code></p>
+
+<hr />
+
+<h3 id="opt_out_capturing">opt_out_capturing()</h3>
+
+<blockquote>
+  <p><strong>opt_out_capturing</strong>(): <code class="language-plaintext highlighter-rouge">void</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L280">sdk/src/index.ts:280</a></p>
+
+<p>Stop capturing events until <code class="language-plaintext highlighter-rouge">opt_in_capturing</code> is called.</p>
+
+<h4 id="returns-13">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">void</code></p>
+
+<hr />
+
+<h3 id="register">register()</h3>
+
+<blockquote>
+  <p><strong>register</strong>(<code class="language-plaintext highlighter-rouge">properties</code>): <code class="language-plaintext highlighter-rouge">void</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L233">sdk/src/index.ts:233</a></p>
+
+<p>Register properties that are attached to all future events.</p>
+
+<h4 id="parameters-7">Parameters</h4>
+
+<h5 id="properties-1">properties</h5>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/CaptureProperties.html"><code class="language-plaintext highlighter-rouge">CaptureProperties</code></a></p>
+
+<h4 id="returns-14">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">void</code></p>
+
+<hr />
+
+<h3 id="register_once">register_once()</h3>
+
+<blockquote>
+  <p><strong>register_once</strong>(<code class="language-plaintext highlighter-rouge">properties</code>, <code class="language-plaintext highlighter-rouge">defaultValue?</code>): <code class="language-plaintext highlighter-rouge">void</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L243">sdk/src/index.ts:243</a></p>
+
+<p>Register properties only when their current value is absent or equal to <code class="language-plaintext highlighter-rouge">defaultValue</code>.</p>
+
+<h4 id="parameters-8">Parameters</h4>
+
+<h5 id="properties-2">properties</h5>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/CaptureProperties.html"><code class="language-plaintext highlighter-rouge">CaptureProperties</code></a></p>
+
+<h5 id="defaultvalue">defaultValue?</h5>
+
+<p><code class="language-plaintext highlighter-rouge">unknown</code> = <code class="language-plaintext highlighter-rouge">'None'</code></p>
+
+<h4 id="returns-15">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">void</code></p>
+
+<hr />
+
+<h3 id="reset">reset()</h3>
+
+<blockquote>
+  <p><strong>reset</strong>(<code class="language-plaintext highlighter-rouge">resetDeviceId?</code>): <code class="language-plaintext highlighter-rouge">void</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L213">sdk/src/index.ts:213</a></p>
+
+<p>Reset local identity and session state, optionally generating a new device ID.</p>
+
+<h4 id="parameters-9">Parameters</h4>
+
+<h5 id="resetdeviceid">resetDeviceId?</h5>
+
+<p><code class="language-plaintext highlighter-rouge">boolean</code> = <code class="language-plaintext highlighter-rouge">false</code></p>
+
+<h4 id="returns-16">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">void</code></p>
+
+<hr />
+
+<h3 id="setpersonproperties">setPersonProperties()</h3>
+
+<blockquote>
+  <p><strong>setPersonProperties</strong>(<code class="language-plaintext highlighter-rouge">userPropertiesToSet?</code>, <code class="language-plaintext highlighter-rouge">userPropertiesToSetOnce?</code>): <code class="language-plaintext highlighter-rouge">void</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L197">sdk/src/index.ts:197</a></p>
+
+<p>Set or set-once person properties for the current distinct ID.</p>
+
+<h4 id="parameters-10">Parameters</h4>
+
+<h5 id="userpropertiestoset-1">userPropertiesToSet?</h5>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/CaptureProperties.html"><code class="language-plaintext highlighter-rouge">CaptureProperties</code></a> = <code class="language-plaintext highlighter-rouge">{}</code></p>
+
+<h5 id="userpropertiestosetonce-1">userPropertiesToSetOnce?</h5>
+
+<p><a href="/clickhouse-product-analytics/reference/sdk/sdk/src/type-aliases/CaptureProperties.html"><code class="language-plaintext highlighter-rouge">CaptureProperties</code></a> = <code class="language-plaintext highlighter-rouge">{}</code></p>
+
+<h4 id="returns-17">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">void</code></p>
+
+<hr />
+
+<h3 id="shutdown">shutdown()</h3>
+
+<blockquote>
+  <p><strong>shutdown</strong>(): <code class="language-plaintext highlighter-rouge">void</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L311">sdk/src/index.ts:311</a></p>
+
+<p>Remove lifecycle listeners and stop queue timers.</p>
+
+<h4 id="returns-18">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">void</code></p>
+
+<hr />
+
+<h3 id="unregister">unregister()</h3>
+
+<blockquote>
+  <p><strong>unregister</strong>(<code class="language-plaintext highlighter-rouge">property</code>): <code class="language-plaintext highlighter-rouge">void</code></p>
+</blockquote>
+
+<p>Defined in: <a href="https://github.com/marcklingen/clickhouse-product-analytics/blob/main/packages/sdk/src/index.ts#L254">sdk/src/index.ts:254</a></p>
+
+<p>Remove a registered super property from future events.</p>
+
+<h4 id="parameters-11">Parameters</h4>
+
+<h5 id="property-1">property</h5>
+
+<p><code class="language-plaintext highlighter-rouge">string</code></p>
+
+<h4 id="returns-19">Returns</h4>
+
+<p><code class="language-plaintext highlighter-rouge">void</code></p>
+
+
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>
