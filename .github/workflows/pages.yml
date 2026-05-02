@@ -213,6 +213,16 @@ jobs:
           source: ./docs
           destination: ./_site
 
+      - name: Rewrite preview links
+        run: |
+          set -euo pipefail
+
+          site_base="/${GITHUB_REPOSITORY#*/}/"
+          preview_base="${site_base}${PREVIEW_PATH}/"
+
+          find _site -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.xml' \) \
+            -exec sed -i "s|${site_base}|${preview_base}|g" {} +
+
       - name: Compose preview Pages tree
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
