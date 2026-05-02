@@ -2,6 +2,7 @@
   "title": "Project",
   "defaultOpen": true,
   "pages": [
+    "verification",
     "publishing",
     "agent-skill",
     "sdk-stability"

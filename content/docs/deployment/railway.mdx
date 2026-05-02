@@ -1,9 +1,9 @@
 ---
-title: Railway Deployment
+title: Railway
 description: Deploy the ingest service on Railway with ClickHouse or ClickHouse Cloud.
 ---
 
-# Railway Deployment
+# Railway
 
 Railway can run the ingest service container and connect it to ClickHouse Cloud or to a ClickHouse instance reachable from Railway. The repo does not need Railway-specific code; the service is configured entirely with environment variables.
 
@@ -33,10 +33,14 @@ Set these variables in Railway:
 
 | Variable | Value |
 | --- | --- |
+| `HOST` | Leave unset unless Railway requires an explicit bind host. The service defaults to `0.0.0.0`. |
 | `PORT` | `8080` or Railway's provided port if your deployment injects one. |
 | `LOG_LEVEL` | `warn` for production. Use `info` or `debug` only while diagnosing. |
 | `PUBLIC_API_KEYS` | Optional comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest. |
 | `ALLOWED_ORIGINS` | Comma-separated browser origins, for example `https://app.example.com`. |
+| `ALLOWED_HOSTS` | Optional comma-separated host allowlist. Prefer `ALLOWED_ORIGINS` unless host-level matching across schemes is intentional. |
+| `MAX_BATCH_BYTES` | Optional maximum request body size after decompression. Defaults to `20971520`. |
+| `MAX_EVENTS_PER_BATCH` | Optional maximum event count per batch. Defaults to `10000`. |
 | `CLICKHOUSE_URL` | ClickHouse HTTP or HTTPS URL. |
 | `CLICKHOUSE_USER` | ClickHouse user. |
 | `CLICKHOUSE_PASSWORD` | ClickHouse password. |
@@ -50,7 +54,6 @@ For ClickHouse Cloud, use the HTTPS endpoint from the cloud console, the cloud u
 Run migrations from a checkout before switching traffic:
 
 ```bash
-npm run build --workspace @clickhouse-product-analytics/ingest-service
 CLICKHOUSE_URL="https://<host>:8443" \
 CLICKHOUSE_USER="<user>" \
 CLICKHOUSE_PASSWORD="<password>" \

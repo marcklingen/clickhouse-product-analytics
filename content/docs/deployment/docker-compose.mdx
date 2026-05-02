@@ -1,15 +1,15 @@
 ---
-title: Deployment
-description: Local and production deployment model.
+title: Docker Compose
+description: Run the ingest service and ClickHouse with Docker Compose.
 ---
 
-# Deployment
+# Docker Compose
 
 The runtime stack is intentionally simple: one stateless ingest service and one ClickHouse database. The browser SDK and React package are built into your application bundle; backend services call the ingest API directly.
 
-For platform-specific deployment examples, see [Railway deployment](/operate/railway) and [Helm deployment](/operate/helm).
+For production platform examples, see [Helm deployment](/deployment/helm) and [Railway deployment](/deployment/railway).
 
-## Local Development
+## Local Stack
 
 ```bash
 cp .env.example .env
@@ -23,7 +23,7 @@ The Compose stack starts:
 - ClickHouse on `http://127.0.0.1:8123`
 - ingest service on `http://127.0.0.1:8080`
 
-`docker-compose.yml` pins ClickHouse to `clickhouse/clickhouse-server:26.3.9.8-alpine`, the current 26.3 stable release on the Alpine image track when this project was last verified. Keep this as a concrete version tag instead of `latest` so local development and E2E runs do not drift silently. Older LTS branches can receive newer patch dates, but this repo intentionally tracks the latest stable feature branch for local verification. If you need registry-level reproducibility, pin the image by digest in your deployment manifests.
+`docker-compose.yml` pins ClickHouse to `clickhouse/clickhouse-server:26.3.9.8-alpine`. Keep this as a concrete version tag instead of `latest` so local development and E2E runs do not drift silently. If you need registry-level reproducibility, pin the image by digest in your deployment manifests.
 
 Run the end-to-end verifier after the stack is healthy:
 
@@ -90,7 +90,6 @@ MIGRATE_ON_START=false
 Run migrations from a trusted environment that can reach the ClickHouse Cloud service:
 
 ```bash
-npm run build --workspace @clickhouse-product-analytics/ingest-service
 CLICKHOUSE_URL=https://<service-host>:8443 \
 CLICKHOUSE_USER=default \
 CLICKHOUSE_PASSWORD=<clickhouse-cloud-password> \
@@ -104,7 +103,9 @@ The browser SDK and React package do not connect to ClickHouse Cloud directly. T
 
 | Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
+| `HOST` | no | `0.0.0.0` | HTTP listen host. |
 | `PORT` | no | `8080` | HTTP listen port. |
+| `LOG_LEVEL` | no | `warn` | Service log level. Accepted values are `silent`, `fatal`, `error`, `warn`, `info`, `debug`, and `trace`. |
 | `PUBLIC_API_KEYS` | for no-origin backend ingest | empty | Comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest. Browser requests from allowed origins can omit `api_key`; provided keys are still validated. Include old and new keys during rotation. |
 | `ALLOWED_ORIGINS` | recommended | empty | Comma-separated browser origins accepted by CORS and source validation. |
 | `ALLOWED_HOSTS` | no | empty | Optional explicit host allowlist. Use only when host-level matching across schemes is intentional. |
@@ -173,15 +174,3 @@ Identity side effects (`$identify`, `$set`, `$set_once`, and `$create_alias`) ar
 ## ClickHouse Version Upgrades
 
 For local development, update the Compose image only after checking the current stable ClickHouse server tag and running the full verifier. For production, upgrade ClickHouse separately from the ingest service, run migrations against a staging database first, and verify the starter queries in `clickhouse-schema.md` before promoting the version.
-
-## GitHub Pages Docs
-
-The docs are a static Fumadocs/Next app in `apps/docs` with curated content under `content/docs`. GitHub Pages builds the app with `output: 'export'` and deploys the static `apps/docs/out` tree through `.github/workflows/pages.yml`.
-
-In the repository settings, configure:
-
-- **Pages > Build and deployment > Source**: GitHub Actions.
-
-Pushes to `main` that change docs app files, `content/docs/**`, `openapi/**`, generated reference output, the lockfile, or the Pages workflow rebuild and deploy the docs site.
-
-Same-repository pull requests get a docs preview when the PR changes docs and the latest push also touched docs-related files. The workflow publishes previews under `/pr-preview/pr-<number>/`, upserts one bot comment with the preview URL, and removes the preview when the PR is closed, merged, converted back to draft, or no longer changes docs.

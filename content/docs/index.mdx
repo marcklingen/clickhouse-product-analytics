@@ -47,10 +47,12 @@ flowchart LR
 
 - [Architecture](/operate/architecture): system boundaries, event flow, identity flow, and how the pieces fit together.
 - [ClickHouse schema](/operate/clickhouse-schema): table/view schemas, JSON property access, and query patterns for humans and agents.
-- [Deployment](/operate/deployment): local Docker Compose, ClickHouse Cloud, production container model, environment variables, and migration workflow.
-- [Railway deployment](/operate/railway): Railway container setup with ClickHouse or ClickHouse Cloud.
-- [Helm deployment](/operate/helm): Kubernetes chart, autoscaling defaults, and install examples.
-- [Verification](/operate/verification): what `npm run verify` and `npm run verify:e2e` prove.
+
+## Deployment
+
+- [Docker Compose](/deployment/docker-compose): local stack, ClickHouse Cloud connection details, production container model, environment variables, and migration workflow.
+- [Helm deployment](/deployment/helm): Kubernetes chart, autoscaling defaults, and install examples.
+- [Railway deployment](/deployment/railway): Railway container setup with ClickHouse or ClickHouse Cloud.
 
 ## Reference
 
@@ -58,6 +60,10 @@ flowchart LR
 - [OpenAPI spec](/reference/openapi): downloadable machine-readable API contract.
 - [SDK reference](/reference/sdk): generated browser SDK reference.
 - [React reference](/reference/react): generated React package reference.
+
+## Project
+
+- [Verification](/project/verification): what `npm run verify` and `npm run verify:e2e` prove.
 - [Publishing packages](/project/publishing): npm package dry-runs, Release It, and explicit publish commands.
 - [Coding agent skill](/project/agent-skill): repo-local skill for adding product analytics tracking with a coding agent.
 - [SDK stability review](/project/sdk-stability): production reliability notes from comparing against mature browser analytics SDK patterns.
