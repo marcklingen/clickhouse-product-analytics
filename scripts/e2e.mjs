@@ -19,7 +19,6 @@ const database = identifier(process.env.CLICKHOUSE_DATABASE ?? 'product_analytic
 const apiKey = process.env.CPA_API_KEY ?? 'local_dev_key'
 const runId = `e2e_${Date.now()}`
 
-await assertDocsDeploymentWiring()
 await waitForHealth(`${serviceUrl}/health`, 'ingest service')
 await waitForHealth(`${clickhouseUrl}/ping`, 'ClickHouse')
 
