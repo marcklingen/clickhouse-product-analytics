@@ -1,0 +1,57 @@
+{
+  "name": "@clickhouse-product-analytics/react",
+  "version": "0.1.0",
+  "description": "React bindings for ClickHouse Product Analytics",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcklingen/clickhouse-product-analytics.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/marcklingen/clickhouse-product-analytics#readme",
+  "bugs": {
+    "url": "https://github.com/marcklingen/clickhouse-product-analytics/issues"
+  },
+  "keywords": [
+    "clickhouse",
+    "analytics",
+    "product-analytics",
+    "react",
+    "nextjs"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "prepack": "npm run build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@clickhouse-product-analytics/sdk": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.2"
+  },
+  "sideEffects": false
+}

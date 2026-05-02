@@ -1,0 +1,144 @@
+---
+title: Verification
+description: Build, unit, and end-to-end verification.
+---
+
+# Verification
+
+The repo has two verification layers: package-level checks and a Docker-backed end-to-end test.
+
+## Package Verification
+
+Run:
+
+```bash
+npm run verify
+```
+
+This runs:
+
+- TypeScript project references with `tsc -b`
+- unit tests with Vitest
+- package builds for SDK, React, and ingest service
+
+Current unit coverage includes:
+
+- browser SDK queueing, identity, pageleave, alias, fetch compression, and transport behavior,
+- React provider, hook, and viewport tracking behavior,
+- ingest service validation, auth, CORS, compressed bodies, identity side effects, and request limits.
+
+## Reference Docs
+
+Run:
+
+```bash
+npm run docs:reference
+```
+
+This regenerates `docs/reference/sdk` from TypeScript source comments with TypeDoc. Run it after changing exported SDK or React APIs.
+
+## End-to-End Verification
+
+Start the local stack first:
+
+```bash
+docker compose up -d --build
+```
+
+Then run:
+
+```bash
+npm run verify:e2e
+```
+
+Clean up the local stack when finished:
+
+```bash
+docker compose down -v --remove-orphans
+```
+
+The E2E verifier builds the Next.js smoke app, exercises the documented browser SDK, React, direct API, identity, CORS, gzip, pageview/pageleave, autocapture, and docs deployment wiring flows, then queries ClickHouse for matching `events`, `persons`, `person_distinct_ids`, and `sessions` rows. Browser and React runtime flows are executed in a DOM harness; the Next.js smoke app is built to verify framework packaging.
+
+The E2E test asserts:
+
+- ingest and ClickHouse health checks,
+- `docs/index.md`, `docs/_config.yml`, and Pages workflow wiring,
+- Next.js smoke app build,
+- browser SDK custom capture,
+- `capture_pageview: "history_change"`,
+- `capture_pageview: true`,
+- `capture_pageview: false`,
+- `capture_pageleave: true`,
+- `capture_pageleave: "if_capture_pageview"`,
+- opt-out and opt-in behavior,
+- `before_send` mutation and dropping,
+- property denylist behavior,
+- autocapture for button clicks,
+- React `AnalyticsProvider`,
+- React `useAnalytics`,
+- React `AnalyticsCaptureOnViewed`,
+- React `trackAllChildren`,
+- direct single-event API,
+- direct batch API,
+- SDK fetch compression and direct gzip bodies,
+- `$identify`, `$set`, and `$set_once`,
+- separate-request anonymous-to-known identity stitching,
+- alias mapping through `person_distinct_ids`,
+- gzip request bodies,
+- allowed and disallowed origins,
+- invalid API key rejection,
+- max event count rejection,
+- existence of ClickHouse tables and views,
+- starter query shapes.
+
+Successful output looks like:
+
+```json
+{
+  "status": "ok",
+  "runId": "e2e_...",
+  "events": 20,
+  "persons": 3,
+  "sessions": 2
+}
+```
+
+## Docs Verification
+
+GitHub Pages builds the docs through `.github/workflows/pages.yml` using `actions/jekyll-build-pages`. Locally, the repo verifies the presence and wiring of docs files during E2E. The actual rendered Pages build is validated by GitHub Actions.
+
+## Deployment Artifact Checks
+
+The CI workflow at `.github/workflows/ci.yml` runs package verification, Docker Compose validation, Helm chart lint/render checks, and the Docker-backed E2E suite. The container workflow at `.github/workflows/container.yml` builds and publishes the ingest image to GitHub Container Registry only after CI succeeds on `main`.
+
+Validate deployment artifacts locally with:
+
+```bash
+docker compose config
+helm lint ./deploy/helm/clickhouse-product-analytics \
+  --set ingest.publicApiKeys=local_dev_key \
+  --set clickhouse.url=http://clickhouse:8123 \
+  --set clickhouse.user=analytics \
+  --set clickhouse.password=local_dev_password
+helm template cpa ./deploy/helm/clickhouse-product-analytics \
+  --set ingest.publicApiKeys=local_dev_key \
+  --set clickhouse.url=http://clickhouse:8123 \
+  --set clickhouse.user=analytics \
+  --set clickhouse.password=local_dev_password
+```
+
+Run the local ingest benchmark with:
+
+```bash
+npm run benchmark:ingest
+```
+
+Package publishability is checked with:
+
+```bash
+npm run release:dry-run
+```
+
+## When To Add E2E Coverage
+
+Add E2E assertions when documentation introduces a new public workflow, API shape, query pattern, or deployment guarantee. Unit tests are enough for internal helpers, but anything shown in `/docs` should either be exercised by `npm run verify:e2e` or explicitly documented as a static/CI-only check.

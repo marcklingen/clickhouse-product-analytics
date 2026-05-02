@@ -1,0 +1,11 @@
+title: ClickHouse Product Analytics
+description: First-party product analytics ingress for ClickHouse.
+theme: jekyll-theme-primer
+markdown: kramdown
+
+plugins:
+  - jekyll-relative-links
+
+relative_links:
+  enabled: true
+  collections: true

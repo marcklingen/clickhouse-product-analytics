@@ -1,0 +1,62 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service
+  pullPolicy: IfNotPresent
+  tag: latest
+  digest: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingest:
+  port: 8080
+  logLevel: warn
+  publicApiKeys: ""
+  allowedOrigins: ""
+  allowedHosts: ""
+  allowServerEventsWithoutOrigin: "true"
+  maxBatchBytes: "20971520"
+  maxEventsPerBatch: "10000"
+  migrateOnStart: "false"
+
+clickhouse:
+  url: ""
+  database: product_analytics
+  user: ""
+  password: ""
+  existingSecret: ""
+  existingSecretUserKey: username
+  existingSecretPasswordKey: password
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

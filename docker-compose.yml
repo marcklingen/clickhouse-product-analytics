@@ -1,0 +1,45 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.3.9.8-alpine
+    ports:
+      - "8123:8123"
+    environment:
+      CLICKHOUSE_DB: product_analytics
+      CLICKHOUSE_USER: analytics
+      CLICKHOUSE_PASSWORD: local_dev_password
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--user", "analytics", "--password", "local_dev_password", "--query", "SELECT 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+
+  ingest:
+    build:
+      context: .
+      dockerfile: packages/ingest-service/Dockerfile
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      LOG_LEVEL: warn
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: analytics
+      CLICKHOUSE_PASSWORD: local_dev_password
+      CLICKHOUSE_DATABASE: product_analytics
+      PUBLIC_API_KEYS: local_dev_key
+      ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN: "true"
+      MIGRATE_ON_START: "true"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  clickhouse-data:

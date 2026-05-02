@@ -1,0 +1,95 @@
+---
+title: Helm Deployment
+description: Install the ingest service on Kubernetes with autoscaling.
+---
+
+# Helm Deployment
+
+The Helm chart in `deploy/helm/clickhouse-product-analytics` deploys the ingest service to Kubernetes. It does not deploy ClickHouse. Point it at ClickHouse Cloud or an existing in-cluster ClickHouse service.
+
+## Render Locally
+
+```bash
+helm template cpa ./deploy/helm/clickhouse-product-analytics \
+  --set ingest.publicApiKeys=local_dev_key \
+  --set clickhouse.url=http://clickhouse:8123 \
+  --set clickhouse.user=analytics \
+  --set clickhouse.password=local_dev_password
+```
+
+## Install
+
+```bash
+helm upgrade --install cpa ./deploy/helm/clickhouse-product-analytics \
+  --namespace analytics \
+  --create-namespace \
+  --set image.repository=ghcr.io/<owner>/<repo>/ingest-service \
+  --set image.tag=sha-<commit> \
+  --set ingest.publicApiKeys="<publishable-key>" \
+  --set ingest.allowedOrigins="https://app.example.com" \
+  --set clickhouse.url="https://<clickhouse-cloud-host>:8443" \
+  --set clickhouse.database="product_analytics" \
+  --set clickhouse.user="<user>" \
+  --set clickhouse.password="<password>"
+```
+
+Use an existing Kubernetes secret for ClickHouse credentials when possible:
+
+```bash
+helm upgrade --install cpa ./deploy/helm/clickhouse-product-analytics \
+  --set ingest.publicApiKeys="<publishable-key>" \
+  --set clickhouse.url="https://<clickhouse-cloud-host>:8443" \
+  --set clickhouse.existingSecret=clickhouse-credentials
+```
+
+The existing secret must contain keys named `username` and `password` unless you override `clickhouse.existingSecretUserKey` and `clickhouse.existingSecretPasswordKey`.
+
+Use `image.tag=latest` only for quick trials. Production rollouts should use the `sha-<commit>` tag published by the container workflow or a digest-pinned image:
+
+```bash
+helm upgrade --install cpa ./deploy/helm/clickhouse-product-analytics \
+  --set image.repository=ghcr.io/<owner>/<repo>/ingest-service \
+  --set image.digest=sha256:<digest> \
+  --set ingest.publicApiKeys="<publishable-key>" \
+  --set clickhouse.url="https://<clickhouse-cloud-host>:8443" \
+  --set clickhouse.existingSecret=clickhouse-credentials
+```
+
+`clickhouse.url` is required. Rendering fails early when it is missing so an invalid deployment is not applied.
+
+## Autoscaling Defaults
+
+Autoscaling is enabled by default:
+
+| Value | Default |
+| --- | --- |
+| `autoscaling.minReplicas` | `2` |
+| `autoscaling.maxReplicas` | `10` |
+| `autoscaling.targetCPUUtilizationPercentage` | `70` |
+| `autoscaling.targetMemoryUtilizationPercentage` | `80` |
+
+The chart also sets resource requests and limits so the HPA has stable utilization signals. Tune these values after observing real traffic and ClickHouse insert latency.
+
+## Migrations
+
+Run migrations from a checkout before deploying a new schema:
+
+```bash
+CLICKHOUSE_URL="https://<clickhouse-cloud-host>:8443" \
+CLICKHOUSE_USER="<user>" \
+CLICKHOUSE_PASSWORD="<password>" \
+CLICKHOUSE_DATABASE="product_analytics" \
+npm run migrate
+```
+
+For a Kubernetes-only network path, run a one-off pod or job with the same image and environment variables, then execute the compiled migration entrypoint from the image:
+
+```bash
+CLICKHOUSE_URL="https://<clickhouse-cloud-host>:8443" \
+CLICKHOUSE_USER="<user>" \
+CLICKHOUSE_PASSWORD="<password>" \
+CLICKHOUSE_DATABASE="product_analytics" \
+node dist/migrate.js
+```
+
+Production charts default `MIGRATE_ON_START` to `false` so every replica does not attempt schema migration on startup.

@@ -1,0 +1,82 @@
+---
+title: Railway Deployment
+description: Deploy the ingest service on Railway with ClickHouse or ClickHouse Cloud.
+---
+
+# Railway Deployment
+
+Railway can run the ingest service container and connect it to ClickHouse Cloud or to a ClickHouse instance reachable from Railway. The repo does not need Railway-specific code; the service is configured entirely with environment variables.
+
+## Recommended Shape
+
+Use one Railway service for the ingest container and an external ClickHouse database. ClickHouse Cloud is the simplest production target because it provides a managed HTTPS endpoint, user, password, and database. A self-managed ClickHouse service also works if Railway can reach its HTTP interface.
+
+## Container Source
+
+Use the Dockerfile at:
+
+```text
+packages/ingest-service/Dockerfile
+```
+
+After the GitHub Container Registry workflow has run on `main`, Railway can also deploy the published image:
+
+```text
+ghcr.io/<owner>/<repo>/ingest-service:sha-<commit>
+```
+
+Use `latest` only for quick trials. Production deployments should use the `sha-<commit>` tag for the commit that passed CI or the digest-pinned GHCR reference `ghcr.io/<owner>/<repo>/ingest-service@sha256:<digest>`.
+
+## Environment Variables
+
+Set these variables in Railway:
+
+| Variable | Value |
+| --- | --- |
+| `PORT` | `8080` or Railway's provided port if your deployment injects one. |
+| `LOG_LEVEL` | `warn` for production. Use `info` or `debug` only while diagnosing. |
+| `PUBLIC_API_KEYS` | Comma-separated publishable keys accepted by the service. |
+| `ALLOWED_ORIGINS` | Comma-separated browser origins, for example `https://app.example.com`. |
+| `ALLOW_SERVER_EVENTS_WITHOUT_ORIGIN` | `true` if backend services send events without an `Origin` header. |
+| `CLICKHOUSE_URL` | ClickHouse HTTP or HTTPS URL. |
+| `CLICKHOUSE_USER` | ClickHouse user. |
+| `CLICKHOUSE_PASSWORD` | ClickHouse password. |
+| `CLICKHOUSE_DATABASE` | Analytics database, for example `product_analytics`. |
+| `MIGRATE_ON_START` | `false` for production. Run migrations as an explicit deploy step. |
+
+For ClickHouse Cloud, use the HTTPS endpoint from the cloud console, the cloud user/password, and keep TLS enabled by using `https://`.
+
+## Migrations
+
+Run migrations from a checkout before switching traffic:
+
+```bash
+npm run build --workspace @clickhouse-product-analytics/ingest-service
+CLICKHOUSE_URL="https://<host>:8443" \
+CLICKHOUSE_USER="<user>" \
+CLICKHOUSE_PASSWORD="<password>" \
+CLICKHOUSE_DATABASE="product_analytics" \
+npm run migrate
+```
+
+If Railway is the only environment with network access to ClickHouse, run a one-off Railway command against the deployed container image with the same production variables:
+
+```bash
+node dist/migrate.js
+```
+
+The production image sets its working directory to the ingest service package, so `dist/migrate.js` is available without TypeScript source files or development dependencies.
+
+## Health Check
+
+Configure Railway to check:
+
+```text
+/health
+```
+
+The endpoint returns `200` when the HTTP service is alive. It does not run a ClickHouse query on every health check.
+
+## Template Status
+
+A Railway template would mainly prefill the Dockerfile path and environment variable names. It is not required for the current deployment model, but it would make sense once the package names, GHCR image name, and recommended ClickHouse Cloud setup are stable.

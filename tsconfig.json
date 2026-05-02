@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/sdk"
+    },
+    {
+      "path": "./packages/react"
+    },
+    {
+      "path": "./packages/ingest-service"
+    }
+  ]
+}

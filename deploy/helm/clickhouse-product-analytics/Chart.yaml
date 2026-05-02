@@ -1,0 +1,6 @@
+apiVersion: v2
+name: clickhouse-product-analytics
+description: HTTP ingest service for ClickHouse Product Analytics
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
