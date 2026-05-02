@@ -27,7 +27,6 @@ ingest:
   logLevel: warn
   publicApiKeys: ""
   allowedOrigins: ""
-  allowedHosts: ""
   maxBatchBytes: "20971520"
   maxEventsPerBatch: "10000"
   migrateOnStart: "false"

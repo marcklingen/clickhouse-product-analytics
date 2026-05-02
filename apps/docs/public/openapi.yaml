@@ -41,7 +41,7 @@ paths:
           schema:
             type: string
             format: uri
-          description: Browser origin. When present, it must match `ALLOWED_ORIGINS` or `ALLOWED_HOSTS`.
+          description: Browser origin. When present, it must exactly match `ALLOWED_ORIGINS`.
         - name: Content-Encoding
           in: header
           required: false

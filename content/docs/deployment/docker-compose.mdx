@@ -106,7 +106,6 @@ The browser SDK and React package do not connect to ClickHouse Cloud directly. T
 | `LOG_LEVEL` | no | `warn` | Service log level. Accepted values are `silent`, `fatal`, `error`, `warn`, `info`, `debug`, and `trace`. |
 | `PUBLIC_API_KEYS` | for no-origin backend ingest | empty | Comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest. Browser requests from allowed origins can omit `api_key`; provided keys are still validated. Include old and new keys during rotation. |
 | `ALLOWED_ORIGINS` | recommended | empty | Comma-separated browser origins accepted by CORS and source validation. |
-| `ALLOWED_HOSTS` | no | empty | Optional explicit host allowlist. Use only when host-level matching across schemes is intentional. |
 | `MAX_BATCH_BYTES` | no | `20971520` | Maximum request body size after decompression. |
 | `MAX_EVENTS_PER_BATCH` | no | `10000` | Maximum number of events in a batch request. |
 | `CLICKHOUSE_URL` | no | `http://localhost:8123` | ClickHouse HTTP endpoint. Use `https://<service-host>:8443` for ClickHouse Cloud. |

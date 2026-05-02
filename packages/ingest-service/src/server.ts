@@ -172,14 +172,7 @@ function authorizeRequest(config: ServiceConfig, origin: string | undefined, api
 }
 
 function isAllowedOrigin(config: ServiceConfig, origin: string): boolean {
-  if (config.allowedOrigins.has(origin)) {
-    return true
-  }
-  try {
-    return config.allowedHosts.has(new URL(origin).host)
-  } catch {
-    return false
-  }
+  return config.allowedOrigins.has(origin)
 }
 
 function withEncodedLength<T extends NodeJS.ReadableStream>(stream: T, contentLength: string | undefined): T {

@@ -36,7 +36,6 @@ Set these variables in Railway:
 | `LOG_LEVEL` | `warn` for production. Use `info` or `debug` only while diagnosing. |
 | `PUBLIC_API_KEYS` | Optional comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest. |
 | `ALLOWED_ORIGINS` | Comma-separated browser origins, for example `https://app.example.com`. |
-| `ALLOWED_HOSTS` | Optional comma-separated host allowlist. Prefer `ALLOWED_ORIGINS` unless host-level matching across schemes is intentional. |
 | `MAX_BATCH_BYTES` | Optional maximum request body size after decompression. Defaults to `20971520`. |
 | `MAX_EVENTS_PER_BATCH` | Optional maximum event count per batch. Defaults to `10000`. |
 | `CLICKHOUSE_URL` | ClickHouse HTTP or HTTPS URL. |

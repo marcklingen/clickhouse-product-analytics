@@ -4,7 +4,6 @@ export type ServiceConfig = {
   logLevel: 'silent' | 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
   publicApiKeys: Set<string>
   allowedOrigins: Set<string>
-  allowedHosts: Set<string>
   maxBatchBytes: number
   maxEventsPerBatch: number
   clickhouse: {
@@ -18,7 +17,6 @@ export type ServiceConfig = {
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServiceConfig {
   const publicApiKeys = csv(env.PUBLIC_API_KEYS)
   const allowedOrigins = csv(env.ALLOWED_ORIGINS)
-  const allowedHosts = csv(env.ALLOWED_HOSTS)
 
   return {
     host: env.HOST ?? '0.0.0.0',
@@ -26,7 +24,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServiceConfig 
     logLevel: logLevelEnv(env.LOG_LEVEL, 'warn'),
     publicApiKeys: new Set(publicApiKeys),
     allowedOrigins: new Set(allowedOrigins),
-    allowedHosts: new Set(allowedHosts),
     maxBatchBytes: numberEnv(env.MAX_BATCH_BYTES, 20 * 1024 * 1024),
     maxEventsPerBatch: numberEnv(env.MAX_EVENTS_PER_BATCH, 10_000),
     clickhouse: {

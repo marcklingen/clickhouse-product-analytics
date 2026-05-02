@@ -159,7 +159,6 @@ Environment variables:
 - `LOG_LEVEL`: service log level, default `warn`.
 - `PUBLIC_API_KEYS`: optional comma-separated API keys. No-origin backend requests require one of these keys; leave empty to disable no-origin backend ingest. Browser requests from `ALLOWED_ORIGINS` can omit `api_key`; if they provide one, it must match this list. Keep old and new keys in the list during rotation.
 - `ALLOWED_ORIGINS`: comma-separated browser origins allowed by CORS and source validation.
-- `ALLOWED_HOSTS`: optional explicit host allowlist for accepting requests across schemes on those hosts.
 - `MAX_BATCH_BYTES`: request body limit, default 20 MB.
 - `MAX_EVENTS_PER_BATCH`: event count limit, default 10,000.
 - `CLICKHOUSE_URL`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`: ClickHouse connection.
