@@ -20,7 +20,7 @@
     "docs:typecheck": "npm run typecheck --workspace @clickhouse-product-analytics/docs",
     "docs:validate": "npm run validate --workspace @clickhouse-product-analytics/docs",
     "migrate": "npm run build --workspace @clickhouse-product-analytics/ingest-service && npm run migrate --workspace @clickhouse-product-analytics/ingest-service",
-    "docs:reference": "typedoc && node scripts/normalize-typedoc.mjs",
+    "docs:reference": "npm run build --workspace @clickhouse-product-analytics/react && typedoc && node scripts/normalize-typedoc.mjs",
     "benchmark:ingest": "npm run build --workspace @clickhouse-product-analytics/ingest-service && node scripts/benchmark-ingest.mjs",
     "release": "release-it",
     "release:check-version": "node scripts/check-sdk-version.mjs",
