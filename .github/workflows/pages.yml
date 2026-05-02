@@ -124,6 +124,8 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Build Markdown docs
         uses: actions/jekyll-build-pages@v1
@@ -201,6 +203,8 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Build Markdown docs
         uses: actions/jekyll-build-pages@v1
