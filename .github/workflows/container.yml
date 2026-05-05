@@ -8,6 +8,10 @@ on:
       - completed
     branches:
       - main
+  # Temporary validation path for the add-arm-image PR. Remove before merging.
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -24,19 +28,38 @@ jobs:
   build-and-publish:
     name: Build and publish ingest image
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    timeout-minutes: 45
+    if: >-
+      (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push') ||
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.head.ref == 'add-arm-image')
 
     steps:
-      - name: Checkout
+      - name: Checkout main publish commit
+        if: github.event_name == 'workflow_run'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
+      - name: Checkout PR publish commit
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Verify current main commit
+        if: github.event_name == 'workflow_run'
         run: |
           git fetch origin main --depth=1
           test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -54,16 +77,27 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,prefix=sha-
+            type=raw,value=main,enable=${{ github.event_name == 'workflow_run' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_run' }}
+            type=sha,prefix=sha-,enable=${{ github.event_name == 'workflow_run' }}
+            type=raw,value=pr-${{ github.event.pull_request.number }},enable=${{ github.event_name == 'pull_request' }}
+            type=raw,value=pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }},enable=${{ github.event_name == 'pull_request' }}
 
       - name: Build and publish
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           file: packages/ingest-service/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Verify published platforms
+        run: |
+          docker buildx imagetools inspect "${IMAGE_NAME}@${{ steps.build.outputs.digest }}" | tee manifest.txt
+          grep -q 'Platform:.*linux/amd64' manifest.txt
+          grep -q 'Platform:.*linux/arm64' manifest.txt

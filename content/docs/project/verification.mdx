@@ -115,7 +115,7 @@ GitHub Pages builds the docs through `.github/workflows/pages.yml` with `npm run
 
 ## Deployment Artifact Checks
 
-The CI workflow at `.github/workflows/ci.yml` runs package verification, Docker Compose validation, Helm chart lint/render checks, and the Docker-backed E2E suite. The container workflow at `.github/workflows/container.yml` builds and publishes the ingest image to GitHub Container Registry only after CI succeeds on `main`.
+The CI workflow at `.github/workflows/ci.yml` runs package verification, Docker Compose validation, Helm chart lint/render checks, and the Docker-backed E2E suite. The container workflow at `.github/workflows/container.yml` builds and publishes the ingest image to GitHub Container Registry only after CI succeeds on `main`, producing `linux/amd64` and `linux/arm64` images under the same GHCR tags. The publish job then inspects the pushed manifest digest and fails if either platform is missing.
 
 Validate deployment artifacts locally with:
 
