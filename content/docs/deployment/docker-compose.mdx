@@ -63,10 +63,13 @@ The published ingest service image is:
 
 ```text
 ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:sha-<commit>
+ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:main
 ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:latest
 ```
 
-Use the `sha-<commit>` tag for production rollouts, or the image digest reported by GHCR after the publish job completes. The mutable `latest` tag is useful for quick trials but should not be the rollout target for a stable environment. For the strictest rollout, deploy `ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service@sha256:<digest>`.
+Each published tag is a multi-platform image for `linux/amd64` and `linux/arm64`.
+
+Use the `sha-<commit>` tag for production rollouts, or the image digest reported by GHCR after the publish job completes. The `main` tag follows the latest successful `main` publish. The mutable `latest` tag is useful for quick trials but should not be the rollout target for a stable environment. For the strictest rollout, deploy `ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service@sha256:<digest>`.
 
 ## ClickHouse Cloud
 

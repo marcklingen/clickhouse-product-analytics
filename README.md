@@ -44,8 +44,11 @@ docker compose -f docker-compose-build.yml up -d --build
 Published ingest service image:
 
 ```text
+ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:main
 ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:latest
 ```
+
+The GHCR tags are published as multi-platform images for `linux/amd64` and `linux/arm64`.
 
 ## Documentation
 
