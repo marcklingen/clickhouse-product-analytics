@@ -41,6 +41,12 @@ The default Compose stack pins `clickhouse/clickhouse-server:26.3.9.8-alpine` an
 docker compose -f docker-compose-build.yml up -d --build
 ```
 
+Published ingest service image:
+
+```text
+ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:latest
+```
+
 ## Documentation
 
 See the [deployed documentation site](https://marcklingen.github.io/clickhouse-product-analytics/) for setup, SDK usage, API reference, deployment, and operations.

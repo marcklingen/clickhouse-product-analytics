@@ -17,13 +17,19 @@ Use the Dockerfile at:
 packages/ingest-service/Dockerfile
 ```
 
-After the GitHub Container Registry workflow has run on `main`, Railway can also deploy the published image:
+Railway can deploy the published image:
 
 ```text
-ghcr.io/<owner>/<repo>/ingest-service:sha-<commit>
+ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:sha-<commit>
 ```
 
-Use `latest` only for quick trials. Production deployments should use the `sha-<commit>` tag for the commit that passed CI or the digest-pinned GHCR reference `ghcr.io/<owner>/<repo>/ingest-service@sha256:<digest>`.
+For quick trials, use:
+
+```text
+ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:latest
+```
+
+Use `latest` only for quick trials. Production deployments should use the `sha-<commit>` tag for the commit that passed CI or the digest-pinned GHCR reference `ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service@sha256:<digest>`.
 
 ## Environment Variables
 

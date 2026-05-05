@@ -59,16 +59,14 @@ The ingest service does not require Redis, Postgres, Kafka, object storage, or a
 
 ## Container Image
 
-`.github/workflows/container.yml` builds `packages/ingest-service/Dockerfile` and publishes the image after CI succeeds for pushes to `main`. The image build uses a pinned Node base-image digest and lockfile-strict `npm ci` installs:
+The published ingest service image is:
 
 ```text
-ghcr.io/<owner>/<repo>/ingest-service:sha-<commit>
-ghcr.io/<owner>/<repo>/ingest-service:latest
+ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:sha-<commit>
+ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:latest
 ```
 
-Use the `sha-<commit>` tag for production rollouts, or the image digest reported by GHCR after the publish job completes. The mutable `latest` tag is useful for quick trials but should not be the rollout target for a stable environment. For the strictest rollout, deploy `ghcr.io/<owner>/<repo>/ingest-service@sha256:<digest>`.
-
-The container publishing workflow runs after the `CI` workflow succeeds on `main`, so the image is gated by package verification, Docker Compose validation, Helm render/lint checks, and Docker-backed E2E tests.
+Use the `sha-<commit>` tag for production rollouts, or the image digest reported by GHCR after the publish job completes. The mutable `latest` tag is useful for quick trials but should not be the rollout target for a stable environment. For the strictest rollout, deploy `ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service@sha256:<digest>`.
 
 ## ClickHouse Cloud
 

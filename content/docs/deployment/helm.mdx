@@ -21,7 +21,7 @@ helm template cpa ./deploy/helm/clickhouse-product-analytics \
 helm upgrade --install cpa ./deploy/helm/clickhouse-product-analytics \
   --namespace analytics \
   --create-namespace \
-  --set image.repository=ghcr.io/<owner>/<repo>/ingest-service \
+  --set image.repository=ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service \
   --set image.tag=sha-<commit> \
   --set ingest.publicApiKeys="<backend-key-old>,<backend-key-new>" \
   --set ingest.allowedOrigins="https://app.example.com" \
@@ -42,11 +42,11 @@ helm upgrade --install cpa ./deploy/helm/clickhouse-product-analytics \
 
 The existing secret must contain keys named `username` and `password` unless you override `clickhouse.existingSecretUserKey` and `clickhouse.existingSecretPasswordKey`.
 
-Use `image.tag=latest` only for quick trials. Production rollouts should use the `sha-<commit>` tag published by the container workflow or a digest-pinned image:
+Use `image.tag=latest` only for quick trials. Production rollouts should use a `sha-<commit>` tag or a digest-pinned image:
 
 ```bash
 helm upgrade --install cpa ./deploy/helm/clickhouse-product-analytics \
-  --set image.repository=ghcr.io/<owner>/<repo>/ingest-service \
+  --set image.repository=ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service \
   --set image.digest=sha256:<digest> \
   --set ingest.publicApiKeys="<backend-key-old>,<backend-key-new>" \
   --set clickhouse.url="https://<clickhouse-cloud-host>:8443" \
