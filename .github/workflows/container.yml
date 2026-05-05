@@ -8,6 +8,10 @@ on:
       - completed
     branches:
       - main
+  # Temporary validation path for the add-arm-image PR. Remove before merging.
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -25,15 +29,29 @@ jobs:
     name: Build and publish ingest image
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    if: >-
+      (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push') ||
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.head.ref == 'add-arm-image')
 
     steps:
-      - name: Checkout
+      - name: Checkout main publish commit
+        if: github.event_name == 'workflow_run'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
+      - name: Checkout PR publish commit
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Verify current main commit
+        if: github.event_name == 'workflow_run'
         run: |
           git fetch origin main --depth=1
           test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
@@ -62,6 +80,8 @@ jobs:
             type=raw,value=main,enable=${{ github.event_name == 'workflow_run' }}
             type=raw,value=latest,enable=${{ github.event_name == 'workflow_run' }}
             type=sha,prefix=sha-,enable=${{ github.event_name == 'workflow_run' }}
+            type=raw,value=pr-${{ github.event.pull_request.number }},enable=${{ github.event_name == 'pull_request' }}
+            type=raw,value=pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }},enable=${{ github.event_name == 'pull_request' }}
 
       - name: Build and publish
         id: build
