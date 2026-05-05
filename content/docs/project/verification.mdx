@@ -45,10 +45,10 @@ npm run docs:validate
 
 ## End-to-End Verification
 
-Start the local stack first:
+Start the source-build local stack first:
 
 ```bash
-docker compose up -d --build
+docker compose -f docker-compose-build.yml up -d --build
 ```
 
 Then run:
@@ -60,10 +60,10 @@ npm run verify:e2e
 Clean up the local stack when finished:
 
 ```bash
-docker compose down -v --remove-orphans
+docker compose -f docker-compose-build.yml down -v --remove-orphans
 ```
 
-The E2E verifier builds the Next.js smoke app, exercises the documented browser SDK, React, direct API, identity, CORS, gzip, pageview/pageleave, autocapture, and docs deployment wiring flows, then queries ClickHouse for matching `events`, `persons`, `person_distinct_ids`, and `sessions` rows. Browser and React runtime flows are executed in a DOM harness; the Next.js smoke app is built to verify framework packaging.
+The E2E verifier builds the Next.js smoke app, exercises the documented browser SDK, React, direct API, identity, CORS, gzip, pageview/pageleave, autocapture, and docs deployment wiring flows, then queries ClickHouse for matching `events`, `persons`, `person_distinct_ids`, and `sessions` rows. Browser and React runtime flows are executed in a DOM harness; the Next.js smoke app is built to verify framework packaging. Use `docker-compose-build.yml` here so ingest service changes in the current checkout are tested instead of the prebuilt GHCR image from the default compose stack.
 
 The E2E test asserts:
 
@@ -121,6 +121,7 @@ Validate deployment artifacts locally with:
 
 ```bash
 docker compose config
+docker compose -f docker-compose-build.yml config
 helm lint ./deploy/helm/clickhouse-product-analytics \
   --set ingest.publicApiKeys=local_dev_key \
   --set clickhouse.url=http://clickhouse:8123 \

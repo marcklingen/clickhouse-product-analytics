@@ -44,7 +44,9 @@ jobs:
         uses: azure/setup-helm@v4
 
       - name: Validate Docker Compose config
-        run: docker compose config
+        run: |
+          docker compose config
+          docker compose -f docker-compose-build.yml config
 
       - name: Lint Helm chart
         run: |
@@ -68,10 +70,10 @@ jobs:
           docker compose version
 
       - name: Start E2E stack
-        run: docker compose up -d --build
+        run: docker compose -f docker-compose-build.yml up -d --build
 
       - name: Show E2E stack status
-        run: docker compose ps
+        run: docker compose -f docker-compose-build.yml ps
 
       - name: Run E2E tests
         run: npm run verify:e2e
@@ -85,8 +87,8 @@ jobs:
 
       - name: Dump Docker logs on failure
         if: failure()
-        run: docker compose logs --no-color --timestamps
+        run: docker compose -f docker-compose-build.yml logs --no-color --timestamps
 
       - name: Stop E2E stack
         if: always()
-        run: docker compose down -v --remove-orphans
+        run: docker compose -f docker-compose-build.yml down -v --remove-orphans

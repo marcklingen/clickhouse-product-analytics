@@ -14,14 +14,14 @@ npm run dev:next
 Start the ingest stack separately when you want events to be accepted:
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
 The E2E verifier builds this example automatically, but it still expects the ingest service and ClickHouse to be running:
 
 ```bash
 npm run build:packages
-docker compose up -d --build
+docker compose -f docker-compose-build.yml up -d --build
 npm run verify:e2e
 ```
 

@@ -7,7 +7,7 @@ This example sends one backend-style event to the ingest service as a one-item `
 Start the local stack:
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
 Send the event:

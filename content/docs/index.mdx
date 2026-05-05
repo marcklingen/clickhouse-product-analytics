@@ -71,7 +71,7 @@ flowchart LR
 cp .env.example .env
 npm install
 npm run build:packages
-docker compose up -d --build
+docker compose up -d
 npm run verify:e2e
 ```
 

@@ -11,9 +11,7 @@ For production platform examples, see [Helm deployment](/deployment/helm) and [R
 
 ```bash
 cp .env.example .env
-npm install
-npm run build:packages
-docker compose up -d --build
+docker compose up -d
 ```
 
 The Compose stack starts:
@@ -21,19 +19,27 @@ The Compose stack starts:
 - ClickHouse on `http://127.0.0.1:8123`
 - ingest service on `http://127.0.0.1:8080`
 
-`docker-compose.yml` pins ClickHouse to `clickhouse/clickhouse-server:26.3.9.8-alpine`. Keep this as a concrete version tag instead of `latest` so local development and E2E runs do not drift silently. If you need registry-level reproducibility, pin the image by digest in your deployment manifests.
-
-Run the end-to-end verifier after the stack is healthy:
-
-```bash
-npm run verify:e2e
-```
+`docker-compose.yml` pins ClickHouse to `clickhouse/clickhouse-server:26.3.9.8-alpine` and runs the prebuilt `ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:latest` image. It does not build from the local checkout. Keep concrete image tags instead of floating tags when you need reproducible deployment manifests, and pin by digest for registry-level reproducibility.
 
 Stop the local stack when finished:
 
 ```bash
 docker compose down
 ```
+
+## Build From Source
+
+Use `docker-compose-build.yml` for CI, contribution checks, and local validation of ingest service changes from this checkout:
+
+```bash
+npm install
+npm run build:packages
+docker compose -f docker-compose-build.yml up -d --build
+npm run verify:e2e
+docker compose -f docker-compose-build.yml down -v --remove-orphans
+```
+
+`docker-compose-build.yml` keeps the same ClickHouse, environment, ports, health checks, and migration-on-start behavior as the default stack, but replaces the GHCR ingest image with `build.context: .` and `packages/ingest-service/Dockerfile`.
 
 ## Production Shape
 

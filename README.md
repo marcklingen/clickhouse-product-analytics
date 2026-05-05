@@ -13,7 +13,8 @@ The repo scope is intentionally narrow: own the first mile of product analytics 
 - **React bindings** (`packages/react`): provider, hook, and viewport tracking component for React and Next.js apps.
 - **HTTP ingest service** (`packages/ingest-service`): origin and API-key validation, CORS/origin allowlisting, compressed request handling, event normalization, person linking, and ClickHouse writes.
 - **ClickHouse migrations** (`packages/ingest-service/migrations`): `events`, `persons`, and `person_distinct_ids` tables plus the `sessions` view.
-- **Local stack** (`docker-compose.yml`): ClickHouse plus ingest service with migration-on-start for development.
+- **Local stack** (`docker-compose.yml`): ClickHouse plus the prebuilt GHCR ingest image with migration-on-start for development.
+- **Source-build stack** (`docker-compose-build.yml`): same services, but builds the ingest image from this checkout.
 - **Examples** (`examples`): a Next.js browser smoke app and direct backend API capture script.
 - **Docs**: static docs site, generated reference pages, and the committed OpenAPI spec.
 - **Attribution** (`ATTRIBUTION.md`, `THIRD_PARTY_NOTICES.md`): upstream inspiration and license notes.
@@ -24,7 +25,7 @@ The repo scope is intentionally narrow: own the first mile of product analytics 
 cp .env.example .env
 npm install
 npm run build:packages
-docker compose up -d --build
+docker compose up -d
 npm run verify:e2e
 ```
 
@@ -34,7 +35,11 @@ The local stack exposes:
 - ClickHouse HTTP API: `http://127.0.0.1:8123`
 - Development backend API key: `local_dev_key`
 
-The Compose stack pins `clickhouse/clickhouse-server:26.3.9.8-alpine` so local development and E2E verification use the current 26.3 stable ClickHouse release without depending on a floating image tag. If you need registry-level reproducibility, pin the same image by digest in your own deployment.
+The default Compose stack pins `clickhouse/clickhouse-server:26.3.9.8-alpine` and runs the prebuilt `ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:latest` image. Use `docker-compose-build.yml` when you want Docker to build the ingest image from this checkout:
+
+```bash
+docker compose -f docker-compose-build.yml up -d --build
+```
 
 ## Documentation
 
@@ -168,7 +173,7 @@ Environment variables:
 
 ```bash
 npm run verify
-docker compose up -d --build
+docker compose -f docker-compose-build.yml up -d --build
 npm run verify:e2e
 npm run dev:next
 ```

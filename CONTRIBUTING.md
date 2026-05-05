@@ -17,9 +17,9 @@ npm run verify
 Run the Docker-backed E2E suite with:
 
 ```bash
-docker compose up -d --build
+docker compose -f docker-compose-build.yml up -d --build
 npm run verify:e2e
-docker compose down -v --remove-orphans
+docker compose -f docker-compose-build.yml down -v --remove-orphans
 ```
 
 ## Development Rules
@@ -36,6 +36,7 @@ Validate deployment changes with:
 
 ```bash
 docker compose config
+docker compose -f docker-compose-build.yml config
 helm lint deploy/helm/clickhouse-product-analytics \
   --set ingest.publicApiKeys=local_dev_key \
   --set clickhouse.url=http://clickhouse:8123 \

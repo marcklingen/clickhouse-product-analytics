@@ -16,7 +16,9 @@ services:
       - clickhouse-data:/var/lib/clickhouse
 
   ingest:
-    image: ghcr.io/marcklingen/clickhouse-product-analytics/ingest-service:latest
+    build:
+      context: .
+      dockerfile: packages/ingest-service/Dockerfile
     depends_on:
       clickhouse:
         condition: service_healthy

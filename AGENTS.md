@@ -22,7 +22,7 @@
 - Focused checks: `npm run test`, `npm run typecheck`, or `npm run build:packages`.
 - Docs checks: `npm run docs:build`, `npm run docs:typecheck`, and `npm run docs:validate`.
 - Regenerate SDK/React reference docs: `npm run docs:reference`.
-- E2E flow: `docker compose up -d --build` then `npm run verify:e2e`.
+- E2E flow for current source: `docker compose -f docker-compose-build.yml up -d --build` then `npm run verify:e2e`.
 
 ## Public API Contract
 
